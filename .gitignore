@@ -27,3 +27,4 @@ Dissertation-Requirements.pdf
 # Private dissertation/project source material
 MIT Main Project Report Basil Emeokoro.pdf
 *.tsbuildinfo
+*.egg-info/
