@@ -1,0 +1,62 @@
+:root {
+  --serps-navy: #034760;
+  --serps-teal: #07847e;
+  --serps-bg: #edf6f8;
+  --serps-card: #ffffff;
+  --serps-border: #c9dce4;
+  --serps-text: #102333;
+  --serps-muted: #617381;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--serps-bg);
+  color: var(--serps-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+.page-shell {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+.hero {
+  border-radius: 8px;
+  padding: 48px;
+  background: linear-gradient(120deg, var(--serps-navy), var(--serps-teal));
+  color: #fff;
+  box-shadow: 0 18px 50px rgba(3, 71, 96, 0.16);
+}
+.eyebrow {
+  margin: 0 0 12px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #a9f4f0;
+}
+h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.5rem); }
+.hero p { max-width: 820px; line-height: 1.7; }
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.card {
+  background: var(--serps-card);
+  border: 1px solid var(--serps-border);
+  border-radius: 8px;
+  padding: 24px;
+}
+.card h2 { margin: 12px 0 8px; font-size: 1.12rem; }
+.card p { color: var(--serps-muted); line-height: 1.6; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #92d6d2;
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--serps-navy);
+  background: #e4fbf8;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
