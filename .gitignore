@@ -1,0 +1,28 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+.env
+.env.local
+.env.*.local
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+playwright-report/
+.DS_Store
+*.log
+
+Dissertation-Requirements.docx
+Dissertation-Requirements.pdf
+*.draft.docx
+*.draft.pdf
+.private/
+
+# Private dissertation/project source material
+MIT Main Project Report Basil Emeokoro.pdf

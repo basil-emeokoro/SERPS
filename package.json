@@ -1,0 +1,17 @@
+{
+  "name": "serps-pop",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web",
+    "packages/shared-types",
+    "packages/api-client",
+    "packages/ui",
+    "packages/config"
+  ],
+  "scripts": {
+    "lint": "npm run lint -w apps/web",
+    "typecheck": "npm run typecheck -w apps/web",
+    "test": "npm run test -w apps/web"
+  }
+}
