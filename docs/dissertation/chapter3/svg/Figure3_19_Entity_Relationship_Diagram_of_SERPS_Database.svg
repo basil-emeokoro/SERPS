@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1450" height="820" viewBox="0 0 1450 820">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#7FA9B5"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<rect width="1450" height="820" fill="#EEF3F6"/>
+<rect x="50" y="45" width="1350" height="100" rx="26" fill="#073B4C"/>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#DDF7F5">Figure 3.19</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Entity Relationship Diagram of</text>
+<text x="75.0" y="150.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">SERPS Database</text>
+<rect x="280" y="250" width="440" height="420" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="500.0" y="298.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">evidence_events</text>
+<text x="500.0" y="329.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">event_id: VARCHAR(32)</text>
+<text x="500.0" y="360.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">session_id: VARCHAR(64)</text>
+<text x="500.0" y="391.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">candidate_id: VARCHAR(64)</text>
+<text x="500.0" y="422.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">timestamp: DATETIME</text>
+<text x="500.0" y="453.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">source_module: VARCHAR(80)</text>
+<text x="500.0" y="484.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">event_type: VARCHAR(120)</text>
+<text x="500.0" y="515.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">risk_weight: FLOAT</text>
+<text x="500.0" y="546.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">confidence: FLOAT</text>
+<text x="500.0" y="577.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">camera_id: VARCHAR(80)</text>
+<text x="500.0" y="608.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">evidence_path: TEXT</text>
+<text x="500.0" y="639.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">description: TEXT</text>
+<text x="1380.0" y="775.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
+</svg>

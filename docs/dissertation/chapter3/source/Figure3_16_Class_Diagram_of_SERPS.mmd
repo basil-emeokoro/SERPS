@@ -1,0 +1,15 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+classDiagram
+  User <|-- Candidate
+  User <|-- Reviewer
+  User <|-- Administrator
+  Institution --> Examination
+  Examination --> ExaminationSession
+  ExaminationSession --> EvidenceEvent
+  EvidenceEvent --> ContextualAssessment
+  ContextualAssessment --> Recommendation
+  Recommendation --> Incident
+  PolicyRule --> Incident
+  Incident --> Acknowledgement
+  Incident --> ReviewerAction
+  ReviewerAction --> AuditLog

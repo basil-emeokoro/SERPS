@@ -1,0 +1,27 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart TD
+  N0["Start"]
+  N1["Register / Authenticate"]
+  N0 --> N1
+  N2["Select Monitoring Mode"]
+  N1 --> N2
+  N3["Run Device Checks"]
+  N2 --> N3
+  N4["Start Examination"]
+  N3 --> N4
+  N5["Generate Evidence Events"]
+  N4 --> N5
+  N6["CIE Contextual Assessment"]
+  N5 --> N6
+  N7["Agentic Recommendation"]
+  N6 --> N7
+  N8["IPIME Policy Evaluation"]
+  N7 --> N8
+  N9["Acknowledgement Required?"]
+  N8 --> N9
+  N10["Human Review"]
+  N9 --> N10
+  N11["Final Outcome"]
+  N10 --> N11
+  N12["Audit Report"]
+  N11 --> N12

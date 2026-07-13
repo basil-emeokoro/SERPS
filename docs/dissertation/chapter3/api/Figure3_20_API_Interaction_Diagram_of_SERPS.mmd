@@ -1,0 +1,17 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart TB
+  React --> Boundary[REST API / WebSocket]
+  Boundary --> FastAPI[FastAPI Hub]
+  FastAPI --> Authentication
+  FastAPI --> Candidates
+  FastAPI --> Examinations
+  FastAPI --> Camera
+  FastAPI --> Identity
+  FastAPI --> Evidence
+  FastAPI --> CIE
+  FastAPI --> Agentic
+  FastAPI --> IPIME
+  FastAPI --> Reporting
+  FastAPI --> Audit
+  FastAPI -.-> PostgreSQL
+  FastAPI -.-> Storage[Evidence Storage]

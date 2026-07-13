@@ -1,0 +1,86 @@
+# Chapter Three Figure Index
+
+- Figure 3.1: Hybrid Design Science Research and Agile Development Process Adopted for SERPS
+  - Source: `source/Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS.mmd`
+  - SVG: `svg/Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS.svg`
+  - PNG: `png/Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS.png`
+- Figure 3.2: Requirements Traceability Model for SERPS
+  - Source: `source/Figure3_2_Requirements_Traceability_Model_for_SERPS.mmd`
+  - SVG: `svg/Figure3_2_Requirements_Traceability_Model_for_SERPS.svg`
+  - PNG: `png/Figure3_2_Requirements_Traceability_Model_for_SERPS.png`
+- Figure 3.3: Overall System Architecture of SERPS
+  - Source: `source/Figure3_3_Overall_System_Architecture_of_SERPS.mmd`
+  - SVG: `svg/Figure3_3_Overall_System_Architecture_of_SERPS.svg`
+  - PNG: `png/Figure3_3_Overall_System_Architecture_of_SERPS.png`
+- Figure 3.4: Candidate Registration, Guided Multi-angle Facial Enrolment and Continuous Identity Assurance Architecture
+  - Source: `source/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture.mmd`
+  - SVG: `svg/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture.svg`
+  - PNG: `png/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture.png`
+- Figure 3.5: Camera and Sensor Management Architecture
+  - Source: `source/Figure3_5_Camera_and_Sensor_Management_Architecture.mmd`
+  - SVG: `svg/Figure3_5_Camera_and_Sensor_Management_Architecture.svg`
+  - PNG: `png/Figure3_5_Camera_and_Sensor_Management_Architecture.png`
+- Figure 3.6: Multimodal Evidence Acquisition Architecture
+  - Source: `source/Figure3_6_Multimodal_Evidence_Acquisition_Architecture.mmd`
+  - SVG: `svg/Figure3_6_Multimodal_Evidence_Acquisition_Architecture.svg`
+  - PNG: `png/Figure3_6_Multimodal_Evidence_Acquisition_Architecture.png`
+- Figure 3.7: Internal Architecture of the Contextual Intelligence Engine
+  - Source: `source/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine.mmd`
+  - SVG: `svg/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine.svg`
+  - PNG: `png/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine.png`
+- Figure 3.8: Agentic Decision Support Architecture
+  - Source: `source/Figure3_8_Agentic_Decision_Support_Architecture.mmd`
+  - SVG: `svg/Figure3_8_Agentic_Decision_Support_Architecture.svg`
+  - PNG: `png/Figure3_8_Agentic_Decision_Support_Architecture.png`
+- Figure 3.9: Institutional Policy and Incident Management Engine
+  - Source: `source/Figure3_9_Institutional_Policy_and_Incident_Management_Engine.mmd`
+  - SVG: `svg/Figure3_9_Institutional_Policy_and_Incident_Management_Engine.svg`
+  - PNG: `png/Figure3_9_Institutional_Policy_and_Incident_Management_Engine.png`
+- Figure 3.10: Governance-aware Decision Pipeline
+  - Source: `source/Figure3_10_Governance_aware_Decision_Pipeline.mmd`
+  - SVG: `svg/Figure3_10_Governance_aware_Decision_Pipeline.svg`
+  - PNG: `png/Figure3_10_Governance_aware_Decision_Pipeline.png`
+- Figure 3.11: Deployment Modes Supported by SERPS
+  - Source: `source/Figure3_11_Deployment_Modes_Supported_by_SERPS.mmd`
+  - SVG: `svg/Figure3_11_Deployment_Modes_Supported_by_SERPS.svg`
+  - PNG: `png/Figure3_11_Deployment_Modes_Supported_by_SERPS.png`
+- Figure 3.12: High-Level Data Flow within SERPS
+  - Source: `source/Figure3_12_High_Level_Data_Flow_within_SERPS.mmd`
+  - SVG: `svg/Figure3_12_High_Level_Data_Flow_within_SERPS.svg`
+  - PNG: `png/Figure3_12_High_Level_Data_Flow_within_SERPS.png`
+- Figure 3.13: Use Case Diagram of SERPS
+  - Source: `source/Figure3_13_Use_Case_Diagram_of_SERPS.mmd`
+  - SVG: `svg/Figure3_13_Use_Case_Diagram_of_SERPS.svg`
+  - PNG: `png/Figure3_13_Use_Case_Diagram_of_SERPS.png`
+- Figure 3.14: Activity Diagram of SERPS
+  - Source: `source/Figure3_14_Activity_Diagram_of_SERPS.mmd`
+  - SVG: `svg/Figure3_14_Activity_Diagram_of_SERPS.svg`
+  - PNG: `png/Figure3_14_Activity_Diagram_of_SERPS.png`
+- Figure 3.15: Sequence Diagram of SERPS
+  - Source: `source/Figure3_15_Sequence_Diagram_of_SERPS.mmd`
+  - SVG: `svg/Figure3_15_Sequence_Diagram_of_SERPS.svg`
+  - PNG: `png/Figure3_15_Sequence_Diagram_of_SERPS.png`
+- Figure 3.16: Class Diagram of SERPS
+  - Source: `source/Figure3_16_Class_Diagram_of_SERPS.mmd`
+  - SVG: `svg/Figure3_16_Class_Diagram_of_SERPS.svg`
+  - PNG: `png/Figure3_16_Class_Diagram_of_SERPS.png`
+- Figure 3.17: Component Diagram of SERPS
+  - Source: `source/Figure3_17_Component_Diagram_of_SERPS.mmd`
+  - SVG: `svg/Figure3_17_Component_Diagram_of_SERPS.svg`
+  - PNG: `png/Figure3_17_Component_Diagram_of_SERPS.png`
+- Figure 3.18: Deployment Diagram of SERPS
+  - Source: `source/Figure3_18_Deployment_Diagram_of_SERPS.mmd`
+  - SVG: `svg/Figure3_18_Deployment_Diagram_of_SERPS.svg`
+  - PNG: `png/Figure3_18_Deployment_Diagram_of_SERPS.png`
+- Figure 3.19: Entity Relationship Diagram of SERPS Database
+  - Source: `source/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.mmd`
+  - SVG: `svg/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.svg`
+  - PNG: `png/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.png`
+- Figure 3.20: API Interaction Diagram of SERPS
+  - Source: `source/Figure3_20_API_Interaction_Diagram_of_SERPS.mmd`
+  - SVG: `svg/Figure3_20_API_Interaction_Diagram_of_SERPS.svg`
+  - PNG: `png/Figure3_20_API_Interaction_Diagram_of_SERPS.png`
+- Figure 3.21: Technology Stack of SERPS
+  - Source: `source/Figure3_21_Technology_Stack_of_SERPS.mmd`
+  - SVG: `svg/Figure3_21_Technology_Stack_of_SERPS.svg`
+  - PNG: `png/Figure3_21_Technology_Stack_of_SERPS.png`

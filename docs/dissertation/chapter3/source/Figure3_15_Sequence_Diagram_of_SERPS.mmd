@@ -1,0 +1,22 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+sequenceDiagram
+  participant Candidate
+  participant React
+  participant FastAPI
+  participant Auth
+  participant Camera
+  participant Evidence
+  participant CIE
+  participant Agentic
+  participant IPIME
+  participant Reviewer
+  participant PostgreSQL
+  Candidate->>React: Start exam
+  React->>FastAPI: Request session
+  FastAPI->>Auth: Verify identity
+  Camera->>Evidence: Emit EvidenceEvent
+  Evidence->>PostgreSQL: Persist raw event
+  Evidence->>CIE: Submit event
+  CIE->>Agentic: Contextual assessment
+  Agentic->>IPIME: Recommendation
+  IPIME->>Reviewer: Policy workflow

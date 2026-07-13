@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1550" height="790" viewBox="0 0 1550 790">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#7FA9B5"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<rect width="1550" height="790" fill="#EEF3F6"/>
+<rect x="50" y="45" width="1450" height="100" rx="26" fill="#073B4C"/>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#DDF7F5">Figure 3.18</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Deployment Diagram of SERPS</text>
+<rect x="100" y="195" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="295.0" y="249.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Candidate Browser</text>
+<rect x="545" y="195" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="740.0" y="249.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Reviewer Browser</text>
+<rect x="990" y="195" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1185.0" y="249.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Administrator Browser</text>
+<rect x="100" y="345" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="295.0" y="399.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Next.js Web Application</text>
+<rect x="545" y="345" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="740.0" y="399.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">FastAPI API Container</text>
+<rect x="990" y="345" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1185.0" y="399.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">AI / Monitoring Services</text>
+<rect x="100" y="495" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="295.0" y="549.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">PostgreSQL Container</text>
+<rect x="545" y="495" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="740.0" y="549.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Evidence Storage</text>
+<rect x="990" y="495" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1185.0" y="549.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Docker Network</text>
+<rect x="100" y="645" width="390" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="295.0" y="699.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Optional Cloud / Edge Boundary</text>
+<line x1="295" y1="242" x2="295" y2="392" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="295.0" y="303.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
+<line x1="740" y1="242" x2="295" y2="392" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="517.5" y="303.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
+<line x1="1185" y1="242" x2="295" y2="392" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="740.0" y="303.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
+<line x1="295" y1="392" x2="740" y2="392" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="517.5" y="378.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">REST</text>
+<line x1="295" y1="242" x2="1185" y2="392" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="740.0" y="303.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">WebRTC</text>
+<line x1="740" y1="392" x2="1185" y2="392" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="962.5" y="378.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">SSE/WebSocket</text>
+<line x1="740" y1="392" x2="295" y2="542" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="517.5" y="453.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">SQL</text>
+<line x1="1185" y1="392" x2="740" y2="542" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="962.5" y="453.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">evidence</text>
+<line x1="740" y1="392" x2="1185" y2="542" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="295" y1="692" x2="1185" y2="542" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="740.0" y="603.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">optional</text>
+<text x="1480.0" y="745.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
+</svg>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="1180" viewBox="0 0 1700 1180">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#7FA9B5"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<rect width="1700" height="1180" fill="#EEF3F6"/>
+<rect x="50" y="45" width="1600" height="100" rx="26" fill="#073B4C"/>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#DDF7F5">Figure 3.1</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Hybrid Design Science Research</text>
+<text x="75.0" y="150.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">and Agile Development Process</text>
+<text x="75.0" y="182.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Adopted for SERPS</text>
+<rect x="120" y="190" width="390" height="68" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="315.0" y="232.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Problem Identification</text>
+<rect x="120" y="278" width="390" height="68" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="315.0" y="319.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Literature Review</text>
+<line x1="315.0" y1="261" x2="315.0" y2="274" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="120" y="366" width="390" height="68" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="315.0" y="407.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Requirements Analysis</text>
+<line x1="315.0" y1="349" x2="315.0" y2="362" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="120" y="454" width="390" height="68" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="315.0" y="495.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">System Architecture</text>
+<line x1="315.0" y1="437" x2="315.0" y2="450" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="120" y="542" width="390" height="68" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="315.0" y="583.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Prototype Design</text>
+<line x1="315.0" y1="525" x2="315.0" y2="538" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="930" y="265" width="250" height="75" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1055.0" y="309.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Sprint Planning</text>
+<rect x="1280" y="345" width="250" height="75" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1405.0" y="389.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Implementation</text>
+<rect x="1250" y="620" width="250" height="75" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1375.0" y="664.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Sprint Review</text>
+<rect x="930" y="700" width="250" height="75" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1055.0" y="744.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Testing</text>
+<rect x="780" y="485" width="250" height="75" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="905.0" y="529.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Refinement</text>
+<line x1="1055" y1="303" x2="1405" y2="383" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1405" y1="383" x2="1375" y2="658" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1375" y1="658" x2="1055" y2="738" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1055" y1="738" x2="905" y2="523" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="905" y1="523" x2="1055" y2="303" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="510" y1="560" x2="780" y2="522" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="645.0" y="527.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Agile loop</text>
+<line x1="1040" y1="775" x2="1040" y2="875" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="790" y="875" width="500" height="70" rx="18" fill="#FFF4D6" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1040.0" y="917.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Final Evaluation</text>
+<line x1="1040" y1="945" x2="1040" y2="1030" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="790" y="1030" width="500" height="70" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1040.0" y="1072.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Documentation &amp; Dissertation</text>
+<text x="1630.0" y="1135.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
+</svg>

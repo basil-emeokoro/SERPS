@@ -1,0 +1,11 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart TB
+  Recommendation --> Policy[Policy-as-Code Rules]
+  InstitutionalPolicy --> Policy
+  Policy --> Warning
+  Policy --> Pause[Pause Exam]
+  Policy --> Shield[Screen Shield]
+  Policy --> Ack[Acknowledgement]
+  Policy --> Escalation
+  Policy --> Reviewer[Reviewer Workflow]
+  Reviewer --> Audit[Audit Log]

@@ -1,0 +1,195 @@
+{
+  "generated_at": "2026-07-13T13:30:31.784953+00:00",
+  "generator": "scripts/docs/generate_chapter3_diagrams.py",
+  "figures": {
+    "3.1": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\flowcharts\\Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS.png",
+      "source_sha256": "974952c5670d2ac1",
+      "svg_sha256": "d2cf7d3e1dff8328",
+      "png_sha256": "8e3ac475f6a5f48d"
+    },
+    "3.2": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_2_Requirements_Traceability_Model_for_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_2_Requirements_Traceability_Model_for_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_2_Requirements_Traceability_Model_for_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_2_Requirements_Traceability_Model_for_SERPS.png",
+      "source_sha256": "c14c9777e8f4fdec",
+      "svg_sha256": "362a485f1c05dcd3",
+      "png_sha256": "09a51e1037984417"
+    },
+    "3.3": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_3_Overall_System_Architecture_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_3_Overall_System_Architecture_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_3_Overall_System_Architecture_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_3_Overall_System_Architecture_of_SERPS.png",
+      "source_sha256": "c123599dfb3edced",
+      "svg_sha256": "2b6b2c2bd156ef3a",
+      "png_sha256": "9187c650cd8ff6d3"
+    },
+    "3.4": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture.png",
+      "source_sha256": "cd1943b8c1eef135",
+      "svg_sha256": "eee0424cea93fc4e",
+      "png_sha256": "66b0e99442f6de9c"
+    },
+    "3.5": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_5_Camera_and_Sensor_Management_Architecture.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_5_Camera_and_Sensor_Management_Architecture.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_5_Camera_and_Sensor_Management_Architecture.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_5_Camera_and_Sensor_Management_Architecture.png",
+      "source_sha256": "2ad24103ce975e72",
+      "svg_sha256": "cc6615a58d2330d1",
+      "png_sha256": "17ac4c1f6f88c5be"
+    },
+    "3.6": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_6_Multimodal_Evidence_Acquisition_Architecture.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_6_Multimodal_Evidence_Acquisition_Architecture.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_6_Multimodal_Evidence_Acquisition_Architecture.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_6_Multimodal_Evidence_Acquisition_Architecture.png",
+      "source_sha256": "2a0b8d03ed81ded1",
+      "svg_sha256": "028b5a5246289aa6",
+      "png_sha256": "a27180314b1d004c"
+    },
+    "3.7": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine.png",
+      "source_sha256": "d11b17c69c9dbf1e",
+      "svg_sha256": "0867e6df094d85e1",
+      "png_sha256": "2e060f699ab9bab9"
+    },
+    "3.8": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_8_Agentic_Decision_Support_Architecture.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_8_Agentic_Decision_Support_Architecture.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_8_Agentic_Decision_Support_Architecture.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_8_Agentic_Decision_Support_Architecture.png",
+      "source_sha256": "8f2bfac04c531613",
+      "svg_sha256": "b0ebb5264a0c58fe",
+      "png_sha256": "65b03713b55b3fd2"
+    },
+    "3.9": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_9_Institutional_Policy_and_Incident_Management_Engine.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_9_Institutional_Policy_and_Incident_Management_Engine.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_9_Institutional_Policy_and_Incident_Management_Engine.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_9_Institutional_Policy_and_Incident_Management_Engine.png",
+      "source_sha256": "d841a94cff1b614a",
+      "svg_sha256": "d6ecff6893fd8b67",
+      "png_sha256": "d4bac772ec54847e"
+    },
+    "3.10": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_10_Governance_aware_Decision_Pipeline.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\flowcharts\\Figure3_10_Governance_aware_Decision_Pipeline.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_10_Governance_aware_Decision_Pipeline.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_10_Governance_aware_Decision_Pipeline.png",
+      "source_sha256": "6bb08fb04a218159",
+      "svg_sha256": "ff9d252e86f2e46e",
+      "png_sha256": "e1929bad18539971"
+    },
+    "3.11": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_11_Deployment_Modes_Supported_by_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_11_Deployment_Modes_Supported_by_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_11_Deployment_Modes_Supported_by_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_11_Deployment_Modes_Supported_by_SERPS.png",
+      "source_sha256": "e42203f0c2fa5bf5",
+      "svg_sha256": "e31121ebf269b69e",
+      "png_sha256": "0a9133c1202ee147"
+    },
+    "3.12": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_12_High_Level_Data_Flow_within_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\flowcharts\\Figure3_12_High_Level_Data_Flow_within_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_12_High_Level_Data_Flow_within_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_12_High_Level_Data_Flow_within_SERPS.png",
+      "source_sha256": "70269f128044edd6",
+      "svg_sha256": "bfedfc0574fd163f",
+      "png_sha256": "3690b4e7baf2086a"
+    },
+    "3.13": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_13_Use_Case_Diagram_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\uml\\Figure3_13_Use_Case_Diagram_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_13_Use_Case_Diagram_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_13_Use_Case_Diagram_of_SERPS.png",
+      "source_sha256": "491dcd9b10f7952e",
+      "svg_sha256": "123bb3f6ef3d0992",
+      "png_sha256": "c7d31015df60066c"
+    },
+    "3.14": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_14_Activity_Diagram_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\uml\\Figure3_14_Activity_Diagram_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_14_Activity_Diagram_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_14_Activity_Diagram_of_SERPS.png",
+      "source_sha256": "dc7ecf7998d53114",
+      "svg_sha256": "433db525e3c5ae7d",
+      "png_sha256": "e2a02ec50772ac45"
+    },
+    "3.15": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_15_Sequence_Diagram_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\uml\\Figure3_15_Sequence_Diagram_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_15_Sequence_Diagram_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_15_Sequence_Diagram_of_SERPS.png",
+      "source_sha256": "4ed9bb83903a80ad",
+      "svg_sha256": "f6e9510d63d7a2b9",
+      "png_sha256": "73b3c6d4bb54c96b"
+    },
+    "3.16": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_16_Class_Diagram_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\uml\\Figure3_16_Class_Diagram_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_16_Class_Diagram_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_16_Class_Diagram_of_SERPS.png",
+      "source_sha256": "ef6e646ad6f85d5a",
+      "svg_sha256": "5b8900a9be49617d",
+      "png_sha256": "44c9c336d2917e33"
+    },
+    "3.17": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_17_Component_Diagram_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\uml\\Figure3_17_Component_Diagram_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_17_Component_Diagram_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_17_Component_Diagram_of_SERPS.png",
+      "source_sha256": "0e0afca14d4ae79c",
+      "svg_sha256": "d9e168ef30a41890",
+      "png_sha256": "78d1798acfb7a086"
+    },
+    "3.18": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_18_Deployment_Diagram_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\uml\\Figure3_18_Deployment_Diagram_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_18_Deployment_Diagram_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_18_Deployment_Diagram_of_SERPS.png",
+      "source_sha256": "24de981602d08043",
+      "svg_sha256": "614d77982799fd38",
+      "png_sha256": "683203b1b923b138"
+    },
+    "3.19": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.png",
+      "source_sha256": "82c7acfa4763d71d",
+      "svg_sha256": "4dd940c32b9fdfd8",
+      "png_sha256": "0098cee5e3b5bf10"
+    },
+    "3.20": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_20_API_Interaction_Diagram_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\api\\Figure3_20_API_Interaction_Diagram_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_20_API_Interaction_Diagram_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_20_API_Interaction_Diagram_of_SERPS.png",
+      "source_sha256": "4740042db69ff4e9",
+      "svg_sha256": "fd027782099bc7c0",
+      "png_sha256": "779c8088d10f5461"
+    },
+    "3.21": {
+      "source": "docs\\dissertation\\chapter3\\source\\Figure3_21_Technology_Stack_of_SERPS.mmd",
+      "category_source": "docs\\dissertation\\chapter3\\technology\\Figure3_21_Technology_Stack_of_SERPS.mmd",
+      "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_21_Technology_Stack_of_SERPS.svg",
+      "png": "docs\\dissertation\\chapter3\\png\\Figure3_21_Technology_Stack_of_SERPS.png",
+      "source_sha256": "dab78a00eaa1a37c",
+      "svg_sha256": "e6946faa9e109e6a",
+      "png_sha256": "ac506e7ef24e1a08"
+    }
+  }
+}

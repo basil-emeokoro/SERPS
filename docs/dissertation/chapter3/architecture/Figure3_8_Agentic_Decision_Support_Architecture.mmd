@@ -1,0 +1,8 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart TB
+  Assessment --> Agentic[Agentic Reasoning]
+  Agentic --> Continue[Continue Monitoring]
+  Agentic --> Reauth[Request Re-authentication]
+  Agentic --> Notify[Notify Reviewer]
+  Agentic --> Escalate[Escalate Incident]
+  Continue --> Recommendation[Advisory Recommendation]
