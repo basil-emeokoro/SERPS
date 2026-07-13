@@ -23,6 +23,7 @@ from xml.sax.saxutils import escape
 from PIL import Image, ImageDraw, ImageFont
 
 from serps_pop.evidence import models as _evidence_models  # noqa: F401
+from serps_pop.identity import models as _identity_models  # noqa: F401
 from serps_pop.infrastructure.database import Base
 
 
@@ -203,6 +204,39 @@ def draw_arrow(draw: ImageDraw.ImageDraw, arrow: Arrow, scale: int = 1) -> None:
     if arrow.label:
         mid = ((x1 + x2) / 2, (y1 + y2) / 2 - 18 * scale)
         draw.text(mid, arrow.label, fill=DEEP_NAVY, font=font(18 * scale), anchor="mm")
+
+
+def mermaid_type(column_type: object) -> str:
+    raw = column_type.__class__.__name__.lower()
+    if "integer" in raw:
+        return "int"
+    if "float" in raw or "numeric" in raw:
+        return "float"
+    if "boolean" in raw:
+        return "boolean"
+    if "date" in raw or "time" in raw:
+        return "datetime"
+    return "string"
+
+
+def erd_mermaid_from_metadata() -> str:
+    lines = ["erDiagram"]
+    for table in Base.metadata.sorted_tables:
+        lines.append(f"  {table.name} {{")
+        for column in table.columns:
+            markers = []
+            if column.primary_key:
+                markers.append("PK")
+            if column.foreign_keys:
+                markers.append("FK")
+            marker_text = f" {' '.join(markers)}" if markers else ""
+            lines.append(f"    {mermaid_type(column.type)} {column.name}{marker_text}")
+        lines.append("  }")
+    for table in Base.metadata.sorted_tables:
+        for foreign_key in table.foreign_keys:
+            referred = foreign_key.column.table.name
+            lines.append(f"  {referred} ||--o{{ {table.name} : references")
+    return "\n".join(lines)
 
 
 def render_png(diagram: Diagram, path: Path) -> None:
@@ -541,8 +575,22 @@ def build_diagrams() -> list[Diagram]:
         for i, table in enumerate(tables):
             cols = [f"{col.name}: {col.type}" for col in table.columns]
             text = table.name + "\n" + "\n".join(cols[:12])
-            shapes.append(Box(280 + i * 520, 250, 440, 420, text, fill=TEAL_LIGHT if i == 0 else WHITE, title=True))
-    diagrams.append(Diagram("3.19", "Entity Relationship Diagram of SERPS Database", "architecture", (1450, 820), shapes, "erDiagram\n  evidence_events {\n    string event_id PK\n    string session_id\n    string candidate_id\n    datetime timestamp\n    string source_module\n    string event_type\n    float risk_weight\n    float confidence\n    string camera_id\n    string evidence_path\n    string description\n  }", notes=["Provisional ERD generated from implemented SQLAlchemy metadata. Current POP schema contains the foundational evidence_events table and is ready for regeneration as schema expands."]))
+            row, col = divmod(i, 3)
+            shapes.append(Box(70 + col * 500, 190 + row * 270, 455, 230, text, fill=TEAL_LIGHT if i == 0 else WHITE, title=True))
+    rows = max(1, math.ceil(max(len(tables), 1) / 3))
+    diagrams.append(
+        Diagram(
+            "3.19",
+            "Entity Relationship Diagram of SERPS Database",
+            "architecture",
+            (1600, max(820, 230 + rows * 270)),
+            shapes,
+            erd_mermaid_from_metadata(),
+            notes=[
+                "ERD generated from implemented SQLAlchemy metadata. Sprint 2 adds identity, RBAC, candidate, examination, assignment, session, token and audit tables.",
+            ],
+        )
+    )
 
     # 3.20 API hub
     shapes = [Box(575, 180, 400, 80, "React / Next.js", fill=TEAL_LIGHT, title=True), Box(575, 330, 400, 80, "REST API / WebSocket", fill=AMBER_LIGHT), Box(575, 480, 400, 80, "FastAPI Hub", fill=TEAL_LIGHT, title=True)]
@@ -627,7 +675,7 @@ def validate(diagrams: list[Diagram], artefacts: dict[str, dict[str, str]]) -> N
             "",
             "## Figure 3.19 Schema Status",
             "",
-            "Figure 3.19 was generated from the current SQLAlchemy metadata. The present POP schema is foundational and currently exposes `evidence_events`. The generator should be rerun when candidate, session, incident, review, policy and audit models are migrated into POP.",
+            "Figure 3.19 was generated from the current SQLAlchemy metadata. The present POP schema includes EvidenceEvent persistence plus Sprint 2 institution, user, role, candidate, examination, assignment, session, authentication, refresh-token and audit-log tables.",
             "",
             "## Architecture Consistency Checks",
             "",

@@ -4,6 +4,7 @@ from alembic import context
 
 from serps_pop.config.settings import get_settings
 from serps_pop.evidence import models  # noqa: F401
+from serps_pop.identity import models as identity_models  # noqa: F401
 from serps_pop.infrastructure.database import Base
 
 config = context.config

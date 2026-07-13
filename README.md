@@ -54,6 +54,32 @@ Not implemented in Sprint 1:
 - Production authentication and RBAC.
 - Reviewer/candidate/admin full portals.
 
+## Sprint 2 Scope
+
+Implemented in the authentication, RBAC, candidate, examination and session foundation sprint:
+
+- Real password hashing and JWT access/refresh token handling.
+- Server-enforced role model for Candidate, Reviewer/Proctor, Administrator and System Administrator.
+- Institution, user, role, candidate, examination, assignment, examination session, authentication session, refresh token and audit-log tables.
+- Non-destructive Alembic migration `0002_auth_rbac_exam_foundation`.
+- FastAPI route groups for authentication, institutions, users, roles, candidates, examinations, examination sessions and audit logs.
+- Examination session state controls for authentication, device-check, ready, active, paused, completed and terminated states.
+- Duplicate prevention and clean conflict responses for candidates, users, institutions, examinations, assignments and active sessions.
+- Role-aware Next.js landing page explaining administrator, reviewer/proctor and candidate portal responsibilities.
+- Idempotent demo seed script at `scripts/dev/seed_demo_data.py`; set `SERPS_DEMO_PASSWORD` to choose a local demo password, otherwise the script prints a one-time generated password.
+- Regenerated OpenAPI documentation at `docs/openapi.json`.
+- Regenerated Chapter Three diagram artefacts; Figure 3.19 now reflects the expanded schema.
+- Security review notes, including the current npm audit finding, are tracked in `docs/security_review.md`.
+- Docker API startup now runs `alembic upgrade head` before serving FastAPI, so the Compose PostgreSQL schema is brought to the current migration head during local container startup.
+
+Still intentionally deferred:
+
+- Full production portal implementation.
+- Live media transport and AI detector migration.
+- CIE, Agentic Decision Support and IPIME migration into POP.
+- Production identity provider integration.
+- Hardened cookie-backed browser sessions; the current Next.js login page is a local POP validation foundation.
+
 ## Local Development
 
 ```powershell
@@ -69,15 +95,23 @@ Frontend: `http://localhost:3000`
 
 OpenAPI: `http://localhost:8000/openapi.json`
 
+Seed local demo data after applying migrations:
+
+```powershell
+$env:SERPS_DEMO_PASSWORD = "choose-a-local-demo-password"
+python scripts\dev\seed_demo_data.py
+```
+
 ## Verification Commands
 
 ```powershell
-python -m py_compile apps\api\app\main.py src\serps_pop\domain\evidence.py
+python -m py_compile apps\api\app\main.py src\serps_pop\domain\evidence.py src\serps_pop\identity\models.py src\serps_pop\identity\services.py
 python -m pytest -q
 npm.cmd run lint -w apps/web
 npm.cmd run typecheck -w apps/web
 npm.cmd run test -w apps/web
 docker compose config
+docker compose up -d --build
 ```
 
 ## Dissertation Figure Discipline

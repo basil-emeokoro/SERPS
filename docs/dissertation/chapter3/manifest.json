@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-13T13:30:31.784953+00:00",
+  "generated_at": "2026-07-13T21:05:27.788879+00:00",
   "generator": "scripts/docs/generate_chapter3_diagrams.py",
   "figures": {
     "3.1": {
@@ -169,9 +169,9 @@
       "category_source": "docs\\dissertation\\chapter3\\architecture\\Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.mmd",
       "svg": "docs\\dissertation\\chapter3\\svg\\Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.svg",
       "png": "docs\\dissertation\\chapter3\\png\\Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.png",
-      "source_sha256": "82c7acfa4763d71d",
-      "svg_sha256": "4dd940c32b9fdfd8",
-      "png_sha256": "0098cee5e3b5bf10"
+      "source_sha256": "b4fc8fee20dc91f3",
+      "svg_sha256": "9b7dfcafadf62818",
+      "png_sha256": "367a888392947693"
     },
     "3.20": {
       "source": "docs\\dissertation\\chapter3\\source\\Figure3_20_API_Interaction_Diagram_of_SERPS.mmd",

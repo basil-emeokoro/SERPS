@@ -1,6 +1,6 @@
 # Chapter Three Diagram Validation Report
 
-Generated at: 2026-07-13T13:30:31.788431+00:00
+Generated at: 2026-07-13T21:05:27.790576+00:00
 
 ## Summary
 
@@ -32,13 +32,13 @@ Generated at: 2026-07-13T13:30:31.788431+00:00
 - Figure 3.17: PASS - Component Diagram of SERPS
 - Figure 3.18: PASS - Deployment Diagram of SERPS
 - Figure 3.19: PASS - Entity Relationship Diagram of SERPS Database
-  - Note: Provisional ERD generated from implemented SQLAlchemy metadata. Current POP schema contains the foundational evidence_events table and is ready for regeneration as schema expands.
+  - Note: ERD generated from implemented SQLAlchemy metadata. Sprint 2 adds identity, RBAC, candidate, examination, assignment, session, token and audit tables.
 - Figure 3.20: PASS - API Interaction Diagram of SERPS
 - Figure 3.21: PASS - Technology Stack of SERPS
 
 ## Figure 3.19 Schema Status
 
-Figure 3.19 was generated from the current SQLAlchemy metadata. The present POP schema is foundational and currently exposes `evidence_events`. The generator should be rerun when candidate, session, incident, review, policy and audit models are migrated into POP.
+Figure 3.19 was generated from the current SQLAlchemy metadata. The present POP schema includes EvidenceEvent persistence plus Sprint 2 institution, user, role, candidate, examination, assignment, session, authentication, refresh-token and audit-log tables.
 
 ## Architecture Consistency Checks
 
