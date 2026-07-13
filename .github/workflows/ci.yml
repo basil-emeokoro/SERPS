@@ -1,0 +1,27 @@
+name: SERPS POP CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: python -m pip install -e .[dev]
+      - run: python -m py_compile apps/api/app/main.py src/serps_pop/domain/evidence.py
+      - run: python -m pytest -q
+      - run: npm install
+      - run: npm run lint -w apps/web
+      - run: npm run typecheck -w apps/web
+      - run: npm run test -w apps/web
