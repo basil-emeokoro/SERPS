@@ -1,11 +1,19 @@
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
 flowchart TB
-  Recommendation --> Policy[Policy-as-Code Rules]
-  InstitutionalPolicy --> Policy
-  Policy --> Warning
-  Policy --> Pause[Pause Exam]
-  Policy --> Shield[Screen Shield]
-  Policy --> Ack[Acknowledgement]
-  Policy --> Escalation
-  Policy --> Reviewer[Reviewer Workflow]
-  Reviewer --> Audit[Audit Log]
+  Recommendation --> Evaluation[Policy Evaluation]
+  Rules[Institutional Rules] --> Evaluation
+  Evaluation --> Selection[Policy Action Selection]
+  Selection --> Warning
+  Selection --> Pause[Pause Examination]
+  Selection --> Shield[Screen Shield]
+  Selection --> Ack[Candidate Acknowledgement]
+  Selection --> Notify[Reviewer Notification]
+  Selection --> Escalation
+  Warning --> Incident[Incident Record]
+  Pause --> Incident
+  Shield --> Incident
+  Ack --> Incident
+  Notify --> Audit[Audit Log]
+  Escalation --> Reviewer[Reviewer Workflow]
+  Incident --> Reviewer
+  Audit --> Reviewer

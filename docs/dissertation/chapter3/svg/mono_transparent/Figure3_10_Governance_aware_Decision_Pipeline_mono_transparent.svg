@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1100" viewBox="0 0 1500 1100">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#000000"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#000000">Figure 3.10</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">Governance-aware Decision</text>
+<text x="75.0" y="150.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">Pipeline</text>
+<rect x="515" y="180" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="223.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">Detection</text>
+<rect x="515" y="270" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="312.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Structured EvidenceEvent</text>
+<line x1="775.0" y1="253" x2="775.0" y2="266" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="515" y="360" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="402.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Contextual Intelligence Engine</text>
+<line x1="775.0" y1="343" x2="775.0" y2="356" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="515" y="450" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="492.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Agentic Recommendation</text>
+<line x1="775.0" y1="433" x2="775.0" y2="446" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="515" y="540" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="582.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Institutional Policy</text>
+<line x1="775.0" y1="523" x2="775.0" y2="536" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="515" y="630" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="658.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Candidate Acknowledgement</text>
+<text x="775.0" y="686.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">(where required)</text>
+<line x1="775.0" y1="613" x2="775.0" y2="626" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="515" y="720" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="762.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Human Reviewer</text>
+<line x1="775.0" y1="703" x2="775.0" y2="716" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="515" y="810" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="852.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Final Institutional Decision</text>
+<line x1="775.0" y1="793" x2="775.0" y2="806" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="515" y="900" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="942.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Audit</text>
+<line x1="775.0" y1="883" x2="775.0" y2="896" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="1075" y="680" width="330" height="150" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1240.0" y="720.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Human governance boundary:</text>
+<text x="1240.0" y="748.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">SERPS supports review, but does</text>
+<text x="1240.0" y="776.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">not issue automatic misconduct</text>
+<text x="1240.0" y="804.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">decisions.</text>
+<line x1="1035" y1="715" x2="1075" y2="735" stroke="#000000" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
+<text x="1430.0" y="1055.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#000000">SERPS Architecture</text>
+</svg>

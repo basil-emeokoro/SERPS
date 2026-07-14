@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1550" height="1050" viewBox="0 0 1550 1050">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#000000"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#000000">Figure 3.20</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">API Interaction Diagram of SERPS</text>
+<rect x="575" y="180" width="400" height="80" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="228.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">React / Next.js</text>
+<rect x="575" y="330" width="400" height="80" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="377.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">REST API / WebSocket</text>
+<rect x="575" y="480" width="400" height="80" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="528.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">FastAPI Hub</text>
+<rect x="80" y="680" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="237.5" y="722.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Authentication</text>
+<rect x="440" y="680" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="597.5" y="722.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Candidates</text>
+<rect x="800" y="680" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="957.5" y="722.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Examinations</text>
+<rect x="1160" y="680" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1317.5" y="722.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Camera</text>
+<rect x="80" y="790" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="237.5" y="832.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Identity</text>
+<rect x="440" y="790" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="597.5" y="832.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Evidence</text>
+<rect x="800" y="790" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="957.5" y="832.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">CIE</text>
+<rect x="1160" y="790" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1317.5" y="832.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Agentic</text>
+<rect x="80" y="900" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="237.5" y="942.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">IPIME</text>
+<rect x="440" y="900" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="597.5" y="942.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Reporting</text>
+<rect x="800" y="900" width="315" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="957.5" y="942.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Audit</text>
+<rect x="1120" y="470" width="320" height="90" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1280.0" y="522.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">PostgreSQL</text>
+<rect x="1120" y="580" width="320" height="90" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1280.0" y="632.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Evidence Storage</text>
+<line x1="775" y1="260" x2="775" y2="330" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="410" x2="775" y2="480" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="975" y1="520" x2="1120" y2="515" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="975" y1="540" x2="1120" y2="625" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="237" y2="680" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="597" y2="680" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="957" y2="680" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="1317" y2="680" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="237" y2="790" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="597" y2="790" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="957" y2="790" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="1317" y2="790" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="237" y2="900" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="597" y2="900" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="560" x2="957" y2="900" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1480.0" y="1005.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#000000">SERPS Architecture</text>
+</svg>

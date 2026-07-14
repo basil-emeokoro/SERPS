@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1440" viewBox="0 0 1560 1440">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#000000"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#000000">Figure 3.14</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">Activity Diagram of SERPS</text>
+<ellipse cx="780.0" cy="210.0" rx="95.0" ry="30.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="210.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Start</text>
+<rect x="535" y="275" width="490" height="64" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="314.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Register / Authenticate</text>
+<text x="780.0" y="342.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Candidate</text>
+<rect x="535" y="370" width="490" height="64" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="395.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Select Monitoring Mode and Run</text>
+<text x="780.0" y="423.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Device Checks</text>
+<rect x="535" y="465" width="490" height="64" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="504.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Start Examination Session</text>
+<rect x="535" y="560" width="490" height="64" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="599.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Generate Structured Evidence</text>
+<text x="780.0" y="627.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Events</text>
+<rect x="535" y="655" width="490" height="64" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="694.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">CIE Contextual Assessment</text>
+<rect x="535" y="750" width="490" height="64" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="789.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Agentic Recommendation</text>
+<rect x="535" y="845" width="490" height="64" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="884.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">IPIME Policy Evaluation</text>
+<polygon points="780.0,955.0 940.0,1020.0 780.0,1085.0 620.0,1020.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="1020.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#000000">Acknowledgement Required?</text>
+<rect x="125" y="990" width="380" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="315.0" y="1018.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">No: Continue Monitoring /</text>
+<text x="315.0" y="1046.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Examination Flow</text>
+<rect x="1065" y="990" width="380" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1255.0" y="1018.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Yes: Candidate Incident</text>
+<text x="1255.0" y="1046.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Acknowledgement</text>
+<rect x="1065" y="1110" width="380" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1255.0" y="1138.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Human Reviewer Inspects Evidence</text>
+<rect x="535" y="1230" width="490" height="64" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="1255.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Final Institutional Decision and</text>
+<text x="780.0" y="1283.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Audit Report</text>
+<ellipse cx="780.0" cy="1365.0" rx="95.0" ry="30.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="780.0" y="1365.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">End</text>
+<line x1="780" y1="240" x2="780" y2="275" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="780" y1="339" x2="780" y2="370" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="780" y1="434" x2="780" y2="465" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="780" y1="529" x2="780" y2="560" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="780" y1="624" x2="780" y2="655" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="780" y1="719" x2="780" y2="750" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="780" y1="814" x2="780" y2="845" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="780" y1="909" x2="780" y2="955" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="620" y1="1020" x2="505" y2="1025" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="562.5" y="1008.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#000000">No</text>
+<line x1="940" y1="1020" x2="1065" y2="1025" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1002.5" y="1008.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#000000">Yes</text>
+<line x1="1255" y1="1060" x2="1255" y2="1110" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1255" y1="1180" x2="780" y2="1230" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="315" y1="1060" x2="780" y2="1230" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="780" y1="1294" x2="780" y2="1335" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1490.0" y="1395.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#000000">SERPS Architecture</text>
+</svg>

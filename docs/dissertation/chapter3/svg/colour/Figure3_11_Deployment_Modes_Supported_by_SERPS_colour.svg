@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1550" height="820" viewBox="0 0 1550 820">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#7FA9B5"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<rect width="1550" height="820" fill="#EEF3F6"/>
+<rect x="50" y="45" width="1450" height="100" rx="26" fill="#073B4C"/>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#DDF7F5">Figure 3.11</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Deployment Modes Supported by</text>
+<text x="75.0" y="150.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">SERPS</text>
+<rect x="100" y="250" width="400" height="430" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="300.0" y="396.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Mode A</text>
+<text x="300.0" y="427.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Single-camera CBT mode</text>
+<text x="300.0" y="458.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A"></text>
+<text x="300.0" y="489.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Primary camera required</text>
+<text x="300.0" y="520.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Secondary not required</text>
+<text x="300.0" y="551.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">CBT-centre limitation note</text>
+<rect x="575" y="250" width="400" height="430" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="775.0" y="396.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Mode B</text>
+<text x="775.0" y="427.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Dual-camera full mode</text>
+<text x="775.0" y="458.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A"></text>
+<text x="775.0" y="489.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Primary required</text>
+<text x="775.0" y="520.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Secondary required</text>
+<text x="775.0" y="551.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Full remote-proctoring coverage</text>
+<rect x="1050" y="250" width="400" height="430" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1250.0" y="396.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Mode C</text>
+<text x="1250.0" y="427.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Mirror-assisted low-resource</text>
+<text x="1250.0" y="458.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">mode</text>
+<text x="1250.0" y="489.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A"></text>
+<text x="1250.0" y="520.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Primary required</text>
+<text x="1250.0" y="551.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Mirror required</text>
+<text x="1250.0" y="582.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Secondary not required</text>
+<text x="1480.0" y="775.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
+</svg>

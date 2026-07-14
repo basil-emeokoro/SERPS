@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1550" height="950" viewBox="0 0 1550 950">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#7FA9B5"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<rect width="1550" height="950" fill="#EEF3F6"/>
+<rect x="50" y="45" width="1450" height="100" rx="26" fill="#073B4C"/>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#DDF7F5">Figure 3.6</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Multimodal Evidence Acquisition</text>
+<text x="75.0" y="150.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Architecture</text>
+<rect x="120" y="210" width="300" height="78" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="270.0" y="256.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Face</text>
+<rect x="465" y="210" width="300" height="78" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="615.0" y="256.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Gaze</text>
+<rect x="810" y="210" width="300" height="78" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="960.0" y="256.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Head Pose</text>
+<rect x="1155" y="210" width="300" height="78" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1305.0" y="256.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Audio</text>
+<rect x="120" y="328" width="300" height="78" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="270.0" y="374.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Browser</text>
+<rect x="465" y="328" width="300" height="78" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="615.0" y="374.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Object Detection</text>
+<rect x="810" y="328" width="300" height="78" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="960.0" y="374.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Room Monitoring</text>
+<rect x="1155" y="328" width="300" height="78" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1305.0" y="374.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">System Health</text>
+<rect x="475" y="560" width="600" height="90" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="775.0" y="613.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Evidence Standardisation</text>
+<rect x="540" y="760" width="470" height="85" rx="18" fill="#FFF4D6" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="775.0" y="811.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Structured EvidenceEvent</text>
+<line x1="270" y1="288" x2="775" y2="560" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="615" y1="288" x2="775" y2="560" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="960" y1="288" x2="775" y2="560" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1305" y1="288" x2="775" y2="560" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="270" y1="406" x2="775" y2="560" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="615" y1="406" x2="775" y2="560" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="960" y1="406" x2="775" y2="560" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1305" y1="406" x2="775" y2="560" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="650" x2="775" y2="760" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1480.0" y="905.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
+</svg>

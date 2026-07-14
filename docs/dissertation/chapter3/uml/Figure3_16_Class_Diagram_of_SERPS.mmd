@@ -1,10 +1,29 @@
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
 classDiagram
-  User <|-- Candidate
-  User <|-- Reviewer
-  User <|-- Administrator
-  Institution --> Examination
-  Examination --> ExaminationSession
+  class Institution {+institution_id +name}
+  class User {+user_id +email +status}
+  class Role {+role_id +name}
+  class UserRole {+user_id +role_id}
+  class Candidate {+candidate_id +institution_reference}
+  class Examination {+examination_id +title}
+  class CandidateExaminationAssignment {+assignment_id +status}
+  class ExaminationSession {+session_id +status +monitoring_mode}
+  class EvidenceEvent {+event_id +event_type +confidence}
+  class ContextualAssessment {+assessment_id +risk_score +risk_level}
+  class Recommendation {+recommendation_id +action}
+  class PolicyRule {+policy_id +condition +action}
+  class Incident {+incident_id +policy_response}
+  class Acknowledgement {+ack_id +candidate_statement}
+  class ReviewerAction {+action_id +decision +rationale}
+  class AuditLog {+audit_id +action +timestamp}
+  Institution "1" --> "many" User
+  User "1" --> "many" UserRole
+  Role "1" --> "many" UserRole
+  Institution "1" --> "many" Candidate
+  Institution "1" --> "many" Examination
+  CandidateExaminationAssignment --> Candidate
+  CandidateExaminationAssignment --> Examination
+  ExaminationSession --> CandidateExaminationAssignment
   ExaminationSession --> EvidenceEvent
   EvidenceEvent --> ContextualAssessment
   ContextualAssessment --> Recommendation

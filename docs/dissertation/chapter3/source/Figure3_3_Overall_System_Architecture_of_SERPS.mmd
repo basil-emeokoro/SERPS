@@ -1,10 +1,13 @@
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
 flowchart TB
-  Users --> Frontend[React / Next.js]
-  Frontend --> API[FastAPI]
-  API --> Evidence[EvidenceEvent Generation]
+  Actors[Actors and Browsers] --> Frontend[Presentation Layer]
+  Frontend --> Communication[REST / SSE / WebRTC]
+  Communication --> API[FastAPI Application Services]
+  API --> Evidence[EvidenceEvent]
   Evidence --> CIE[Contextual Intelligence Engine]
   CIE --> Agentic[Agentic Decision Support]
   Agentic --> IPIME
   IPIME --> Reviewer[Human Reviewer]
+  Reviewer --> Final[Final Institutional Decision]
   API -. shared persistence .-> DB[(PostgreSQL)]
+  Evidence -. artefacts .-> Storage[Evidence Storage]

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1150" viewBox="0 0 1840 1150">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#000000"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#000000">Figure 3.19</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">Entity Relationship Diagram of</text>
+<text x="75.0" y="150.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">SERPS Database</text>
+<rect x="55" y="190" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="255.0" y="282.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">evidence_events</text>
+<text x="255.0" y="313.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">event_id (PK)</text>
+<text x="255.0" y="344.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">event_type</text>
+<text x="255.0" y="375.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">confidence</text>
+<rect x="495" y="190" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="695.0" y="282.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institutions</text>
+<text x="695.0" y="313.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (PK)</text>
+<text x="695.0" y="344.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">name</text>
+<text x="695.0" y="375.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<rect x="935" y="190" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1135.0" y="282.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">roles</text>
+<text x="1135.0" y="313.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">role_id (PK)</text>
+<text x="1135.0" y="344.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">name</text>
+<text x="1135.0" y="375.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<rect x="1375" y="190" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1575.0" y="251.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">candidates</text>
+<text x="1575.0" y="282.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">candidate_id (PK)</text>
+<text x="1575.0" y="313.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (FK)</text>
+<text x="1575.0" y="344.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">email</text>
+<text x="1575.0" y="375.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">status</text>
+<text x="1575.0" y="406.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<rect x="55" y="490" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="255.0" y="535.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">examinations</text>
+<text x="255.0" y="566.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">examination_id (PK)</text>
+<text x="255.0" y="597.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (FK)</text>
+<text x="255.0" y="628.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">title</text>
+<text x="255.0" y="659.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">status</text>
+<text x="255.0" y="690.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">monitoring_mode</text>
+<text x="255.0" y="721.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<rect x="495" y="490" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="695.0" y="551.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">users</text>
+<text x="695.0" y="582.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">user_id (PK)</text>
+<text x="695.0" y="613.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (FK)</text>
+<text x="695.0" y="644.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">email</text>
+<text x="695.0" y="675.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">status</text>
+<text x="695.0" y="706.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<rect x="935" y="490" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1135.0" y="582.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">audit_logs</text>
+<text x="1135.0" y="613.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">audit_id (PK)</text>
+<text x="1135.0" y="644.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (FK)</text>
+<text x="1135.0" y="675.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">actor_user_id (FK)</text>
+<rect x="1375" y="490" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1575.0" y="535.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">authentication_sessions</text>
+<text x="1575.0" y="566.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">authentication_session_id (PK)</text>
+<text x="1575.0" y="597.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (FK)</text>
+<text x="1575.0" y="628.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">user_id (FK)</text>
+<text x="1575.0" y="659.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">candidate_id (FK)</text>
+<text x="1575.0" y="690.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">status</text>
+<text x="1575.0" y="721.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<rect x="55" y="790" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="255.0" y="820.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">candidate_examination</text>
+<text x="255.0" y="851.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">assignments</text>
+<text x="255.0" y="882.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">assignment_id (PK)</text>
+<text x="255.0" y="913.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (FK)</text>
+<text x="255.0" y="944.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">candidate_id (FK)</text>
+<text x="255.0" y="975.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">examination_id (FK)</text>
+<text x="255.0" y="1006.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">status</text>
+<text x="255.0" y="1037.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<rect x="495" y="790" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="695.0" y="866.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">refresh_tokens</text>
+<text x="695.0" y="897.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">refresh_token_id (PK)</text>
+<text x="695.0" y="928.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">user_id (FK)</text>
+<text x="695.0" y="959.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (FK)</text>
+<text x="695.0" y="990.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<rect x="935" y="790" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1135.0" y="882.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">user_roles</text>
+<text x="1135.0" y="913.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">user_role_id (PK)</text>
+<text x="1135.0" y="944.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">user_id (FK)</text>
+<text x="1135.0" y="975.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">role_id (FK)</text>
+<rect x="1375" y="790" width="400" height="260" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1575.0" y="820.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">examination_sessions</text>
+<text x="1575.0" y="851.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">session_id (PK)</text>
+<text x="1575.0" y="882.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">institution_id (FK)</text>
+<text x="1575.0" y="913.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">candidate_id (FK)</text>
+<text x="1575.0" y="944.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">examination_id (FK)</text>
+<text x="1575.0" y="975.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">assignment_id (FK)</text>
+<text x="1575.0" y="1006.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">status</text>
+<text x="1575.0" y="1037.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">created_at</text>
+<text x="1770.0" y="1105.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#000000">SERPS Architecture</text>
+</svg>

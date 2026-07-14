@@ -1,0 +1,14 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart LR
+  Web[Next.js Frontend] --> API[FastAPI API]
+  API --> Auth
+  API --> Camera
+  Camera --> Vision
+  Camera --> Audio
+  Vision --> Evidence
+  Audio --> Evidence
+  Evidence --> CIE
+  CIE --> Agentic
+  Agentic --> IPIME
+  IPIME --> Reporting
+  Evidence -.-> DB[(PostgreSQL)]

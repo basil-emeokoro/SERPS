@@ -1,0 +1,10 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart TB
+  Manager[Camera Manager] --> Permissions
+  Manager --> Discovery
+  Manager --> Modes[Mode Selection]
+  Manager --> Health[Health Monitoring]
+  Manager --> Primary[Primary Camera]
+  Manager --> Secondary[Secondary Camera]
+  Primary --> Evidence[EvidenceEvent]
+  Secondary --> Evidence

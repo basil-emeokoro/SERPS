@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1460" viewBox="0 0 1680 1460">
+<style>text{font-family:Arial, sans-serif;fill:#042A3A}.title{font-weight:bold;font-size:26px}.table{font-weight:bold;font-size:18px}.col{font-size:13px}.box{fill:#FFFFFF;stroke:#0F8B8D;stroke-width:2}.header{fill:#DDF7F5;stroke:#0F8B8D;stroke-width:2}</style>
+<text x="60" y="55" class="title">Figure 3.19A: Full Technical Schema ERD</text>
+<text x="60" y="88" class="col">Generated from SQLAlchemy metadata. This technical artefact preserves all columns for implementation traceability.</text>
+<rect x="60" y="130" width="470" height="285" rx="12" class="box"/>
+<rect x="60" y="130" width="470" height="42" rx="12" class="header"/>
+<text x="78" y="155" class="table">evidence_events</text>
+<text x="78" y="200" class="col">event_id: VARCHAR(32) (PK)</text>
+<text x="78" y="217" class="col">session_id: VARCHAR(64)</text>
+<text x="78" y="234" class="col">candidate_id: VARCHAR(64)</text>
+<text x="78" y="251" class="col">timestamp: DATETIME</text>
+<text x="78" y="268" class="col">source_module: VARCHAR(80)</text>
+<text x="78" y="285" class="col">event_type: VARCHAR(120)</text>
+<text x="78" y="302" class="col">risk_weight: FLOAT</text>
+<text x="78" y="319" class="col">confidence: FLOAT</text>
+<text x="78" y="336" class="col">camera_id: VARCHAR(80)</text>
+<text x="78" y="353" class="col">evidence_path: TEXT</text>
+<text x="78" y="370" class="col">description: TEXT</text>
+<rect x="580" y="130" width="470" height="285" rx="12" class="box"/>
+<rect x="580" y="130" width="470" height="42" rx="12" class="header"/>
+<text x="598" y="155" class="table">institutions</text>
+<text x="598" y="200" class="col">institution_id: VARCHAR(36) (PK)</text>
+<text x="598" y="217" class="col">code: VARCHAR(32)</text>
+<text x="598" y="234" class="col">name: VARCHAR(180)</text>
+<text x="598" y="251" class="col">institution_type: VARCHAR(50)</text>
+<text x="598" y="268" class="col">metadata_json: JSON</text>
+<text x="598" y="285" class="col">is_active: BOOLEAN</text>
+<text x="598" y="302" class="col">created_at: DATETIME</text>
+<text x="598" y="319" class="col">updated_at: DATETIME</text>
+<rect x="1100" y="130" width="470" height="285" rx="12" class="box"/>
+<rect x="1100" y="130" width="470" height="42" rx="12" class="header"/>
+<text x="1118" y="155" class="table">roles</text>
+<text x="1118" y="200" class="col">role_id: VARCHAR(36) (PK)</text>
+<text x="1118" y="217" class="col">name: VARCHAR(80)</text>
+<text x="1118" y="234" class="col">description: TEXT</text>
+<text x="1118" y="251" class="col">created_at: DATETIME</text>
+<rect x="60" y="450" width="470" height="285" rx="12" class="box"/>
+<rect x="60" y="450" width="470" height="42" rx="12" class="header"/>
+<text x="78" y="475" class="table">candidates</text>
+<text x="78" y="520" class="col">candidate_id: VARCHAR(36) (PK)</text>
+<text x="78" y="537" class="col">institution_id: VARCHAR(36) (FK)</text>
+<text x="78" y="554" class="col">candidate_identifier: VARCHAR(80)</text>
+<text x="78" y="571" class="col">identifier_type: VARCHAR(40)</text>
+<text x="78" y="588" class="col">full_name: VARCHAR(180)</text>
+<text x="78" y="605" class="col">email: VARCHAR(254)</text>
+<text x="78" y="622" class="col">status: VARCHAR(50)</text>
+<text x="78" y="639" class="col">matric_number: VARCHAR(80)</text>
+<text x="78" y="656" class="col">registration_number: VARCHAR(120)</text>
+<text x="78" y="673" class="col">centre_number: VARCHAR(20)</text>
+<text x="78" y="690" class="col">candidate_number: VARCHAR(20)</text>
+<text x="78" y="707" class="col">programme: VARCHAR(120)</text>
+<text x="78" y="724" class="col">... 4 more columns</text>
+<rect x="580" y="450" width="470" height="285" rx="12" class="box"/>
+<rect x="580" y="450" width="470" height="42" rx="12" class="header"/>
+<text x="598" y="475" class="table">examinations</text>
+<text x="598" y="520" class="col">examination_id: VARCHAR(36) (PK)</text>
+<text x="598" y="537" class="col">institution_id: VARCHAR(36) (FK)</text>
+<text x="598" y="554" class="col">exam_code: VARCHAR(80)</text>
+<text x="598" y="571" class="col">title: VARCHAR(180)</text>
+<text x="598" y="588" class="col">status: VARCHAR(30)</text>
+<text x="598" y="605" class="col">starts_at: DATETIME</text>
+<text x="598" y="622" class="col">ends_at: DATETIME</text>
+<text x="598" y="639" class="col">duration_minutes: INTEGER</text>
+<text x="598" y="656" class="col">monitoring_mode: VARCHAR(10)</text>
+<text x="598" y="673" class="col">policy_profile: VARCHAR(80)</text>
+<text x="598" y="690" class="col">is_active: BOOLEAN</text>
+<text x="598" y="707" class="col">created_at: DATETIME</text>
+<text x="598" y="724" class="col">updated_at: DATETIME</text>
+<rect x="1100" y="450" width="470" height="285" rx="12" class="box"/>
+<rect x="1100" y="450" width="470" height="42" rx="12" class="header"/>
+<text x="1118" y="475" class="table">users</text>
+<text x="1118" y="520" class="col">user_id: VARCHAR(36) (PK)</text>
+<text x="1118" y="537" class="col">institution_id: VARCHAR(36) (FK)</text>
+<text x="1118" y="554" class="col">email: VARCHAR(254)</text>
+<text x="1118" y="571" class="col">full_name: VARCHAR(180)</text>
+<text x="1118" y="588" class="col">password_hash: TEXT</text>
+<text x="1118" y="605" class="col">status: VARCHAR(30)</text>
+<text x="1118" y="622" class="col">failed_login_count: INTEGER</text>
+<text x="1118" y="639" class="col">last_login_at: DATETIME</text>
+<text x="1118" y="656" class="col">created_at: DATETIME</text>
+<text x="1118" y="673" class="col">updated_at: DATETIME</text>
+<rect x="60" y="770" width="470" height="285" rx="12" class="box"/>
+<rect x="60" y="770" width="470" height="42" rx="12" class="header"/>
+<text x="78" y="795" class="table">audit_logs</text>
+<text x="78" y="840" class="col">audit_id: VARCHAR(36) (PK)</text>
+<text x="78" y="857" class="col">institution_id: VARCHAR(36) (FK)</text>
+<text x="78" y="874" class="col">actor_user_id: VARCHAR(36) (FK)</text>
+<text x="78" y="891" class="col">action: VARCHAR(120)</text>
+<text x="78" y="908" class="col">target_type: VARCHAR(80)</text>
+<text x="78" y="925" class="col">target_id: VARCHAR(80)</text>
+<text x="78" y="942" class="col">result: VARCHAR(30)</text>
+<text x="78" y="959" class="col">metadata_json: JSON</text>
+<text x="78" y="976" class="col">timestamp: DATETIME</text>
+<rect x="580" y="770" width="470" height="285" rx="12" class="box"/>
+<rect x="580" y="770" width="470" height="42" rx="12" class="header"/>
+<text x="598" y="795" class="table">authentication_sessions</text>
+<text x="598" y="840" class="col">authentication_session_id: VARCHAR(36) (PK)</text>
+<text x="598" y="857" class="col">institution_id: VARCHAR(36) (FK)</text>
+<text x="598" y="874" class="col">user_id: VARCHAR(36) (FK)</text>
+<text x="598" y="891" class="col">candidate_id: VARCHAR(36) (FK)</text>
+<text x="598" y="908" class="col">status: VARCHAR(40)</text>
+<text x="598" y="925" class="col">created_at: DATETIME</text>
+<text x="598" y="942" class="col">expires_at: DATETIME</text>
+<text x="598" y="959" class="col">revoked_at: DATETIME</text>
+<rect x="1100" y="770" width="470" height="285" rx="12" class="box"/>
+<rect x="1100" y="770" width="470" height="42" rx="12" class="header"/>
+<text x="1118" y="795" class="table">candidate_examination</text>
+<text x="1118" y="813" class="table">assignments</text>
+<text x="1118" y="840" class="col">assignment_id: VARCHAR(36) (PK)</text>
+<text x="1118" y="857" class="col">institution_id: VARCHAR(36) (FK)</text>
+<text x="1118" y="874" class="col">candidate_id: VARCHAR(36) (FK)</text>
+<text x="1118" y="891" class="col">examination_id: VARCHAR(36) (FK)</text>
+<text x="1118" y="908" class="col">status: VARCHAR(40)</text>
+<text x="1118" y="925" class="col">created_at: DATETIME</text>
+<rect x="60" y="1090" width="470" height="285" rx="12" class="box"/>
+<rect x="60" y="1090" width="470" height="42" rx="12" class="header"/>
+<text x="78" y="1115" class="table">refresh_tokens</text>
+<text x="78" y="1160" class="col">refresh_token_id: VARCHAR(36) (PK)</text>
+<text x="78" y="1177" class="col">user_id: VARCHAR(36) (FK)</text>
+<text x="78" y="1194" class="col">institution_id: VARCHAR(36) (FK)</text>
+<text x="78" y="1211" class="col">token_hash: VARCHAR(128)</text>
+<text x="78" y="1228" class="col">replaced_by_token_hash: VARCHAR(128)</text>
+<text x="78" y="1245" class="col">created_at: DATETIME</text>
+<text x="78" y="1262" class="col">expires_at: DATETIME</text>
+<text x="78" y="1279" class="col">revoked_at: DATETIME</text>
+<rect x="580" y="1090" width="470" height="285" rx="12" class="box"/>
+<rect x="580" y="1090" width="470" height="42" rx="12" class="header"/>
+<text x="598" y="1115" class="table">user_roles</text>
+<text x="598" y="1160" class="col">user_role_id: VARCHAR(36) (PK)</text>
+<text x="598" y="1177" class="col">user_id: VARCHAR(36) (FK)</text>
+<text x="598" y="1194" class="col">role_id: VARCHAR(36) (FK)</text>
+<text x="598" y="1211" class="col">assigned_at: DATETIME</text>
+<rect x="1100" y="1090" width="470" height="285" rx="12" class="box"/>
+<rect x="1100" y="1090" width="470" height="42" rx="12" class="header"/>
+<text x="1118" y="1115" class="table">examination_sessions</text>
+<text x="1118" y="1160" class="col">session_id: VARCHAR(36) (PK)</text>
+<text x="1118" y="1177" class="col">institution_id: VARCHAR(36) (FK)</text>
+<text x="1118" y="1194" class="col">candidate_id: VARCHAR(36) (FK)</text>
+<text x="1118" y="1211" class="col">examination_id: VARCHAR(36) (FK)</text>
+<text x="1118" y="1228" class="col">assignment_id: VARCHAR(36) (FK)</text>
+<text x="1118" y="1245" class="col">status: VARCHAR(40)</text>
+<text x="1118" y="1262" class="col">deployment_mode: VARCHAR(10)</text>
+<text x="1118" y="1279" class="col">authentication_gate_status: VARCHAR(40)</text>
+<text x="1118" y="1296" class="col">device_check_status: VARCHAR(40)</text>
+<text x="1118" y="1313" class="col">monitoring_status: VARCHAR(40)</text>
+<text x="1118" y="1330" class="col">started_at: DATETIME</text>
+<text x="1118" y="1347" class="col">ended_at: DATETIME</text>
+<text x="1118" y="1364" class="col">... 2 more columns</text>
+</svg>

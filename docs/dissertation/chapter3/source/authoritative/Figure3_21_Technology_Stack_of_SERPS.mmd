@@ -1,0 +1,29 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart TD
+  N0["Presentation
+Next.js / React / TypeScript
+Implemented foundation"]
+  N1["API / Application
+FastAPI, Pydantic
+Implemented foundation"]
+  N0 --> N1
+  N2["Real-time Communication
+WebSocket / SSE / WebRTC
+Planned interfaces"]
+  N1 --> N2
+  N3["AI / ML
+OpenCV, MediaPipe, YOLO
+Planned POP migration"]
+  N2 --> N3
+  N4["Intelligence / Governance
+CIE, Agentic, IPIME
+POC implemented; POP migration pending"]
+  N3 --> N4
+  N5["Persistence
+SQLAlchemy, Alembic, PostgreSQL
+Configured and migration-verified"]
+  N4 --> N5
+  N6["Infrastructure / DevOps
+Docker Compose, GitHub Actions
+Implemented foundation"]
+  N5 --> N6

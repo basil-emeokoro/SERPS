@@ -1,0 +1,10 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart LR
+  EvidenceEvent --> Fusion[Event Fusion Module]
+  Fusion --> Memory[Temporal Behaviour Memory]
+  Memory --> Reasoning[Contextual Reasoning Module]
+  Reasoning --> Risk[Risk Scoring Engine]
+  Reasoning --> Explain[Explainability Interface]
+  Risk <--> Explain
+  Explain --> Assessment[Contextual Assessment]
+  Risk --> Assessment

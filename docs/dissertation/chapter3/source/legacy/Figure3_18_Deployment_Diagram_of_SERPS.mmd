@@ -1,0 +1,10 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart TB
+  CandidateBrowser --> Web[Next.js Web Application]
+  ReviewerBrowser --> Web
+  AdminBrowser --> Web
+  Web --> API[FastAPI API Container]
+  CandidateBrowser -. WebRTC .-> AI[AI / Monitoring Services]
+  API --> DB[(PostgreSQL Container)]
+  API --> Storage[Evidence Storage]
+  API <--> AI

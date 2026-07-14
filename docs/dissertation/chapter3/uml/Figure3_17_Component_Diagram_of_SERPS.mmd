@@ -1,14 +1,19 @@
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
-flowchart LR
+flowchart TB
   Web[Next.js Frontend] --> API[FastAPI API]
-  API --> Auth
+  API --> Auth[Authentication]
+  API --> Candidate
+  API --> Examination
+  API --> Session
   API --> Camera
   Camera --> Vision
   Camera --> Audio
-  Vision --> Evidence
+  Vision --> Evidence[Evidence Services]
   Audio --> Evidence
   Evidence --> CIE
-  CIE --> Agentic
+  CIE --> Agentic[Agentic Decision Support]
   Agentic --> IPIME
   IPIME --> Reporting
-  Evidence -.-> DB[(PostgreSQL)]
+  IPIME --> Audit
+  Evidence --> PostgreSQL
+  Evidence --> Storage[Evidence Storage]

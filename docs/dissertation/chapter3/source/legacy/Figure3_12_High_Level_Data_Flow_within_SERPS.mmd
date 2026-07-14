@@ -1,0 +1,7 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+flowchart LR
+  Sources --> Detection --> EvidenceEvent
+  EvidenceEvent --> CIE
+  EvidenceEvent -. persists .-> DB[(PostgreSQL)]
+  DB -. read .-> Reports
+  Reports --> Reviewer

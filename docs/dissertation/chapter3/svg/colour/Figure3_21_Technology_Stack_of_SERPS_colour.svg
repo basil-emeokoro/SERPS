@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1050" viewBox="0 0 1500 1050">
+<defs>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#7FA9B5"/></marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
+</defs>
+<rect width="1500" height="1050" fill="#EEF3F6"/>
+<rect x="50" y="45" width="1400" height="100" rx="26" fill="#073B4C"/>
+<text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#DDF7F5">Figure 3.21</text>
+<text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Technology Stack of SERPS</text>
+<rect x="440" y="185" width="620" height="95" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="750.0" y="210.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Presentation</text>
+<text x="750.0" y="241.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Next.js / React / TypeScript</text>
+<text x="750.0" y="272.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Implemented foundation</text>
+<rect x="440" y="305" width="620" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="750.0" y="331.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">API / Application</text>
+<text x="750.0" y="359.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">FastAPI, Pydantic</text>
+<text x="750.0" y="387.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Implemented foundation</text>
+<line x1="750.0" y1="283" x2="750.0" y2="301" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="440" y="425" width="620" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="750.0" y="451.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Real-time Communication</text>
+<text x="750.0" y="479.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">WebSocket / SSE / WebRTC</text>
+<text x="750.0" y="507.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Planned interfaces</text>
+<line x1="750.0" y1="403" x2="750.0" y2="421" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="440" y="545" width="620" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="750.0" y="571.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">AI / ML</text>
+<text x="750.0" y="599.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">OpenCV, MediaPipe, YOLO</text>
+<text x="750.0" y="627.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Planned POP migration</text>
+<line x1="750.0" y1="523" x2="750.0" y2="541" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="440" y="665" width="620" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="750.0" y="691.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Intelligence / Governance</text>
+<text x="750.0" y="719.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">CIE, Agentic, IPIME</text>
+<text x="750.0" y="747.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">POC implemented; POP migration</text>
+<text x="750.0" y="775.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">pending</text>
+<line x1="750.0" y1="643" x2="750.0" y2="661" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="440" y="785" width="620" height="95" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="750.0" y="811.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Persistence</text>
+<text x="750.0" y="839.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">SQLAlchemy, Alembic, PostgreSQL</text>
+<text x="750.0" y="867.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Configured and migration-</text>
+<text x="750.0" y="895.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">verified</text>
+<line x1="750.0" y1="763" x2="750.0" y2="781" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="440" y="905" width="620" height="95" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="750.0" y="931.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Infrastructure / DevOps</text>
+<text x="750.0" y="959.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Docker Compose, GitHub Actions</text>
+<text x="750.0" y="987.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Implemented foundation</text>
+<line x1="750.0" y1="883" x2="750.0" y2="901" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1430.0" y="1005.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
+</svg>
