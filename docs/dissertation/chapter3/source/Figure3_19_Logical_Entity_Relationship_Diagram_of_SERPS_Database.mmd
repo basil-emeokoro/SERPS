@@ -1,0 +1,16 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
+erDiagram
+  INSTITUTION ||--o{ CANDIDATE : owns
+  INSTITUTION ||--o{ EXAMINATION : offers
+  INSTITUTION ||--o{ STAFF_USER : employs
+  INSTITUTION ||--o{ ROLE : defines
+  STAFF_USER ||--o{ USER_ROLE : assigned
+  ROLE ||--o{ USER_ROLE : grants
+  CANDIDATE ||--o{ CANDIDATE_EXAM_ASSIGNMENT : assigned
+  EXAMINATION ||--o{ CANDIDATE_EXAM_ASSIGNMENT : includes
+  CANDIDATE_EXAM_ASSIGNMENT ||--o{ EXAMINATION_SESSION : creates
+  EXAMINATION_SESSION ||--o{ EVIDENCE_EVENT : records
+  EVIDENCE_EVENT ||--o{ CONTEXTUAL_ALERT : contextualises
+  CONTEXTUAL_ALERT ||--o{ INCIDENT : triggers
+  INCIDENT ||--o{ AUDIT_LOG : records
+  STAFF_USER ||--o{ AUDIT_LOG : performs

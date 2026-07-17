@@ -54,7 +54,7 @@ Source: Author's Architecture (2026).
 **Figure 3.18: Deployment Diagram of SERPS.**
 Source: Author's Architecture (2026).
 
-**Figure 3.19: Entity Relationship Diagram of SERPS Database.**
+**Figure 3.19: Logical Entity Relationship Diagram of SERPS Database.**
 Source: Author's Architecture (2026).
 
 **Figure 3.20: API Interaction Diagram of SERPS.**

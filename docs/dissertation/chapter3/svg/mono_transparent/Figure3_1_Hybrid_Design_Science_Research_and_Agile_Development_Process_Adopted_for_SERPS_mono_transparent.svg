@@ -21,36 +21,30 @@
 <rect x="115" y="634" width="430" height="78" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
 <text x="330.0" y="680.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Prototype Design</text>
 <line x1="330.0" y1="609" x2="330.0" y2="630" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<rect x="880" y="230" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1015.0" y="280.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Sprint Planning</text>
-<rect x="1220" y="230" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1355.0" y="280.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Implementation</text>
-<rect x="1220" y="485" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1355.0" y="535.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Testing</text>
-<rect x="880" y="485" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1015.0" y="535.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Sprint Review</text>
-<rect x="710" y="358" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="845.0" y="408.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Refinement</text>
-<line x1="1015" y1="273" x2="1220" y2="273" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1220" y1="273" x2="1355" y2="316" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1355" y1="316" x2="1355" y2="485" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1355" y1="485" x2="1220" y2="528" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1220" y1="528" x2="1015" y2="528" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1015" y1="528" x2="880" y2="528" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="880" y1="528" x2="845" y2="444" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="845" y1="444" x2="845" y2="401" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="845" y1="401" x2="880" y2="316" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="880" y1="316" x2="1015" y2="273" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="545" y1="634" x2="710" y2="401" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="627.5" y="503.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#000000">prototype to sprint</text>
-<line x1="845" y1="444" x2="880" y2="273" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="862.5" y="344.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#000000">return</text>
+<rect x="820" y="225" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="955.0" y="275.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Sprint Planning</text>
+<rect x="1180" y="225" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1315.0" y="275.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Implementation</text>
+<rect x="1180" y="455" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1315.0" y="505.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Testing</text>
+<rect x="820" y="455" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="955.0" y="505.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Sprint Review</text>
+<rect x="640" y="340" width="270" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="775.0" y="390.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Refinement</text>
+<line x1="545" y1="634" x2="820" y2="268" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="682.5" y="437.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#000000">prototype to sprint</text>
+<line x1="1090" y1="268" x2="1180" y2="268" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1315" y1="311" x2="1315" y2="455" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="1180" y1="498" x2="1090" y2="498" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="820" y1="498" x2="910" y2="383" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="775" y1="340" x2="820" y2="268" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
 <rect x="760" y="760" width="620" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
 <text x="1070.0" y="811.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">Final Evaluation</text>
 <rect x="760" y="900" width="620" height="86" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
 <text x="1070.0" y="951.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">Documentation and Dissertation</text>
 <text x="1070.0" y="982.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#000000">Evidence</text>
-<line x1="1035" y1="571" x2="1035" y2="760" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<line x1="955" y1="541" x2="955" y2="760" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="955.0" y="636.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#000000">completed agile cycle</text>
 <line x1="1070" y1="846" x2="1070" y2="900" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
 <text x="220.0" y="980.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#000000">DSR establishes the research</text>
 <text x="220.0" y="1009.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#000000">artefact; Agile controls</text>

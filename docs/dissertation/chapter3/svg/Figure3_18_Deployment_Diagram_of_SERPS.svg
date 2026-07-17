@@ -1,54 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1450" height="860" viewBox="0 0 1450 860">
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="1010" viewBox="0 0 1760 1010">
 <defs>
 <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#7FA9B5"/></marker>
 <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
 </defs>
-<rect width="1450" height="860" fill="#EEF3F6"/>
-<rect x="50" y="45" width="1350" height="100" rx="26" fill="#073B4C"/>
+<rect width="1760" height="1010" fill="#EEF3F6"/>
+<rect x="50" y="45" width="1660" height="100" rx="26" fill="#073B4C"/>
 <text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#DDF7F5">Figure 3.18</text>
 <text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Deployment Diagram of SERPS</text>
-<rect x="470" y="185" width="910" height="610" rx="18" fill="#F8FBFC" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7" filter="url(#shadow)"/>
-<text x="925.0" y="497.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Docker Network / Optional Edge</text>
-<text x="925.0" y="525.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">or Cloud Boundary</text>
-<rect x="90" y="210" width="300" height="90" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="240.0" y="248.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Candidate Device</text>
-<text x="240.0" y="279.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Browser + camera/mic</text>
-<rect x="90" y="360" width="300" height="90" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="240.0" y="398.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Reviewer Device</text>
-<text x="240.0" y="429.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Browser console</text>
-<rect x="90" y="510" width="300" height="90" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="240.0" y="548.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Administrator Device</text>
-<text x="240.0" y="579.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Browser dashboard</text>
-<rect x="520" y="250" width="340" height="110" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="690.0" y="298.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Web Application Container</text>
-<text x="690.0" y="329.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Next.js</text>
-<rect x="980" y="250" width="340" height="110" rx="18" fill="#FFF4D6" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="1150.0" y="298.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">API Container</text>
-<text x="1150.0" y="329.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">FastAPI</text>
-<rect x="980" y="430" width="340" height="110" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="1150.0" y="462.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">AI / Monitoring Services</text>
-<text x="1150.0" y="493.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">OpenCV, MediaPipe, YOLO adapters</text>
-<rect x="520" y="640" width="340" height="100" rx="18" fill="#EEF3F6" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="690.0" y="683.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">PostgreSQL Container</text>
-<text x="690.0" y="714.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">SQL persistence</text>
-<rect x="980" y="640" width="340" height="100" rx="18" fill="#EEF3F6" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="1150.0" y="683.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Evidence Storage</text>
-<text x="1150.0" y="714.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">snapshots and artefacts</text>
-<line x1="390" y1="255" x2="520" y2="305" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="455.0" y="266.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
-<line x1="390" y1="405" x2="520" y2="305" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="455.0" y="341.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
-<line x1="390" y1="555" x2="520" y2="305" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="455.0" y="416.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
-<line x1="860" y1="305" x2="980" y2="305" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="920.0" y="291.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">REST</text>
-<line x1="390" y1="255" x2="980" y2="485" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<text x="685.0" y="356.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">WebRTC</text>
-<line x1="1150" y1="360" x2="1150" y2="430" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="1150.0" y="381.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">SSE/WebSocket</text>
-<line x1="1100" y1="360" x2="690" y2="640" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="895.0" y="486.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">SQL</text>
-<line x1="1150" y1="540" x2="1150" y2="640" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="1150.0" y="576.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">evidence</text>
-<text x="1380.0" y="815.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
+<rect x="560" y="150" width="1120" height="760" rx="18" fill="#F8FBFC" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7" filter="url(#shadow)"/>
+<text x="1120.0" y="537.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">SERPS Containerised Deployment</text>
+<text x="1120.0" y="565.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Environment</text>
+<rect x="85" y="250" width="370" height="130" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="270.0" y="292.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">&lt;&lt;device&gt;&gt;</text>
+<text x="270.0" y="323.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Candidate Device</text>
+<text x="270.0" y="354.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Browser + Camera / Mic</text>
+<rect x="85" y="485" width="370" height="120" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="270.0" y="522.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">&lt;&lt;device&gt;&gt;</text>
+<text x="270.0" y="553.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Reviewer Device</text>
+<text x="270.0" y="584.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Browser Console</text>
+<rect x="85" y="700" width="370" height="120" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="270.0" y="737.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">&lt;&lt;device&gt;&gt;</text>
+<text x="270.0" y="768.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Administrator Device</text>
+<text x="270.0" y="799.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Dashboard</text>
+<rect x="640" y="265" width="365" height="125" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="822.5" y="305.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">&lt;&lt;container&gt;&gt;</text>
+<text x="822.5" y="336.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Next.js Web App</text>
+<text x="822.5" y="367.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Candidate / Reviewer UI</text>
+<rect x="1210" y="265" width="365" height="125" rx="18" fill="#FFF4D6" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1392.5" y="305.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">&lt;&lt;container&gt;&gt;</text>
+<text x="1392.5" y="336.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">FastAPI API</text>
+<text x="1392.5" y="367.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Service Boundary</text>
+<rect x="1210" y="520" width="365" height="145" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1392.5" y="570.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">&lt;&lt;service&gt;&gt;</text>
+<text x="1392.5" y="601.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">AI Monitoring Services</text>
+<text x="1392.5" y="632.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">OpenCV / MediaPipe / YOLO</text>
+<rect x="640" y="720" width="365" height="120" rx="18" fill="#EEF3F6" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="822.5" y="757.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">&lt;&lt;database&gt;&gt;</text>
+<text x="822.5" y="788.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">PostgreSQL</text>
+<text x="822.5" y="819.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Relational Persistence</text>
+<rect x="1210" y="720" width="365" height="120" rx="18" fill="#EEF3F6" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1392.5" y="757.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">&lt;&lt;storage&gt;&gt;</text>
+<text x="1392.5" y="788.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Evidence Storage</text>
+<text x="1392.5" y="819.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700" fill="#042A3A">Snapshots</text>
+<rect x="690" y="930" width="480" height="58" rx="18" fill="#FFFFFF" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7" filter="url(#shadow)"/>
+<text x="930.0" y="952.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Optional edge/cloud execution</text>
+<text x="930.0" y="980.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">boundary for production</text>
+<text x="930.0" y="1008.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">hardening</text>
+<line x1="455" y1="315" x2="640" y2="315" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="547.5" y="301.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
+<line x1="455" y1="545" x2="640" y2="335" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="547.5" y="426.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
+<line x1="455" y1="760" x2="640" y2="355" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="547.5" y="543.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">HTTPS</text>
+<line x1="1005" y1="327" x2="1210" y2="327" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1107.5" y="313.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">REST</text>
+<line x1="825" y1="390" x2="1210" y2="575" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
+<text x="1017.5" y="468.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">WebRTC media</text>
+<line x1="1392" y1="390" x2="1392" y2="520" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1392.0" y="441.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">WebSocket / SSE</text>
+<line x1="1392" y1="390" x2="825" y2="720" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1108.5" y="541.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">SQL</text>
+<line x1="1320" y1="665" x2="900" y2="720" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
+<text x="1110.0" y="678.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">event metadata</text>
+<line x1="1392" y1="665" x2="1392" y2="720" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1392.0" y="678.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">snapshots</text>
+<text x="1690.0" y="965.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
 </svg>

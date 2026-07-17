@@ -1,19 +1,21 @@
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
 flowchart TB
-  Web[Next.js Frontend] --> API[FastAPI API]
+  Web[Next.js Frontend] --> API[FastAPI API Boundary]
   API --> Auth[Authentication]
-  API --> Candidate
-  API --> Examination
-  API --> Session
-  API --> Camera
-  Camera --> Vision
-  Camera --> Audio
-  Vision --> Evidence[Evidence Services]
+  API --> Candidate[Candidate]
+  API --> Exam[Examination]
+  API --> Session[Session]
+  API --> Camera[Camera]
+  Camera --> Vision[Vision Detection]
+  Camera --> Audio[Audio Detection]
+  Camera --> Identity[Identity Signals]
+  Vision --> Evidence[Evidence Service]
   Audio --> Evidence
-  Evidence --> CIE
+  Identity --> Evidence
+  Evidence --> CIE[Contextual Intelligence Engine]
   CIE --> Agentic[Agentic Decision Support]
-  Agentic --> IPIME
+  Agentic --> IPIME[IPIME]
   IPIME --> Reporting
   IPIME --> Audit
-  Evidence --> PostgreSQL
-  Evidence --> Storage[Evidence Storage]
+  Evidence -.-> PostgreSQL
+  Evidence -.-> Storage[Evidence Storage]

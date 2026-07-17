@@ -1,91 +1,130 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120">
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1530" viewBox="0 0 2200 1530">
 <defs>
 <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#000000"/></marker>
 <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
 </defs>
 <text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#000000">Figure 3.13</text>
 <text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">Use Case Diagram of SERPS</text>
-<circle cx="120" cy="228" r="18" fill="none" stroke="#000000" stroke-width="4"/>
-<path d="M120,246 L120,305 M78,270 L162,270 M120,305 L82,355 M120,305 L158,355" stroke="#000000" stroke-width="4" fill="none"/>
-<text x="120.0" y="380.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Candidate</text>
-<circle cx="120" cy="683" r="18" fill="none" stroke="#000000" stroke-width="4"/>
-<path d="M120,701 L120,760 M78,725 L162,725 M120,760 L82,810 M120,760 L158,810" stroke="#000000" stroke-width="4" fill="none"/>
-<text x="120.0" y="835.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Administrator</text>
-<circle cx="1430" cy="228" r="18" fill="none" stroke="#000000" stroke-width="4"/>
-<path d="M1430,246 L1430,305 M1388,270 L1472,270 M1430,305 L1392,355 M1430,305 L1468,355" stroke="#000000" stroke-width="4" fill="none"/>
-<text x="1430.0" y="380.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Reviewer/</text>
-<text x="1430.0" y="407.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Proctor</text>
-<circle cx="1430" cy="683" r="18" fill="none" stroke="#000000" stroke-width="4"/>
-<path d="M1430,701 L1430,760 M1388,725 L1472,725 M1430,760 L1392,810 M1430,760 L1468,810" stroke="#000000" stroke-width="4" fill="none"/>
-<text x="1430.0" y="835.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">System</text>
-<text x="1430.0" y="862.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Administrator</text>
-<rect x="310" y="175" width="930" height="860" rx="18" fill="none" stroke="#000000" stroke-width="3" stroke-dasharray="8 7"/>
-<text x="775.0" y="612.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">SERPS System Boundary</text>
-<ellipse cx="517.5" cy="284.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="517.5" y="284.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Register</text>
-<ellipse cx="747.5" cy="284.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="747.5" y="284.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Give Consent</text>
-<ellipse cx="977.5" cy="284.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="977.5" y="284.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Enrol Biometrics</text>
-<ellipse cx="1207.5" cy="284.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1207.5" y="284.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Authenticate</text>
-<ellipse cx="627.5" cy="424.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="627.5" y="424.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Perform Device Check</text>
-<ellipse cx="917.5" cy="424.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="917.5" y="424.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Take Examination</text>
-<ellipse cx="1182.5" cy="424.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1182.5" y="424.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Receive Warning</text>
-<ellipse cx="887.5" cy="559.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="887.5" y="559.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Submit Acknowledgement</text>
-<ellipse cx="967.5" cy="674.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="967.5" y="674.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Monitor Assigned Sessions</text>
-<ellipse cx="1207.5" cy="674.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1207.5" y="674.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">View Evidence</text>
-<ellipse cx="967.5" cy="794.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="967.5" y="794.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Review Incident</text>
-<ellipse cx="1207.5" cy="794.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1207.5" y="794.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Record Decision</text>
-<ellipse cx="1087.5" cy="914.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1087.5" y="914.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Request Re-authentication</text>
-<ellipse cx="517.5" cy="729.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="517.5" y="729.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Manage Candidates</text>
-<ellipse cx="717.5" cy="849.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="717.5" y="849.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Manage Examinations</text>
-<ellipse cx="517.5" cy="969.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="517.5" y="969.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Assign Candidates</text>
-<ellipse cx="717.5" cy="609.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="717.5" y="609.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Configure Policies</text>
-<ellipse cx="717.5" cy="729.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="717.5" y="729.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Generate Reports</text>
-<ellipse cx="1087.5" cy="1029.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1087.5" y="1029.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Manage Institutions</text>
-<ellipse cx="887.5" cy="1029.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="887.5" y="1029.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Manage Users and Roles</text>
-<ellipse cx="1207.5" cy="559.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1207.5" y="559.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Inspect Audit Logs</text>
-<ellipse cx="1207.5" cy="969.0" rx="97.5" ry="34.0" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1207.5" y="969.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Monitor System Health</text>
-<line x1="225" y1="300" x2="420" y2="284" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="300" x2="650" y2="284" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="300" x2="880" y2="284" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="300" x2="1110" y2="284" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="300" x2="530" y2="424" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="300" x2="820" y2="424" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="300" x2="1085" y2="424" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="300" x2="790" y2="559" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="755" x2="420" y2="729" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="755" x2="620" y2="849" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="755" x2="420" y2="969" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="755" x2="620" y2="609" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="225" y1="755" x2="620" y2="729" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="300" x2="1065" y2="674" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="300" x2="1305" y2="674" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="300" x2="1065" y2="794" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="300" x2="1305" y2="794" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="300" x2="1185" y2="914" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="755" x2="1185" y2="1029" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="755" x2="985" y2="1029" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="755" x2="1305" y2="559" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<line x1="1430" y1="755" x2="1305" y2="969" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="1530.0" y="1075.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#000000">SERPS Architecture</text>
+<rect x="330" y="180" width="1570" height="1220" rx="18" fill="none" stroke="#000000" stroke-width="3" stroke-dasharray="8 7"/>
+<text x="1115.0" y="797.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000"></text>
+<circle cx="150" cy="618" r="18" fill="none" stroke="#000000" stroke-width="4"/>
+<path d="M150,636 L150,695 M108,660 L192,660 M150,695 L112,745 M150,695 L188,745" stroke="#000000" stroke-width="4" fill="none"/>
+<text x="150.0" y="770.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Candidate</text>
+<circle cx="150" cy="1128" r="18" fill="none" stroke="#000000" stroke-width="4"/>
+<path d="M150,1146 L150,1205 M108,1170 L192,1170 M150,1205 L112,1255 M150,1205 L188,1255" stroke="#000000" stroke-width="4" fill="none"/>
+<text x="150.0" y="1280.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Administrator</text>
+<circle cx="2070" cy="583" r="18" fill="none" stroke="#000000" stroke-width="4"/>
+<path d="M2070,601 L2070,660 M2028,625 L2112,625 M2070,660 L2032,710 M2070,660 L2108,710" stroke="#000000" stroke-width="4" fill="none"/>
+<text x="2070.0" y="735.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Reviewer/Proctor</text>
+<circle cx="2070" cy="1148" r="18" fill="none" stroke="#000000" stroke-width="4"/>
+<path d="M2070,1166 L2070,1225 M2028,1190 L2112,1190 M2070,1225 L2032,1275 M2070,1225 L2108,1275" stroke="#000000" stroke-width="4" fill="none"/>
+<text x="2070.0" y="1300.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">System</text>
+<text x="2070.0" y="1327.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Administrator</text>
+<rect x="430" y="245" width="350" height="805" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="605.0" y="654.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000"></text>
+<rect x="790" y="780" width="350" height="520" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="965.0" y="1047.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000"></text>
+<rect x="1220" y="245" width="360" height="555" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1400.0" y="529.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000"></text>
+<rect x="1220" y="910" width="360" height="395" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1400.0" y="1114.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000"></text>
+<text x="475.0" y="270.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="500" fill="#000000">Candidate and Examination</text>
+<text x="875.0" y="805.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="500" fill="#000000">Administration</text>
+<text x="1260.0" y="270.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="500" fill="#000000">Review and Incident</text>
+<text x="1265.0" y="935.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="500" fill="#000000">System Administration</text>
+<ellipse cx="610.0" cy="391.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="610.0" y="391.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Register</text>
+<ellipse cx="610.0" cy="481.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="610.0" y="481.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Give</text>
+<text x="610.0" y="508.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Consent</text>
+<ellipse cx="610.0" cy="571.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="610.0" y="571.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Enrol</text>
+<text x="610.0" y="598.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Biometrics</text>
+<ellipse cx="610.0" cy="661.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="610.0" y="661.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Authenticate</text>
+<ellipse cx="610.0" cy="751.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="610.0" y="751.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Perform</text>
+<text x="610.0" y="778.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Device Check</text>
+<ellipse cx="610.0" cy="841.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="610.0" y="841.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Take</text>
+<text x="610.0" y="868.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Examination</text>
+<ellipse cx="610.0" cy="931.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="610.0" y="931.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Receive</text>
+<text x="610.0" y="958.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Warning</text>
+<ellipse cx="610.0" cy="1021.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="610.0" y="1021.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Submit</text>
+<text x="610.0" y="1048.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Acknowledgement</text>
+<ellipse cx="970.0" cy="916.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="970.0" y="916.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Manage</text>
+<text x="970.0" y="943.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Candidates</text>
+<ellipse cx="970.0" cy="1006.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="970.0" y="1006.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Assign</text>
+<text x="970.0" y="1033.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Candidates</text>
+<ellipse cx="970.0" cy="1096.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="970.0" y="1096.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Manage</text>
+<text x="970.0" y="1123.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Exams</text>
+<ellipse cx="970.0" cy="1186.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="970.0" y="1186.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Configure</text>
+<text x="970.0" y="1213.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Policies</text>
+<ellipse cx="970.0" cy="1276.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="970.0" y="1276.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Generate</text>
+<text x="970.0" y="1303.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Reports</text>
+<ellipse cx="1405.0" cy="391.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="391.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Monitor</text>
+<text x="1405.0" y="418.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Assigned</text>
+<text x="1405.0" y="445.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Sessions</text>
+<ellipse cx="1405.0" cy="496.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="496.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">View</text>
+<text x="1405.0" y="523.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Evidence</text>
+<ellipse cx="1405.0" cy="601.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="601.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Review</text>
+<text x="1405.0" y="628.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Incident</text>
+<ellipse cx="1405.0" cy="706.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="706.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Record</text>
+<text x="1405.0" y="733.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Reviewer</text>
+<text x="1405.0" y="760.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Decision</text>
+<ellipse cx="1405.0" cy="786.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="786.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Request</text>
+<text x="1405.0" y="813.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Re-authentication</text>
+<ellipse cx="1405.0" cy="1036.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="1036.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Manage Users</text>
+<text x="1405.0" y="1063.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">and Roles</text>
+<ellipse cx="1405.0" cy="1126.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="1126.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Manage</text>
+<text x="1405.0" y="1153.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Institutions</text>
+<ellipse cx="1405.0" cy="1216.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="1216.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Monitor</text>
+<text x="1405.0" y="1243.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">System Health</text>
+<ellipse cx="1405.0" cy="1306.0" rx="110.0" ry="41.0" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1405.0" y="1306.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Inspect</text>
+<text x="1405.0" y="1333.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#000000">Audit Logs</text>
+<line x1="260" y1="600" x2="500" y2="391" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="600" x2="500" y2="481" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="600" x2="500" y2="571" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="600" x2="500" y2="661" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="600" x2="500" y2="751" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="600" x2="500" y2="841" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="600" x2="500" y2="931" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="600" x2="500" y2="1021" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="1110" x2="860" y2="916" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="1110" x2="860" y2="1006" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="1110" x2="860" y2="1096" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="1110" x2="860" y2="1186" stroke="#000000" stroke-width="2"/>
+<line x1="260" y1="1110" x2="860" y2="1276" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="565" x2="1515" y2="391" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="565" x2="1515" y2="496" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="565" x2="1515" y2="601" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="565" x2="1515" y2="706" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="565" x2="1515" y2="786" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="1130" x2="1515" y2="1036" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="1130" x2="1515" y2="1126" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="1130" x2="1515" y2="1216" stroke="#000000" stroke-width="2"/>
+<line x1="2070" y1="1130" x2="1515" y2="1306" stroke="#000000" stroke-width="2"/>
+<text x="470.0" y="1440.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#000000">Use cases describe user goals</text>
+<text x="470.0" y="1469.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#000000">and responsibilities.</text>
+<text x="470.0" y="1498.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#000000">Institutional policy and</text>
+<text x="470.0" y="1527.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#000000">reviewer decisions remain human-</text>
+<text x="470.0" y="1556.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#000000">governed; SERPS does not issue</text>
+<text x="470.0" y="1585.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#000000">automatic misconduct decisions.</text>
+<text x="2130.0" y="1485.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#000000">SERPS Architecture</text>
 </svg>

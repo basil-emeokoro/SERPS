@@ -9,6 +9,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_1_Hybrid_Design_Science_Research_and_Agile_Development_Process_Adopted_for_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.2: Requirements Traceability Model for SERPS
   - Source: `source/Figure3_2_Requirements_Traceability_Model_for_SERPS.mmd`
@@ -19,6 +21,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_2_Requirements_Traceability_Model_for_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_2_Requirements_Traceability_Model_for_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_2_Requirements_Traceability_Model_for_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_2_Requirements_Traceability_Model_for_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_2_Requirements_Traceability_Model_for_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.3: Overall System Architecture of SERPS
   - Source: `source/Figure3_3_Overall_System_Architecture_of_SERPS.mmd`
@@ -29,6 +33,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_3_Overall_System_Architecture_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_3_Overall_System_Architecture_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_3_Overall_System_Architecture_of_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_3_Overall_System_Architecture_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_3_Overall_System_Architecture_of_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.4: Candidate Registration, Guided Multi-angle Facial Enrolment and Continuous Identity Assurance Architecture
   - Source: `source/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture.mmd`
@@ -39,6 +45,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_4_Candidate_Registration_Guided_Multi_angle_Facial_Enrolment_and_Continuous_Identity_Assurance_Architecture_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.5: Camera and Sensor Management Architecture
   - Source: `source/Figure3_5_Camera_and_Sensor_Management_Architecture.mmd`
@@ -49,6 +57,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_5_Camera_and_Sensor_Management_Architecture_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_5_Camera_and_Sensor_Management_Architecture_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_5_Camera_and_Sensor_Management_Architecture_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_5_Camera_and_Sensor_Management_Architecture_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_5_Camera_and_Sensor_Management_Architecture_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.6: Multimodal Evidence Acquisition Architecture
   - Source: `source/Figure3_6_Multimodal_Evidence_Acquisition_Architecture.mmd`
@@ -59,6 +69,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_6_Multimodal_Evidence_Acquisition_Architecture_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_6_Multimodal_Evidence_Acquisition_Architecture_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_6_Multimodal_Evidence_Acquisition_Architecture_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_6_Multimodal_Evidence_Acquisition_Architecture_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_6_Multimodal_Evidence_Acquisition_Architecture_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.7: Internal Architecture of the Contextual Intelligence Engine
   - Source: `source/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine.mmd`
@@ -69,6 +81,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_7_Internal_Architecture_of_the_Contextual_Intelligence_Engine_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.8: Agentic Decision Support Architecture
   - Source: `source/Figure3_8_Agentic_Decision_Support_Architecture.mmd`
@@ -79,6 +93,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_8_Agentic_Decision_Support_Architecture_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_8_Agentic_Decision_Support_Architecture_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_8_Agentic_Decision_Support_Architecture_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_8_Agentic_Decision_Support_Architecture_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_8_Agentic_Decision_Support_Architecture_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.9: Institutional Policy and Incident Management Engine
   - Source: `source/Figure3_9_Institutional_Policy_and_Incident_Management_Engine.mmd`
@@ -89,6 +105,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_9_Institutional_Policy_and_Incident_Management_Engine_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_9_Institutional_Policy_and_Incident_Management_Engine_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_9_Institutional_Policy_and_Incident_Management_Engine_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_9_Institutional_Policy_and_Incident_Management_Engine_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_9_Institutional_Policy_and_Incident_Management_Engine_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.10: Governance-aware Decision Pipeline
   - Source: `source/Figure3_10_Governance_aware_Decision_Pipeline.mmd`
@@ -99,6 +117,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_10_Governance_aware_Decision_Pipeline_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_10_Governance_aware_Decision_Pipeline_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_10_Governance_aware_Decision_Pipeline_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_10_Governance_aware_Decision_Pipeline_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_10_Governance_aware_Decision_Pipeline_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.11: Deployment Modes Supported by SERPS
   - Source: `source/Figure3_11_Deployment_Modes_Supported_by_SERPS.mmd`
@@ -109,6 +129,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_11_Deployment_Modes_Supported_by_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_11_Deployment_Modes_Supported_by_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_11_Deployment_Modes_Supported_by_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_11_Deployment_Modes_Supported_by_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_11_Deployment_Modes_Supported_by_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.12: High-Level Data Flow within SERPS
   - Source: `source/Figure3_12_High_Level_Data_Flow_within_SERPS.mmd`
@@ -119,6 +141,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_12_High_Level_Data_Flow_within_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_12_High_Level_Data_Flow_within_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_12_High_Level_Data_Flow_within_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_12_High_Level_Data_Flow_within_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_12_High_Level_Data_Flow_within_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.13: Use Case Diagram of SERPS
   - Source: `source/Figure3_13_Use_Case_Diagram_of_SERPS.mmd`
@@ -129,6 +153,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_13_Use_Case_Diagram_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_13_Use_Case_Diagram_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_13_Use_Case_Diagram_of_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_13_Use_Case_Diagram_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_13_Use_Case_Diagram_of_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.14: Activity Diagram of SERPS
   - Source: `source/Figure3_14_Activity_Diagram_of_SERPS.mmd`
@@ -139,6 +165,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_14_Activity_Diagram_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_14_Activity_Diagram_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_14_Activity_Diagram_of_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_14_Activity_Diagram_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_14_Activity_Diagram_of_SERPS_mono_white_background.png`
   - Recommended Word orientation: Square / flexible
 - Figure 3.15: Sequence Diagram of SERPS
   - Source: `source/Figure3_15_Sequence_Diagram_of_SERPS.mmd`
@@ -149,6 +177,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_15_Sequence_Diagram_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_15_Sequence_Diagram_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_15_Sequence_Diagram_of_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_15_Sequence_Diagram_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_15_Sequence_Diagram_of_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.16: Class Diagram of SERPS
   - Source: `source/Figure3_16_Class_Diagram_of_SERPS.mmd`
@@ -159,6 +189,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_16_Class_Diagram_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_16_Class_Diagram_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_16_Class_Diagram_of_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_16_Class_Diagram_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_16_Class_Diagram_of_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.17: Component Diagram of SERPS
   - Source: `source/Figure3_17_Component_Diagram_of_SERPS.mmd`
@@ -169,7 +201,9 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_17_Component_Diagram_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_17_Component_Diagram_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_17_Component_Diagram_of_SERPS_mono_transparent.png`
-  - Recommended Word orientation: Landscape
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_17_Component_Diagram_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_17_Component_Diagram_of_SERPS_mono_white_background.png`
+  - Recommended Word orientation: Square / flexible
 - Figure 3.18: Deployment Diagram of SERPS
   - Source: `source/Figure3_18_Deployment_Diagram_of_SERPS.mmd`
   - SVG: `svg/Figure3_18_Deployment_Diagram_of_SERPS.svg`
@@ -179,17 +213,21 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_18_Deployment_Diagram_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_18_Deployment_Diagram_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_18_Deployment_Diagram_of_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_18_Deployment_Diagram_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_18_Deployment_Diagram_of_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
-- Figure 3.19: Entity Relationship Diagram of SERPS Database
-  - Source: `source/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.mmd`
-  - SVG: `svg/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.svg`
-  - PNG: `png/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.png`
-  - Authoritative source: `docs/dissertation/chapter3/source/authoritative/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database.mmd`
-  - Official colour SVG: `docs/dissertation/chapter3/svg/colour/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database_colour.svg`
-  - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database_colour.png`
-  - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database_mono_transparent.svg`
-  - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_19_Entity_Relationship_Diagram_of_SERPS_Database_mono_transparent.png`
-  - Recommended Word orientation: Landscape
+- Figure 3.19: Logical Entity Relationship Diagram of SERPS Database
+  - Source: `source/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database.mmd`
+  - SVG: `svg/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database.svg`
+  - PNG: `png/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database.png`
+  - Authoritative source: `docs/dissertation/chapter3/source/authoritative/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database.mmd`
+  - Official colour SVG: `docs/dissertation/chapter3/svg/colour/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database_colour.svg`
+  - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database_colour.png`
+  - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database_mono_transparent.svg`
+  - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_19_Logical_Entity_Relationship_Diagram_of_SERPS_Database_mono_white_background.png`
+  - Recommended Word orientation: Square / flexible
 - Figure 3.20: API Interaction Diagram of SERPS
   - Source: `source/Figure3_20_API_Interaction_Diagram_of_SERPS.mmd`
   - SVG: `svg/Figure3_20_API_Interaction_Diagram_of_SERPS.svg`
@@ -199,6 +237,8 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_20_API_Interaction_Diagram_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_20_API_Interaction_Diagram_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_20_API_Interaction_Diagram_of_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_20_API_Interaction_Diagram_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_20_API_Interaction_Diagram_of_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape
 - Figure 3.21: Technology Stack of SERPS
   - Source: `source/Figure3_21_Technology_Stack_of_SERPS.mmd`
@@ -209,4 +249,6 @@
   - Official colour PNG: `docs/dissertation/chapter3/png/colour/Figure3_21_Technology_Stack_of_SERPS_colour.png`
   - Official monochrome transparent SVG: `docs/dissertation/chapter3/svg/mono_transparent/Figure3_21_Technology_Stack_of_SERPS_mono_transparent.svg`
   - Official monochrome transparent PNG: `docs/dissertation/chapter3/png/mono_transparent/Figure3_21_Technology_Stack_of_SERPS_mono_transparent.png`
+  - Official monochrome white-background SVG: `docs/dissertation/chapter3/svg/mono_white_background/Figure3_21_Technology_Stack_of_SERPS_mono_white_background.svg`
+  - Official monochrome white-background PNG: `docs/dissertation/chapter3/png/mono_white_background/Figure3_21_Technology_Stack_of_SERPS_mono_white_background.png`
   - Recommended Word orientation: Landscape

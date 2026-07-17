@@ -137,19 +137,19 @@ erDiagram
   institutions ||--o{ candidates : references
   institutions ||--o{ examinations : references
   institutions ||--o{ users : references
-  institutions ||--o{ audit_logs : references
   users ||--o{ audit_logs : references
+  institutions ||--o{ audit_logs : references
   users ||--o{ authentication_sessions : references
   candidates ||--o{ authentication_sessions : references
   institutions ||--o{ authentication_sessions : references
   institutions ||--o{ candidate_examination_assignments : references
   candidates ||--o{ candidate_examination_assignments : references
   examinations ||--o{ candidate_examination_assignments : references
-  institutions ||--o{ refresh_tokens : references
   users ||--o{ refresh_tokens : references
+  institutions ||--o{ refresh_tokens : references
   users ||--o{ user_roles : references
   roles ||--o{ user_roles : references
-  examinations ||--o{ examination_sessions : references
+  candidates ||--o{ examination_sessions : references
   institutions ||--o{ examination_sessions : references
   candidate_examination_assignments ||--o{ examination_sessions : references
-  candidates ||--o{ examination_sessions : references
+  examinations ||--o{ examination_sessions : references

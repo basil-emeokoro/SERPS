@@ -1,17 +1,11 @@
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
 flowchart LR
-  CandidateDevice -->|HTTPS| Web[Web Application Container]
-  ReviewerDevice -->|HTTPS| Web
-  AdminDevice -->|HTTPS| Web
-  Web -->|REST| API[API Container]
-  CandidateDevice -. WebRTC .-> AI[AI / Monitoring Services]
-  API <--> |SSE / WebSocket| AI
-  API -->|SQL| DB[(PostgreSQL Container)]
-  AI -->|Evidence storage protocol| Storage[Evidence Storage]
-  subgraph DockerNetwork[Docker Network / Optional Edge or Cloud Boundary]
-    Web
-    API
-    AI
-    DB
-    Storage
-  end
+  CandidateDevice[<<device>> Candidate Device Browser + Camera/Mic] -->|HTTPS| Web[<<container>> Next.js Web App]
+  ReviewerDevice[<<device>> Reviewer Device Browser Console] -->|HTTPS| Web
+  AdminDevice[<<device>> Administrator Device Dashboard] -->|HTTPS| Web
+  Web -->|REST| API[<<container>> FastAPI API]
+  Web -. WebRTC media .-> AI[<<service>> AI Monitoring Services]
+  API <--> |WebSocket / SSE| AI
+  API -->|SQL| DB[(<<database>> PostgreSQL)]
+  AI -->|snapshots| Storage[<<storage>> Evidence Storage]
+  AI -. event metadata .-> DB

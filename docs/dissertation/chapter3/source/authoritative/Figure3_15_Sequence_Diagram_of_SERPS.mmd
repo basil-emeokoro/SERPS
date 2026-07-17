@@ -1,22 +1,33 @@
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#DDF7F5', 'primaryBorderColor': '#0F8B8D', 'lineColor': '#7FA9B5', 'fontFamily': 'Segoe UI, Arial'}}}%%
 sequenceDiagram
   participant Candidate
-  participant React
+  participant React as React Frontend
   participant FastAPI
-  participant Auth
-  participant Camera
-  participant Evidence
+  participant Auth as Authentication
+  participant Camera as Camera Manager
+  participant Evidence as Evidence Services
   participant CIE
-  participant Agentic
+  participant Agentic as Agentic Support
   participant IPIME
   participant Reviewer
   participant PostgreSQL
-  Candidate->>React: Start exam
-  React->>FastAPI: Request session
-  FastAPI->>Auth: Verify identity
-  Camera->>Evidence: Emit EvidenceEvent
-  Evidence->>PostgreSQL: Persist raw event
-  Evidence->>CIE: Submit event
-  CIE->>Agentic: Contextual assessment
-  Agentic->>IPIME: Recommendation
-  IPIME->>Reviewer: Policy workflow
+  Candidate->>React: Submit credentials
+  React->>FastAPI: POST /auth/login
+  FastAPI->>Auth: Validate credentials
+  Auth->>PostgreSQL: Read user and roles
+  PostgreSQL-->>Auth: User and role data
+  Auth-->>FastAPI: Issue access/refresh tokens
+  FastAPI-->>React: Authentication response
+  Candidate->>React: Start examination
+  React->>FastAPI: Create examination session
+  FastAPI->>Camera: Initialise authorised devices
+  Camera->>Evidence: Stream-health EvidenceEvent
+  Evidence->>PostgreSQL: Persist raw EvidenceEvent
+  Evidence->>CIE: Submit structured event
+  opt Incident detected
+    CIE->>Agentic: Contextual assessment
+    Agentic->>IPIME: Advisory recommendation
+    IPIME->>Reviewer: Policy response and notification
+    Reviewer->>FastAPI: Record human action
+    FastAPI->>PostgreSQL: Persist decision and audit trail
+  end

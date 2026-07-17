@@ -1,64 +1,113 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1650" height="1020" viewBox="0 0 1650 1020">
+<svg xmlns="http://www.w3.org/2000/svg" width="3460" height="2060" viewBox="0 0 3460 2060">
 <defs>
 <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M2,2 L10,6 L2,10 z" fill="#7FA9B5"/></marker>
 <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#9AB2BD" flood-opacity="0.45"/></filter>
 </defs>
-<rect width="1650" height="1020" fill="#EEF3F6"/>
-<rect x="50" y="45" width="1550" height="100" rx="26" fill="#073B4C"/>
+<rect width="3460" height="2060" fill="#EEF3F6"/>
+<rect x="50" y="45" width="3360" height="100" rx="26" fill="#073B4C"/>
 <text x="75.0" y="84.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#DDF7F5">Figure 3.15</text>
 <text x="75.0" y="118.0" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Sequence Diagram of SERPS</text>
-<rect x="90" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="147.5" y="224.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Candidate</text>
-<line x1="147" y1="245" x2="147" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="225" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="282.5" y="210.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">React Frontend</text>
-<line x1="282" y1="245" x2="282" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="360" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="417.5" y="224.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">FastAPI</text>
-<line x1="417" y1="245" x2="417" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="495" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="552.5" y="224.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Authentication</text>
-<line x1="552" y1="245" x2="552" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="630" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="687.5" y="210.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Camera Manager</text>
-<line x1="687" y1="245" x2="687" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="765" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="822.5" y="210.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Evidence Services</text>
-<line x1="822" y1="245" x2="822" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="900" y="190" width="115" height="55" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="957.5" y="224.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">CIE</text>
-<line x1="957" y1="245" x2="957" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="1035" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="1092.5" y="224.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Agentic</text>
-<line x1="1092" y1="245" x2="1092" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="1170" y="190" width="115" height="55" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="1227.5" y="224.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">IPIME</text>
-<line x1="1227" y1="245" x2="1227" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="1305" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="1362.5" y="224.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Reviewer</text>
-<line x1="1362" y1="245" x2="1362" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<rect x="1440" y="190" width="115" height="55" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
-<text x="1497.5" y="224.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">PostgreSQL</text>
-<line x1="1497" y1="245" x2="1497" y2="950" stroke="#7FA9B5" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
-<line x1="205" y1="300" x2="225" y2="300" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="215.0" y="286.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">start</text>
-<line x1="340" y1="350" x2="360" y2="350" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="350.0" y="336.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">request</text>
-<line x1="475" y1="400" x2="495" y2="400" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="485.0" y="386.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">authenticate</text>
-<line x1="475" y1="470" x2="630" y2="470" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="552.5" y="456.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">camera control</text>
-<line x1="745" y1="540" x2="765" y2="540" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="755.0" y="526.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">evidence</text>
-<line x1="880" y1="610" x2="1440" y2="610" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="1160.0" y="596.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">persist</text>
-<line x1="880" y1="680" x2="900" y2="680" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="890.0" y="666.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">events</text>
-<line x1="1015" y1="750" x2="1035" y2="750" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="1025.0" y="736.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">assessment</text>
-<line x1="1150" y1="820" x2="1170" y2="820" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="1160.0" y="806.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">recommendation</text>
-<line x1="1285" y1="890" x2="1305" y2="890" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
-<text x="1295.0" y="876.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">policy response</text>
-<text x="1580.0" y="975.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
+<rect x="70" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="165.0" y="238.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Candidate</text>
+<line x1="165" y1="267" x2="165" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="370" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="465.0" y="224.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">React</text>
+<text x="465.0" y="252.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Frontend</text>
+<line x1="465" y1="267" x2="465" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="670" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="765.0" y="238.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">FastAPI</text>
+<line x1="765" y1="267" x2="765" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="970" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1065.0" y="238.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Authentication</text>
+<line x1="1065" y1="267" x2="1065" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="1270" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1365.0" y="224.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Camera</text>
+<text x="1365.0" y="252.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Manager</text>
+<line x1="1365" y1="267" x2="1365" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="1570" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1665.0" y="224.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Evidence</text>
+<text x="1665.0" y="252.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Services</text>
+<line x1="1665" y1="267" x2="1665" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="1870" y="195" width="190" height="72" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1965.0" y="238.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">CIE</text>
+<line x1="1965" y1="267" x2="1965" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="2170" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="2265.0" y="238.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Agentic</text>
+<line x1="2265" y1="267" x2="2265" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="2470" y="195" width="190" height="72" rx="18" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="2565.0" y="238.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">IPIME</text>
+<line x1="2565" y1="267" x2="2565" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="2770" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="2865.0" y="238.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Reviewer</text>
+<line x1="2865" y1="267" x2="2865" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="3070" y="195" width="190" height="72" rx="18" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="3165.0" y="238.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">PostgreSQL</text>
+<line x1="3165" y1="267" x2="3165" y2="1950" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7"/>
+<rect x="457" y="330" width="16" height="375" rx="4" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="465.0" y="524.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="757" y="420" width="16" height="1230" rx="4" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="765.0" y="1042.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="1057" y="510" width="16" height="170" rx="4" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1065.0" y="602.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="1357" y="880" width="16" height="160" rx="4" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1365.0" y="967.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="1657" y="960" width="16" height="300" rx="4" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1665.0" y="1117.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="1957" y="1210" width="16" height="250" rx="4" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="1965.0" y="1342.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="2257" y="1290" width="16" height="210" rx="4" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="2265.0" y="1402.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="2557" y="1370" width="16" height="180" rx="4" fill="#DDF7F5" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="2565.0" y="1467.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="2857" y="1450" width="16" height="180" rx="4" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="2865.0" y="1547.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<rect x="3157" y="565" width="16" height="1095" rx="4" fill="#FFFFFF" stroke="#0F8B8D" stroke-width="3" filter="url(#shadow)"/>
+<text x="3165.0" y="1119.5" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A"></text>
+<line x1="183" y1="320" x2="447" y2="320" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="315.0" y="306.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Submit credentials</text>
+<line x1="483" y1="410" x2="747" y2="410" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="615.0" y="396.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">POST /auth/login</text>
+<line x1="783" y1="500" x2="1047" y2="500" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="915.0" y="486.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Validate credentials</text>
+<line x1="1083" y1="590" x2="3147" y2="590" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="2115.0" y="576.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Read user and roles</text>
+<line x1="3147" y1="680" x2="1083" y2="680" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="2115.0" y="666.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">User and role data</text>
+<line x1="1047" y1="770" x2="783" y2="770" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="915.0" y="756.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Issue access / refresh tokens</text>
+<line x1="747" y1="860" x2="483" y2="860" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="615.0" y="846.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Authentication response</text>
+<line x1="183" y1="980" x2="447" y2="980" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="315.0" y="966.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Start examination</text>
+<line x1="483" y1="1070" x2="747" y2="1070" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="615.0" y="1056.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Create examination session</text>
+<line x1="783" y1="1160" x2="1347" y2="1160" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1065.0" y="1146.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Initialise authorised devices</text>
+<line x1="1383" y1="1250" x2="1647" y2="1250" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1515.0" y="1236.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Stream-health EvidenceEvent</text>
+<line x1="1683" y1="1340" x2="3147" y2="1340" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="2415.0" y="1326.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Persist raw EvidenceEvent</text>
+<line x1="1683" y1="1430" x2="1947" y2="1430" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1815.0" y="1416.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Submit structured event</text>
+<line x1="1983" y1="1520" x2="2247" y2="1520" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="2115.0" y="1506.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Contextual assessment</text>
+<line x1="2283" y1="1610" x2="2547" y2="1610" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="2415.0" y="1596.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Advisory recommendation</text>
+<line x1="2583" y1="1700" x2="2847" y2="1700" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="2715.0" y="1686.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Policy response and notification</text>
+<line x1="2847" y1="1790" x2="783" y2="1790" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1815.0" y="1776.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Record reviewer action</text>
+<line x1="783" y1="1880" x2="3147" y2="1880" stroke="#7FA9B5" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="1965.0" y="1866.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600" fill="#042A3A">Persist decision and audit trail</text>
+<rect x="1865" y="1490" width="760" height="270" rx="18" fill="#F8FBFC" stroke="#7FA9B5" stroke-width="3" stroke-dasharray="8 7" filter="url(#shadow)"/>
+<text x="2245.0" y="1576.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">opt Contextual concern detected</text>
+<text x="2245.0" y="1604.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">CIE assesses evidence in a</text>
+<text x="2245.0" y="1632.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">temporal window.</text>
+<text x="2245.0" y="1660.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Agentic support recommends</text>
+<text x="2245.0" y="1688.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">action.</text>
+<text x="2245.0" y="1716.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">IPIME applies institutional</text>
+<text x="2245.0" y="1744.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">workflow.</text>
+<text x="2245.0" y="1772.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">Human reviewer remains</text>
+<text x="2245.0" y="1800.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#042A3A">responsible for final decision.</text>
+<text x="3390.0" y="2015.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#60717C">SERPS Architecture</text>
 </svg>

@@ -34,15 +34,18 @@ OUT = ROOT / "docs" / "dissertation" / "chapter3"
 SUBDIRS = [
     "architecture",
     "uml",
+    "erd",
     "flowcharts",
     "api",
     "technology",
     "png",
     "png/colour",
     "png/mono_transparent",
+    "png/mono_white_background",
     "svg",
     "svg/colour",
     "svg/mono_transparent",
+    "svg/mono_white_background",
     "source",
     "source/authoritative",
     "source/legacy",
@@ -120,6 +123,17 @@ class Arrow:
 
 
 @dataclass(frozen=True)
+class Connector:
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+    label: str = ""
+    dashed: bool = False
+    width: int = 4
+
+
+@dataclass(frozen=True)
 class Note:
     x: float
     y: float
@@ -128,7 +142,7 @@ class Note:
     size: int = 22
 
 
-Shape = Box | Ellipse | Actor | Diamond | Arrow | Note
+Shape = Box | Ellipse | Actor | Diamond | Arrow | Connector | Note
 
 
 @dataclass(frozen=True)
@@ -167,6 +181,20 @@ MONO_THEME = RenderTheme(
     "#000000",
     "#000000",
     None,
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    False,
+)
+
+MONO_WHITE_THEME = RenderTheme(
+    "mono_white_background",
+    "#FFFFFF",
+    None,
+    "#000000",
+    "#000000",
+    "#FFFFFF",
     "#000000",
     "#000000",
     "#000000",
@@ -270,6 +298,26 @@ def draw_arrow(draw: ImageDraw.ImageDraw, arrow: Arrow, scale: int = 1, theme: R
         draw.text(mid, arrow.label, fill=theme.text_color, font=font(18 * scale), anchor="mm")
 
 
+def draw_connector(draw: ImageDraw.ImageDraw, connector: Connector, scale: int = 1, theme: RenderTheme = COLOUR_THEME) -> None:
+    x1, y1, x2, y2 = [v * scale for v in (connector.x1, connector.y1, connector.x2, connector.y2)]
+    color = theme.line_color
+    width = connector.width * scale
+    if connector.dashed:
+        steps = max(8, int(math.hypot(x2 - x1, y2 - y1) / (18 * scale)))
+        for i in range(steps):
+            if i % 2 == 0:
+                sx = x1 + (x2 - x1) * i / steps
+                sy = y1 + (y2 - y1) * i / steps
+                ex = x1 + (x2 - x1) * (i + 1) / steps
+                ey = y1 + (y2 - y1) * (i + 1) / steps
+                draw.line((sx, sy, ex, ey), fill=color, width=width)
+    else:
+        draw.line((x1, y1, x2, y2), fill=color, width=width)
+    if connector.label:
+        mid = ((x1 + x2) / 2, (y1 + y2) / 2 - 18 * scale)
+        draw.text(mid, connector.label, fill=theme.text_color, font=font(18 * scale), anchor="mm")
+
+
 def mermaid_type(column_type: object) -> str:
     raw = column_type.__class__.__name__.lower()
     if "integer" in raw:
@@ -329,7 +377,7 @@ def render_png(diagram: Diagram, path: Path, theme: RenderTheme = COLOUR_THEME) 
             if theme.shadow:
                 shadow = (rect[0] + 5 * scale, rect[1] + 6 * scale, rect[2] + 5 * scale, rect[3] + 6 * scale)
                 draw.rounded_rectangle(shadow, radius=shape.radius * scale, fill="#D9E4EA")
-            fill = shape.fill if theme.name == "colour" else (255, 255, 255, 0)
+            fill = shape.fill if theme.name == "colour" else ((255, 255, 255, 255) if theme.background else (255, 255, 255, 0))
             stroke = shape.stroke if theme.name == "colour" else theme.box_stroke
             text_color = shape.color if theme.name == "colour" else theme.text_color
             draw.rounded_rectangle(rect, radius=shape.radius * scale, fill=fill, outline=stroke, width=3 * scale)
@@ -346,7 +394,7 @@ def render_png(diagram: Diagram, path: Path, theme: RenderTheme = COLOUR_THEME) 
             )
         elif isinstance(shape, Ellipse):
             rect = tuple(v * scale for v in (shape.x, shape.y, shape.x + shape.w, shape.y + shape.h))
-            fill = shape.fill if theme.name == "colour" else (255, 255, 255, 0)
+            fill = shape.fill if theme.name == "colour" else ((255, 255, 255, 255) if theme.background else (255, 255, 255, 0))
             stroke = shape.stroke if theme.name == "colour" else theme.box_stroke
             text_color = shape.color if theme.name == "colour" else theme.text_color
             draw.ellipse(rect, fill=fill, outline=stroke, width=3 * scale)
@@ -373,7 +421,7 @@ def render_png(diagram: Diagram, path: Path, theme: RenderTheme = COLOUR_THEME) 
                 ((shape.x + shape.w / 2) * scale, (shape.y + shape.h) * scale),
                 (shape.x * scale, (shape.y + shape.h / 2) * scale),
             ]
-            fill = shape.fill if theme.name == "colour" else (255, 255, 255, 0)
+            fill = shape.fill if theme.name == "colour" else ((255, 255, 255, 255) if theme.background else (255, 255, 255, 0))
             stroke = shape.stroke if theme.name == "colour" else theme.box_stroke
             text_color = shape.color if theme.name == "colour" else theme.text_color
             draw.polygon(points, fill=fill, outline=stroke)
@@ -388,6 +436,8 @@ def render_png(diagram: Diagram, path: Path, theme: RenderTheme = COLOUR_THEME) 
             )
         elif isinstance(shape, Arrow):
             draw_arrow(draw, shape, scale, theme)
+        elif isinstance(shape, Connector):
+            draw_connector(draw, shape, scale, theme)
         elif isinstance(shape, Note):
             color = shape.color if theme.name == "colour" else theme.text_color
             draw_wrapped(draw, (shape.x * scale, shape.y * scale), shape.text, color, font(shape.size * scale), 420 * scale)
@@ -425,7 +475,7 @@ def render_svg(diagram: Diagram, path: Path, theme: RenderTheme = COLOUR_THEME) 
     for shape in diagram.shapes:
         if isinstance(shape, Box):
             dash = ' stroke-dasharray="8 7"' if shape.dashed else ""
-            fill = shape.fill if theme.name == "colour" else "none"
+            fill = shape.fill if theme.name == "colour" else ("#FFFFFF" if theme.background else "none")
             stroke = shape.stroke if theme.name == "colour" else theme.box_stroke
             text_color = shape.color if theme.name == "colour" else theme.text_color
             filter_attr = ' filter="url(#shadow)"' if theme.shadow else ""
@@ -437,7 +487,7 @@ def render_svg(diagram: Diagram, path: Path, theme: RenderTheme = COLOUR_THEME) 
             size = 24 if shape.title else 21
             out.append(svg_text(shape.x + shape.w / 2, shape.y + shape.h / 2 - (len(lines) * (size + 7)) / 2 + size, shape.text, size, text_color, "700" if shape.title else "500"))
         elif isinstance(shape, Ellipse):
-            fill = shape.fill if theme.name == "colour" else "none"
+            fill = shape.fill if theme.name == "colour" else ("#FFFFFF" if theme.background else "none")
             stroke = shape.stroke if theme.name == "colour" else theme.box_stroke
             text_color = shape.color if theme.name == "colour" else theme.text_color
             out.append(
@@ -450,7 +500,7 @@ def render_svg(diagram: Diagram, path: Path, theme: RenderTheme = COLOUR_THEME) 
             out.append(f'<path d="M{x},{y+36} L{x},{y+95} M{x-42},{y+60} L{x+42},{y+60} M{x},{y+95} L{x-38},{y+145} M{x},{y+95} L{x+38},{y+145}" stroke="{theme.text_color}" stroke-width="4" fill="none"/>')
             out.append(svg_text(x, y + 170, shape.text, 20, theme.text_color, "700"))
         elif isinstance(shape, Diamond):
-            fill = shape.fill if theme.name == "colour" else "none"
+            fill = shape.fill if theme.name == "colour" else ("#FFFFFF" if theme.background else "none")
             stroke = shape.stroke if theme.name == "colour" else theme.box_stroke
             text_color = shape.color if theme.name == "colour" else theme.text_color
             points = [
@@ -466,6 +516,13 @@ def render_svg(diagram: Diagram, path: Path, theme: RenderTheme = COLOUR_THEME) 
             dash = ' stroke-dasharray="8 7"' if shape.dashed else ""
             out.append(
                 f'<line x1="{shape.x1}" y1="{shape.y1}" x2="{shape.x2}" y2="{shape.y2}" stroke="{theme.line_color}" stroke-width="4"{dash} marker-end="url(#arrow)"/>'
+            )
+            if shape.label:
+                out.append(svg_text((shape.x1 + shape.x2) / 2, (shape.y1 + shape.y2) / 2 - 14, shape.label, 18, theme.text_color, "600"))
+        elif isinstance(shape, Connector):
+            dash = ' stroke-dasharray="8 7"' if shape.dashed else ""
+            out.append(
+                f'<line x1="{shape.x1}" y1="{shape.y1}" x2="{shape.x2}" y2="{shape.y2}" stroke="{theme.line_color}" stroke-width="{shape.width}"{dash}/>'
             )
             if shape.label:
                 out.append(svg_text((shape.x1 + shape.x2) / 2, (shape.y1 + shape.y2) / 2 - 14, shape.label, 18, theme.text_color, "600"))
@@ -518,19 +575,20 @@ def build_diagrams() -> list[Diagram]:
     dsr = ["Problem Identification", "Literature Review", "Requirements Analysis", "System Architecture", "Prototype Design"]
     shapes = pipeline_shapes(dsr, 115, 210, 430, 78, 28)
     agile = ["Sprint Planning", "Implementation", "Testing", "Sprint Review", "Refinement"]
-    agile_positions = [(880, 230), (1220, 230), (1220, 485), (880, 485), (710, 358)]
+    agile_positions = [(820, 225), (1180, 225), (1180, 455), (820, 455), (640, 340)]
     for label, (x, y) in zip(agile, agile_positions, strict=True):
         shapes.append(Box(x, y, 270, 86, label, fill=TEAL_LIGHT if label == "Sprint Planning" else WHITE))
-    loop_points = [(1015, 273), (1220, 273), (1355, 316), (1355, 485), (1220, 528), (1015, 528), (880, 528), (845, 444), (845, 401), (880, 316)]
-    for (x1, y1), (x2, y2) in zip(loop_points, loop_points[1:] + [loop_points[0]], strict=True):
-        shapes.append(Arrow(x1, y1, x2, y2))
     shapes.extend(
         [
-            Arrow(545, 634, 710, 401, "prototype to sprint"),
-            Arrow(845, 444, 880, 273, "return"),
+            Arrow(545, 634, 820, 268, "prototype to sprint"),
+            Arrow(1090, 268, 1180, 268),
+            Arrow(1315, 311, 1315, 455),
+            Arrow(1180, 498, 1090, 498),
+            Arrow(820, 498, 910, 383),
+            Arrow(775, 340, 820, 268),
             Box(760, 760, 620, 86, "Final Evaluation", fill=AMBER_LIGHT, title=True),
             Box(760, 900, 620, 86, "Documentation and Dissertation Evidence", fill=TEAL_LIGHT, title=True),
-            Arrow(1035, 571, 1035, 760),
+            Arrow(955, 541, 955, 760, "completed agile cycle"),
             Arrow(1070, 846, 1070, 900),
             Note(220, 980, "DSR establishes the research artefact; Agile controls iterative prototype implementation.", size=22),
         ]
@@ -543,44 +601,54 @@ def build_diagrams() -> list[Diagram]:
 
     # 3.3 layered system architecture
     shapes = [
-        Box(100, 180, 1400, 64, "Actors and Browsers: Candidate | Reviewer/Proctor | Administrator | System Administrator", fill=TEAL_LIGHT, title=True),
-        Box(100, 275, 1400, 64, "Presentation Layer: Next.js candidate UI, reviewer console and admin dashboard", fill=WHITE),
-        Box(100, 370, 420, 64, "REST API", fill=AMBER_LIGHT),
-        Box(590, 370, 420, 64, "WebSocket / SSE", fill=AMBER_LIGHT),
-        Box(1080, 370, 420, 64, "WebRTC Boundary", fill=AMBER_LIGHT),
-        Box(100, 465, 1400, 64, "FastAPI Application Services", fill=TEAL_LIGHT, title=True),
+        Box(120, 170, 1660, 62, "Actors and Browsers: Candidate | Reviewer/Proctor | Administrator | System Administrator", fill=TEAL_LIGHT, title=True),
+        Box(120, 275, 1660, 58, "Presentation Layer: candidate UI, reviewer console and administrator dashboard", fill=WHITE),
+        Box(250, 385, 300, 58, "REST API", fill=AMBER_LIGHT),
+        Box(800, 385, 300, 58, "WebSocket / SSE", fill=AMBER_LIGHT),
+        Box(1350, 385, 300, 58, "WebRTC Boundary", fill=AMBER_LIGHT),
+        Box(120, 495, 1660, 62, "FastAPI Application Services", fill=TEAL_LIGHT, title=True),
+        Box(135, 615, 285, 62, "Camera Manager", fill=WHITE),
+        Box(455, 615, 285, 62, "Authentication", fill=WHITE),
+        Box(775, 615, 285, 62, "Candidate / Exam", fill=WHITE),
+        Box(1095, 615, 285, 62, "Session Control", fill=WHITE),
+        Box(1415, 615, 285, 62, "Reports / Audit", fill=WHITE),
+        Box(135, 755, 285, 70, "Detection\nModules", fill=WHITE),
+        Box(775, 755, 285, 70, "Evidence Service", fill=WHITE),
+        Box(500, 910, 285, 78, "Structured\nEvidenceEvent", fill=AMBER_LIGHT, title=True),
+        Box(850, 910, 160, 78, "CIE", fill=TEAL_LIGHT, title=True),
+        Box(1070, 910, 245, 78, "Agentic Decision\nSupport", fill=TEAL_LIGHT, title=True),
+        Box(1380, 910, 170, 78, "IPIME", fill=TEAL_LIGHT, title=True),
+        Box(1610, 910, 220, 78, "Human\nReviewer", fill=WHITE),
+        Box(1610, 1045, 220, 80, "Final Institutional\nDecision", fill=WHITE),
+        Box(180, 1135, 330, 112, "PostgreSQL\nRelational persistence", fill=GREY, title=True),
+        Box(650, 1135, 330, 112, "Evidence Storage\nSnapshots and artefacts", fill=GREY, title=True),
+        Box(1280, 1135, 360, 112, "Documentation / Reports\nTraceable exports", fill=GREY, title=True),
     ]
-    svc = ["Authentication", "Candidate / Exam", "Session Control", "Camera Manager", "Evidence Service", "Reports / Audit"]
-    shapes.extend(grid_boxes(svc, 115, 560, 3, 420, 66, 55, 34))
-    intel = ["EvidenceEvent", "CIE", "Agentic Decision Support", "IPIME", "Human Reviewer", "Final Institutional Decision"]
-    shapes.extend(grid_boxes(intel, 100, 760, 6, 205, 72, 28, 20, TEAL_LIGHT))
-    shapes.extend(
-        [
-            Box(100, 920, 420, 105, "PostgreSQL\nShared relational persistence", fill=GREY, title=True),
-            Box(590, 920, 420, 105, "Evidence Storage\nSnapshots and artefacts", fill=GREY, title=True),
-            Box(1080, 920, 420, 105, "Documentation / Reports\nTraceable exports", fill=GREY, title=True),
-        ]
-    )
-    for x in [310, 800, 1290]:
-        shapes.append(Arrow(x, 244, x, 275))
-        shapes.append(Arrow(x, 339, x, 370))
-        shapes.append(Arrow(x, 434, x, 465))
-    shapes.append(Arrow(800, 529, 800, 560))
-    shapes.append(Arrow(800, 694, 800, 760))
-    for i in range(len(intel) - 1):
-        x = 100 + i * (205 + 28)
-        shapes.append(Arrow(x + 205, 796, x + 233, 796))
-    shapes.extend([Arrow(305, 832, 310, 920, "persist", dashed=True), Arrow(800, 832, 800, 920, "evidence", dashed=True), Arrow(1265, 832, 1290, 920, "reports", dashed=True)])
-    diagrams.append(Diagram("3.3", "Overall System Architecture of SERPS", "architecture", (1600, 1080), shapes, "flowchart TB\n  Actors[Actors and Browsers] --> Frontend[Presentation Layer]\n  Frontend --> Communication[REST / SSE / WebRTC]\n  Communication --> API[FastAPI Application Services]\n  API --> Evidence[EvidenceEvent]\n  Evidence --> CIE[Contextual Intelligence Engine]\n  CIE --> Agentic[Agentic Decision Support]\n  Agentic --> IPIME\n  IPIME --> Reviewer[Human Reviewer]\n  Reviewer --> Final[Final Institutional Decision]\n  API -. shared persistence .-> DB[(PostgreSQL)]\n  Evidence -. artefacts .-> Storage[Evidence Storage]"))
+    shapes.extend([
+        Arrow(950, 232, 950, 275),
+        Arrow(950, 333, 400, 385), Arrow(950, 333, 950, 385), Arrow(950, 333, 1500, 385),
+        Arrow(400, 443, 950, 495), Arrow(950, 443, 950, 495), Arrow(1500, 443, 950, 495),
+        Arrow(277, 557, 277, 615), Arrow(597, 557, 597, 615), Arrow(917, 557, 917, 615), Arrow(1237, 557, 1237, 615), Arrow(1557, 557, 1557, 615),
+        Arrow(277, 677, 277, 755, "frames / health"),
+        Arrow(917, 677, 917, 755),
+        Arrow(277, 825, 500, 949),
+        Arrow(917, 825, 642, 910, "stored event"),
+        Arrow(785, 949, 850, 949), Arrow(1010, 949, 1070, 949),
+        Arrow(1315, 949, 1380, 949), Arrow(1550, 949, 1610, 949),
+        Arrow(1720, 988, 1720, 1045),
+        Arrow(642, 988, 345, 1135, "persist", dashed=True),
+        Arrow(642, 988, 815, 1135, "snapshots", dashed=True),
+    ])
+    diagrams.append(Diagram("3.3", "Overall System Architecture of SERPS", "architecture", (1920, 1320), shapes, "flowchart TB\n  Actors[Actors and Browsers] --> Frontend[Presentation Layer]\n  Frontend --> REST[REST API]\n  Frontend --> Realtime[WebSocket / SSE]\n  Frontend --> WebRTC[WebRTC Boundary]\n  REST --> API[FastAPI Application Services]\n  Realtime --> API\n  WebRTC --> API\n  API --> Camera[Camera Manager]\n  API --> Auth[Authentication]\n  API --> Candidate[Candidate / Exam]\n  API --> Session[Session Control]\n  API --> Reports[Reports / Audit]\n  Camera --> Detection[Detection Modules]\n  Candidate --> EvidenceService[Evidence Service]\n  EvidenceService --> Evidence[Structured EvidenceEvent]\n  Detection --> Evidence\n  Evidence --> CIE[Contextual Intelligence Engine]\n  CIE --> Agentic[Agentic Decision Support]\n  Agentic --> IPIME\n  IPIME --> Reviewer[Human Reviewer]\n  Reviewer --> Final[Final Institutional Decision]\n  Evidence -. persist .-> DB[(PostgreSQL)]\n  Evidence -. snapshots .-> Storage[Evidence Storage]\n  Reports -. exports .-> Docs[Documentation / Reports]"))
 
-    # 3.4
+# 3.4
     stages = ["Registration", "Consent", "Device Check", "Camera Permission", "Guided Multi-angle Capture", "Image Quality Assessment", "Liveness Detection", "Embedding Generation", "Biometric Profile", "Continuous Identity Assurance"]
     shapes = pipeline_shapes(stages, 170, 180, 430, 65, 18)
     poses = ["Front", "Left", "Right", "Slight Up", "Slight Down", "Centre"]
     shapes.extend(grid_boxes(poses, 760, 420, 3, 210, 75, 30, 30, TEAL_LIGHT))
-    shapes.append(Arrow(600, 470, 760, 465, "pose targets"))
+    shapes.append(Arrow(600, 544, 760, 465, "pose targets"))
     shapes.append(Box(720, 755, 790, 120, "Continuous verification compares live identity evidence with enrolled biometric profile and emits structured identity events.", fill=AMBER_LIGHT))
-    diagrams.append(Diagram("3.4", "Candidate Registration, Guided Multi-angle Facial Enrolment and Continuous Identity Assurance Architecture", "architecture", (1600, 1030), shapes, mmd_flow("3.4", stages)))
+    diagrams.append(Diagram("3.4", "Candidate Registration, Guided Multi-angle Facial Enrolment and Continuous Identity Assurance Architecture", "architecture", (1600, 1100), shapes, mmd_flow("3.4", stages)))
 
     # 3.5
     shapes = [Box(575, 190, 450, 80, "Camera Manager", fill=TEAL_LIGHT, title=True)]
@@ -589,7 +657,9 @@ def build_diagrams() -> list[Diagram]:
     shapes.extend([Box(270, 620, 350, 90, "Primary Camera\nCandidate View", fill=WHITE), Box(980, 620, 350, 90, "Secondary Camera\nEnvironment View", fill=WHITE), Box(270, 790, 350, 80, "Face / Identity / Gaze", fill=TEAL_LIGHT), Box(980, 790, 350, 80, "Room / Object Context", fill=TEAL_LIGHT), Box(575, 900, 450, 80, "Structured EvidenceEvent", fill=AMBER_LIGHT)])
     for x in [315, 750, 1185]:
         shapes.append(Arrow(800, 270, x, 330))
-    shapes.extend([Arrow(445, 710, 445, 790), Arrow(1155, 710, 1155, 790), Arrow(445, 870, 710, 900), Arrow(1155, 870, 890, 900)])
+    for x in [315, 750, 1185]:
+        shapes.append(Arrow(800, 270, x, 440))
+    shapes.extend([Arrow(750, 405, 445, 620), Arrow(750, 405, 1155, 620), Arrow(445, 710, 445, 790), Arrow(1155, 710, 1155, 790), Arrow(445, 870, 710, 900), Arrow(1155, 870, 890, 900)])
     diagrams.append(Diagram("3.5", "Camera and Sensor Management Architecture", "architecture", (1550, 1060), shapes, "flowchart TB\n  Manager[Camera Manager] --> Permissions\n  Manager --> Discovery\n  Manager --> Modes[Mode Selection]\n  Manager --> Health[Health Monitoring]\n  Manager --> Primary[Primary Camera]\n  Manager --> Secondary[Secondary Camera]\n  Primary --> Evidence[EvidenceEvent]\n  Secondary --> Evidence"))
 
     # 3.6
@@ -617,93 +687,100 @@ def build_diagrams() -> list[Diagram]:
     diagrams.append(Diagram("3.7", "Internal Architecture of the Contextual Intelligence Engine", "architecture", (1550, 900), shapes, "flowchart LR\n  EvidenceEvent --> Fusion[Event Fusion Module]\n  Fusion --> Memory[Temporal Behaviour Memory]\n  Memory --> Reasoning[Contextual Reasoning Module]\n  Reasoning --> Risk[Risk Scoring Engine]\n  Reasoning --> Explain[Explainability Interface]\n  Risk <--> Explain\n  Explain --> Assessment[Contextual Assessment]\n  Risk --> Assessment"))
 
     # 3.8
-    shapes = [Box(560, 190, 440, 80, "Contextual Assessment", fill=AMBER_LIGHT, title=True), Box(560, 360, 440, 80, "Agentic Reasoning", fill=TEAL_LIGHT, title=True)]
+    shapes = [Box(560, 170, 440, 80, "Contextual Assessment", fill=AMBER_LIGHT, title=True), Box(560, 310, 440, 80, "Agentic Reasoning", fill=TEAL_LIGHT, title=True), Box(560, 455, 440, 70, "Recommendation Selection", fill=TEAL_LIGHT, title=True)]
     rec = ["Continue Monitoring", "Request Re-authentication", "Notify Reviewer", "Escalate Incident"]
-    shapes.extend(grid_boxes(rec, 150, 570, 4, 290, 85, 45, 20, WHITE))
+    shapes.extend(grid_boxes(rec, 150, 610, 4, 290, 85, 45, 20, WHITE))
     shapes.append(Box(560, 780, 440, 80, "Advisory Recommendation\nNot a final decision", fill=AMBER_LIGHT, title=True))
-    shapes.extend([Arrow(780, 270, 780, 360), Arrow(780, 440, 780, 570)])
+    shapes.extend([Arrow(780, 250, 780, 310), Arrow(780, 390, 780, 455), Arrow(780, 525, 780, 560)])
+    shapes.append(Connector(295, 560, 1295, 560))
     for i in range(4):
-        shapes.append(Arrow(295 + i * 335, 655, 780, 780))
-    diagrams.append(Diagram("3.8", "Agentic Decision Support Architecture", "architecture", (1500, 960), shapes, "flowchart TB\n  Assessment --> Agentic[Agentic Reasoning]\n  Agentic --> Continue[Continue Monitoring]\n  Agentic --> Reauth[Request Re-authentication]\n  Agentic --> Notify[Notify Reviewer]\n  Agentic --> Escalate[Escalate Incident]\n  Continue --> Recommendation[Advisory Recommendation]"))
+        x = 295 + i * 335
+        shapes.append(Arrow(x, 560, x, 610))
+    for i in range(4):
+        shapes.append(Arrow(295 + i * 335, 695, 780, 780))
+    diagrams.append(Diagram("3.8", "Agentic Decision Support Architecture", "architecture", (1500, 960), shapes, "flowchart TB\n  Assessment --> Agentic[Agentic Reasoning]\n  Agentic --> Selection[Recommendation Selection]\n  Selection --> Continue[Continue Monitoring]\n  Selection --> Reauth[Request Re-authentication]\n  Selection --> Notify[Notify Reviewer]\n  Selection --> Escalate[Escalate Incident]\n  Continue --> Recommendation[Advisory Recommendation: not final]\n  Reauth --> Recommendation\n  Notify --> Recommendation\n  Escalate --> Recommendation"))
 
     # 3.9
     shapes = [
-        Box(90, 190, 330, 74, "Agentic Recommendation", fill=AMBER_LIGHT, title=True),
-        Box(520, 190, 330, 74, "Policy Evaluation", fill=TEAL_LIGHT, title=True),
-        Box(950, 190, 330, 74, "Institutional Rules", fill=WHITE, title=True),
-        Box(520, 330, 330, 74, "Policy Action Selection", fill=TEAL_LIGHT, title=True),
+        Box(90, 190, 330, 90, "Agentic Recommendation", fill=AMBER_LIGHT, title=True),
+        Box(520, 190, 330, 90, "Policy Evaluation", fill=TEAL_LIGHT, title=True),
+        Box(950, 190, 330, 90, "Institutional Rules", fill=WHITE, title=True),
+        Box(520, 335, 330, 90, "Policy Action Selection", fill=TEAL_LIGHT, title=True),
+        Box(520, 650, 330, 78, "Policy Actions Executed", fill=TEAL_LIGHT, title=True),
     ]
     actions = ["Warning", "Pause Examination", "Screen Shield", "Candidate Acknowledgement", "Reviewer Notification", "Escalation"]
-    shapes.extend(grid_boxes(actions, 90, 495, 3, 390, 74, 60, 48, WHITE))
+    shapes.extend(grid_boxes(actions, 70, 470, 6, 190, 75, 35, 0, WHITE))
     shapes.extend(
         [
-            Box(190, 760, 310, 78, "Incident Record", fill=AMBER_LIGHT, title=True),
-            Box(620, 760, 310, 78, "Audit Log", fill=AMBER_LIGHT, title=True),
-            Box(1050, 760, 310, 78, "Reviewer Workflow", fill=AMBER_LIGHT, title=True),
+            Box(150, 805, 330, 82, "Incident Record", fill=AMBER_LIGHT, title=True),
+            Box(575, 805, 330, 82, "Audit Log", fill=AMBER_LIGHT, title=True),
+            Box(1000, 805, 330, 82, "Reviewer Workflow", fill=AMBER_LIGHT, title=True),
         ]
     )
-    shapes.extend([Arrow(420, 227, 520, 227), Arrow(850, 227, 950, 227), Arrow(685, 264, 685, 330), Arrow(1115, 264, 850, 367)])
+    shapes.extend([Arrow(420, 235, 520, 235), Arrow(850, 235, 950, 235), Arrow(685, 280, 685, 335), Arrow(1115, 280, 850, 380)])
     for i in range(6):
-        row, col = divmod(i, 3)
-        sx = 285 + col * 450
-        sy = 569 + row * 122
-        shapes.extend([Arrow(sx, sy, 345, 760), Arrow(sx, sy, 775, 760), Arrow(sx, sy, 1205, 760)])
+        sx = 165 + i * 225
+        shapes.append(Arrow(685, 425, sx, 470))
+        shapes.append(Arrow(sx, 545, 685, 650))
+    shapes.extend([Arrow(685, 728, 315, 805), Arrow(685, 728, 740, 805), Arrow(685, 728, 1165, 805)])
     diagrams.append(Diagram("3.9", "Institutional Policy and Incident Management Engine", "architecture", (1480, 940), shapes, "flowchart TB\n  Recommendation --> Evaluation[Policy Evaluation]\n  Rules[Institutional Rules] --> Evaluation\n  Evaluation --> Selection[Policy Action Selection]\n  Selection --> Warning\n  Selection --> Pause[Pause Examination]\n  Selection --> Shield[Screen Shield]\n  Selection --> Ack[Candidate Acknowledgement]\n  Selection --> Notify[Reviewer Notification]\n  Selection --> Escalation\n  Warning --> Incident[Incident Record]\n  Pause --> Incident\n  Shield --> Incident\n  Ack --> Incident\n  Notify --> Audit[Audit Log]\n  Escalation --> Reviewer[Reviewer Workflow]\n  Incident --> Reviewer\n  Audit --> Reviewer"))
 
     # 3.10
     pipeline = ["Detection", "Structured EvidenceEvent", "Contextual Intelligence Engine", "Agentic Recommendation", "Institutional Policy", "Candidate Acknowledgement\n(where required)", "Human Reviewer", "Final Institutional Decision", "Audit"]
     shapes = pipeline_shapes(pipeline, 515, 180, 520, 70, 20)
-    shapes.append(Box(1075, 680, 330, 150, "Human governance boundary:\nSERPS supports review, but does not issue automatic misconduct decisions.", fill=AMBER_LIGHT))
-    shapes.append(Arrow(1035, 715, 1075, 735, dashed=True))
+    shapes.append(Box(1060, 650, 390, 190, "Human Governance Boundary:\nSERPS supports review but does not make automatic misconduct decisions.", fill=AMBER_LIGHT))
+    shapes.append(Arrow(1035, 740, 1060, 745, dashed=True))
     diagrams.append(Diagram("3.10", "Governance-aware Decision Pipeline", "flowcharts", (1500, 1100), shapes, mmd_flow("3.10", pipeline)))
 
     # 3.11
     shapes = [
-        Box(100, 250, 400, 430, "Mode A\nSingle-camera CBT mode\n\nPrimary camera required\nSecondary not required\nCBT-centre limitation note", fill=TEAL_LIGHT, title=True),
-        Box(575, 250, 400, 430, "Mode B\nDual-camera full mode\n\nPrimary required\nSecondary required\nFull remote-proctoring coverage", fill=WHITE, title=True),
-        Box(1050, 250, 400, 430, "Mode C\nMirror-assisted low-resource mode\n\nPrimary required\nMirror required\nSecondary not required", fill=TEAL_LIGHT, title=True),
+        Box(100, 250, 400, 430, "Mode A\nSingle-camera CBT mode\n\nPrimary camera required\nSecondary camera not required\nSuitable for controlled CBT centres", fill=TEAL_LIGHT, title=True),
+        Box(575, 250, 400, 430, "Mode B\nDual-camera full proctoring mode\n\nPrimary camera required\nSecondary camera required\nProvides candidate and room coverage", fill=WHITE, title=True),
+        Box(1050, 250, 400, 430, "Mode C\nMirror-assisted low-resource mode\n\nPrimary camera required\nMirror or reflective aid required\nSecondary camera not required", fill=TEAL_LIGHT, title=True),
     ]
     diagrams.append(Diagram("3.11", "Deployment Modes Supported by SERPS", "architecture", (1550, 820), shapes, "flowchart LR\n  A[Mode A: Primary Camera] --- B[Mode B: Primary + Secondary]\n  B --- C[Mode C: Primary + Mirror]"))
 
     # 3.12
-    shapes = [Box(100, 220, 280, 75, "Camera / Audio / Browser", fill=WHITE), Box(470, 220, 280, 75, "Detection Modules", fill=WHITE), Box(840, 220, 280, 75, "EvidenceEvent", fill=AMBER_LIGHT, title=True), Box(1220, 120, 280, 75, "Contextual Intelligence", fill=TEAL_LIGHT), Box(1220, 330, 280, 75, "PostgreSQL\nPersistence", fill=GREY), Box(840, 550, 280, 75, "Reports and Audit", fill=WHITE), Box(1220, 550, 280, 75, "Reviewer Console", fill=WHITE)]
-    shapes.extend([Arrow(380, 257, 470, 257), Arrow(750, 257, 840, 257), Arrow(1120, 245, 1220, 165), Arrow(1120, 270, 1220, 365), Arrow(1360, 405, 980, 550, "read", dashed=True), Arrow(1120, 590, 1220, 590)])
+    shapes = [Box(100, 250, 280, 75, "Camera / Audio / Browser", fill=WHITE), Box(470, 250, 280, 75, "Detection Modules", fill=WHITE), Box(840, 250, 280, 75, "EvidenceEvent", fill=AMBER_LIGHT, title=True), Box(1220, 220, 280, 75, "Contextual Intelligence", fill=TEAL_LIGHT), Box(1220, 390, 280, 75, "PostgreSQL\nPersistence", fill=GREY), Box(840, 585, 280, 75, "Reports and Audit", fill=WHITE), Box(1220, 585, 280, 75, "Reviewer Console", fill=WHITE)]
+    shapes.extend([Arrow(380, 287, 470, 287), Arrow(750, 287, 840, 287), Arrow(1120, 270, 1220, 257), Arrow(1120, 305, 1220, 427), Arrow(1360, 465, 980, 585, "read", dashed=True), Arrow(1120, 625, 1220, 625)])
     diagrams.append(Diagram("3.12", "High-Level Data Flow within SERPS", "flowcharts", (1600, 780), shapes, "flowchart LR\n  Sources --> Detection --> EvidenceEvent\n  EvidenceEvent --> CIE\n  EvidenceEvent -. persists .-> DB[(PostgreSQL)]\n  DB -. read .-> Reports\n  Reports --> Reviewer"))
 
     # 3.13 use case
     shapes = [
-        Actor(120, 210, "Candidate"),
-        Actor(120, 665, "Administrator"),
-        Actor(1430, 210, "Reviewer/\nProctor"),
-        Actor(1430, 665, "System\nAdministrator"),
-        Box(310, 175, 930, 860, "SERPS System Boundary", fill="#F8FBFC", stroke=LINE, dashed=True),
+        Box(330, 180, 1570, 1220, "", fill="#F8FBFC", stroke=LINE, dashed=True),
+        Actor(150, 600, "Candidate"),
+        Actor(150, 1110, "Administrator"),
+        Actor(2070, 565, "Reviewer/Proctor"),
+        Actor(2070, 1130, "System\nAdministrator"),
+        Box(430, 245, 350, 805, "", fill=WHITE),
+        Box(790, 780, 350, 520, "", fill=WHITE),
+        Box(1220, 245, 360, 555, "", fill=WHITE),
+        Box(1220, 910, 360, 395, "", fill=WHITE),
+        Note(475, 270, "Candidate and Examination", size=26, color=DEEP_NAVY),
+        Note(875, 805, "Administration", size=26, color=DEEP_NAVY),
+        Note(1260, 270, "Review and Incident", size=26, color=DEEP_NAVY),
+        Note(1265, 935, "System Administration", size=26, color=DEEP_NAVY),
     ]
-    usecase_cols = {
-        "candidate": [("Register", 420, 250), ("Give Consent", 650, 250), ("Enrol Biometrics", 880, 250), ("Authenticate", 1110, 250), ("Perform Device Check", 530, 390), ("Take Examination", 820, 390), ("Receive Warning", 1085, 390), ("Submit Acknowledgement", 790, 525)],
-        "reviewer": [("Monitor Assigned Sessions", 870, 640), ("View Evidence", 1110, 640), ("Review Incident", 870, 760), ("Record Decision", 1110, 760), ("Request Re-authentication", 990, 880)],
-        "admin": [("Manage Candidates", 420, 695), ("Manage Examinations", 620, 815), ("Assign Candidates", 420, 935), ("Configure Policies", 620, 575), ("Generate Reports", 620, 695)],
-        "sys": [("Manage Institutions", 990, 995), ("Manage Users and Roles", 790, 995), ("Inspect Audit Logs", 1110, 525), ("Monitor System Health", 1110, 935)],
-    }
-    all_cases: dict[str, tuple[float, float]] = {}
-    for group in usecase_cols.values():
-        for label, x, y in group:
-            all_cases[label] = (x, y)
-            shapes.append(Ellipse(x, y, 195, 68, label, fill=TEAL_LIGHT if label in {"Take Examination", "Review Incident"} else WHITE))
-    for label in ["Register", "Give Consent", "Enrol Biometrics", "Authenticate", "Perform Device Check", "Take Examination", "Receive Warning", "Submit Acknowledgement"]:
-        x, y = all_cases[label]
-        shapes.append(Arrow(225, 300, x, y + 34))
-    for label in ["Manage Candidates", "Manage Examinations", "Assign Candidates", "Configure Policies", "Generate Reports"]:
-        x, y = all_cases[label]
-        shapes.append(Arrow(225, 755, x, y + 34))
-    for label in ["Monitor Assigned Sessions", "View Evidence", "Review Incident", "Record Decision", "Request Re-authentication"]:
-        x, y = all_cases[label]
-        shapes.append(Arrow(1430, 300, x + 195, y + 34))
-    for label in ["Manage Institutions", "Manage Users and Roles", "Inspect Audit Logs", "Monitor System Health"]:
-        x, y = all_cases[label]
-        shapes.append(Arrow(1430, 755, x + 195, y + 34))
-    diagrams.append(Diagram("3.13", "Use Case Diagram of SERPS", "uml", (1600, 1120), shapes, "flowchart LR\n  Candidate((Candidate)) --- Register((Register))\n  Candidate --- Consent((Give Consent))\n  Candidate --- Biometrics((Enrol Biometrics))\n  Candidate --- Auth((Authenticate))\n  Candidate --- Exam((Take Examination))\n  Reviewer((Reviewer/Proctor)) --- Monitor((Monitor Assigned Sessions))\n  Reviewer --- Review((Review Incident))\n  Reviewer --- Decision((Record Decision))\n  Admin((Administrator)) --- ManageCandidates((Manage Candidates))\n  Admin --- Policies((Configure Policies))\n  SysAdmin((System Administrator)) --- Users((Manage Users and Roles))\n  SysAdmin --- Audit((Inspect Audit Logs))"))
+    use_cases = [
+        (500, 350, "Register"), (500, 440, "Give\nConsent"), (500, 530, "Enrol\nBiometrics"), (500, 620, "Authenticate"),
+        (500, 710, "Perform\nDevice Check"), (500, 800, "Take\nExamination"), (500, 890, "Receive\nWarning"), (500, 980, "Submit\nAcknowledgement"),
+        (860, 875, "Manage\nCandidates"), (860, 965, "Assign\nCandidates"), (860, 1055, "Manage\nExams"), (860, 1145, "Configure\nPolicies"), (860, 1235, "Generate\nReports"),
+        (1295, 350, "Monitor\nAssigned\nSessions"), (1295, 455, "View\nEvidence"), (1295, 560, "Review\nIncident"), (1295, 665, "Record\nReviewer\nDecision"), (1295, 745, "Request\nRe-authentication"),
+        (1295, 995, "Manage Users\nand Roles"), (1295, 1085, "Manage\nInstitutions"), (1295, 1175, "Monitor\nSystem Health"), (1295, 1265, "Inspect\nAudit Logs"),
+    ]
+    for x, y, label in use_cases:
+        shapes.append(Ellipse(x, y, 220, 82, label, fill=AMBER_LIGHT if label in {"Take\nExamination", "Review\nIncident"} else WHITE))
+    shapes.extend([
+        Connector(260, 600, 500, 391, width=2), Connector(260, 600, 500, 481, width=2), Connector(260, 600, 500, 571, width=2), Connector(260, 600, 500, 661, width=2),
+        Connector(260, 600, 500, 751, width=2), Connector(260, 600, 500, 841, width=2), Connector(260, 600, 500, 931, width=2), Connector(260, 600, 500, 1021, width=2),
+        Connector(260, 1110, 860, 916, width=2), Connector(260, 1110, 860, 1006, width=2), Connector(260, 1110, 860, 1096, width=2), Connector(260, 1110, 860, 1186, width=2), Connector(260, 1110, 860, 1276, width=2),
+        Connector(2070, 565, 1515, 391, width=2), Connector(2070, 565, 1515, 496, width=2), Connector(2070, 565, 1515, 601, width=2), Connector(2070, 565, 1515, 706, width=2), Connector(2070, 565, 1515, 786, width=2),
+        Connector(2070, 1130, 1515, 1036, width=2), Connector(2070, 1130, 1515, 1126, width=2), Connector(2070, 1130, 1515, 1216, width=2), Connector(2070, 1130, 1515, 1306, width=2),
+    ])
+    shapes.append(Note(470, 1440, "Use cases describe user goals and responsibilities. Institutional policy and reviewer decisions remain human-governed; SERPS does not issue automatic misconduct decisions.", size=22, color=MUTED))
+    diagrams.append(Diagram("3.13", "Use Case Diagram of SERPS", "uml", (2200, 1530), shapes, "flowchart LR\n  Candidate((Candidate)) --- Register((Register))\n  Candidate --- Consent((Give Consent))\n  Candidate --- Biometrics((Enrol Biometrics))\n  Candidate --- Authenticate((Authenticate))\n  Candidate --- Device((Perform Device Check))\n  Candidate --- Exam((Take Examination))\n  Candidate --- Warning((Receive Warning))\n  Candidate --- Ack((Submit Acknowledgement))\n  Administrator((Administrator)) --- ManageCandidates((Manage Candidates))\n  Administrator --- AssignCandidates((Assign Candidates))\n  Administrator --- ManageExams((Manage Examinations))\n  Administrator --- ConfigurePolicies((Configure Policies))\n  Administrator --- Reports((Generate Reports))\n  Reviewer((Reviewer/Proctor)) --- Monitor((Monitor Assigned Sessions))\n  Reviewer --- Evidence((View Evidence))\n  Reviewer --- ReviewIncident((Review Incident))\n  Reviewer --- RecordDecision((Record Reviewer Decision))\n  Reviewer --- Reauth((Request Re-authentication))\n  SysAdmin((System Administrator)) --- Users((Manage Users and Roles))\n  SysAdmin --- Institutions((Manage Institutions))\n  SysAdmin --- Health((Monitor System Health))\n  SysAdmin --- Audit((Inspect Audit Logs))"))
 
-    # 3.14 activity
+# 3.14 activity
     shapes = [
         Ellipse(685, 180, 190, 60, "Start", fill=DEEP_NAVY, stroke=DEEP_NAVY, color=WHITE),
         Box(535, 275, 490, 64, "Register / Authenticate Candidate", fill=WHITE),
@@ -735,116 +812,201 @@ def build_diagrams() -> list[Diagram]:
     diagrams.append(Diagram("3.14", "Activity Diagram of SERPS", "uml", (1560, 1440), shapes, "flowchart TD\n  Start((Start)) --> Auth[Register / Authenticate Candidate]\n  Auth --> Device[Select Monitoring Mode and Run Device Checks]\n  Device --> Exam[Start Examination Session]\n  Exam --> Evidence[Generate Structured Evidence Events]\n  Evidence --> CIE[CIE Contextual Assessment]\n  CIE --> Agentic[Agentic Recommendation]\n  Agentic --> IPIME[IPIME Policy Evaluation]\n  IPIME --> Decision{Acknowledgement Required?}\n  Decision -- No --> Continue[Continue Monitoring / Examination Flow]\n  Decision -- Yes --> Ack[Candidate Incident Acknowledgement]\n  Ack --> Review[Human Reviewer Inspects Evidence]\n  Continue --> Final[Final Institutional Decision and Audit Report]\n  Review --> Final\n  Final --> End((End))"))
 
     # 3.15 sequence
-    participants = ["Candidate", "React Frontend", "FastAPI", "Authentication", "Camera Manager", "Evidence Services", "CIE", "Agentic", "IPIME", "Reviewer", "PostgreSQL"]
-    x_positions = [90 + i * 135 for i in range(len(participants))]
+    participants = ["Candidate", "React\nFrontend", "FastAPI", "Authentication", "Camera\nManager", "Evidence\nServices", "CIE", "Agentic", "IPIME", "Reviewer", "PostgreSQL"]
+    x_positions = [165 + i * 300 for i in range(len(participants))]
     shapes = []
+    top_y = 195
+    bottom_y = 1950
     for p, x in zip(participants, x_positions, strict=True):
-        shapes.append(Box(x, 190, 115, 55, p, fill=TEAL_LIGHT if p in {"CIE", "IPIME"} else WHITE))
-        shapes.append(Arrow(x + 57, 245, x + 57, 950, dashed=True))
-    messages = [(0, 1, 300, "start"), (1, 2, 350, "request"), (2, 3, 400, "authenticate"), (2, 4, 470, "camera control"), (4, 5, 540, "evidence"), (5, 10, 610, "persist"), (5, 6, 680, "events"), (6, 7, 750, "assessment"), (7, 8, 820, "recommendation"), (8, 9, 890, "policy response")]
+        shapes.append(Box(x - 95, top_y, 190, 72, p, fill=TEAL_LIGHT if p in {"CIE", "IPIME"} else WHITE))
+        shapes.append(Connector(x, top_y + 72, x, bottom_y, dashed=True, width=3))
+    activations = {
+        1: (330, 705), 2: (420, 1650), 3: (510, 680), 4: (880, 1040), 5: (960, 1260),
+        6: (1210, 1460), 7: (1290, 1500), 8: (1370, 1550), 9: (1450, 1630), 10: (565, 1660),
+    }
+    for idx, (y1, y2) in activations.items():
+        x = x_positions[idx]
+        shapes.append(Box(x - 8, y1, 16, y2 - y1, "", fill=TEAL_LIGHT if participants[idx] in {"CIE", "IPIME"} else WHITE, radius=4))
+    messages = [
+        (0, 1, 320, "Submit credentials"),
+        (1, 2, 410, "POST /auth/login"),
+        (2, 3, 500, "Validate credentials"),
+        (3, 10, 590, "Read user and roles"),
+        (10, 3, 680, "User and role data"),
+        (3, 2, 770, "Issue access / refresh tokens"),
+        (2, 1, 860, "Authentication response"),
+        (0, 1, 980, "Start examination"),
+        (1, 2, 1070, "Create examination session"),
+        (2, 4, 1160, "Initialise authorised devices"),
+        (4, 5, 1250, "Stream-health EvidenceEvent"),
+        (5, 10, 1340, "Persist raw EvidenceEvent"),
+        (5, 6, 1430, "Submit structured event"),
+        (6, 7, 1520, "Contextual assessment"),
+        (7, 8, 1610, "Advisory recommendation"),
+        (8, 9, 1700, "Policy response and notification"),
+        (9, 2, 1790, "Record reviewer action"),
+        (2, 10, 1880, "Persist decision and audit trail"),
+    ]
     for a, b, y, label in messages:
-        shapes.append(Arrow(x_positions[a] + 115, y, x_positions[b], y, label))
-    diagrams.append(Diagram("3.15", "Sequence Diagram of SERPS", "uml", (1650, 1020), shapes, "sequenceDiagram\n  participant Candidate\n  participant React\n  participant FastAPI\n  participant Auth\n  participant Camera\n  participant Evidence\n  participant CIE\n  participant Agentic\n  participant IPIME\n  participant Reviewer\n  participant PostgreSQL\n  Candidate->>React: Start exam\n  React->>FastAPI: Request session\n  FastAPI->>Auth: Verify identity\n  Camera->>Evidence: Emit EvidenceEvent\n  Evidence->>PostgreSQL: Persist raw event\n  Evidence->>CIE: Submit event\n  CIE->>Agentic: Contextual assessment\n  Agentic->>IPIME: Recommendation\n  IPIME->>Reviewer: Policy workflow"))
+        if b > a:
+            shapes.append(Arrow(x_positions[a] + 18, y, x_positions[b] - 18, y, label))
+        else:
+            shapes.append(Arrow(x_positions[a] - 18, y, x_positions[b] + 18, y, label))
+    shapes.append(Box(1865, 1490, 760, 270, "opt Contextual concern detected\nCIE assesses evidence in a temporal window.\nAgentic support recommends action.\nIPIME applies institutional workflow.\nHuman reviewer remains responsible for final decision.", fill="#F8FBFC", stroke=LINE, dashed=True))
+    diagrams.append(Diagram("3.15", "Sequence Diagram of SERPS", "uml", (3460, 2060), shapes, "sequenceDiagram\n  participant Candidate\n  participant React as React Frontend\n  participant FastAPI\n  participant Auth as Authentication\n  participant Camera as Camera Manager\n  participant Evidence as Evidence Services\n  participant CIE\n  participant Agentic as Agentic Support\n  participant IPIME\n  participant Reviewer\n  participant PostgreSQL\n  Candidate->>React: Submit credentials\n  React->>FastAPI: POST /auth/login\n  FastAPI->>Auth: Validate credentials\n  Auth->>PostgreSQL: Read user and roles\n  PostgreSQL-->>Auth: User and role data\n  Auth-->>FastAPI: Issue access/refresh tokens\n  FastAPI-->>React: Authentication response\n  Candidate->>React: Start examination\n  React->>FastAPI: Create examination session\n  FastAPI->>Camera: Initialise authorised devices\n  Camera->>Evidence: Stream-health EvidenceEvent\n  Evidence->>PostgreSQL: Persist raw EvidenceEvent\n  Evidence->>CIE: Submit structured event\n  opt Incident detected\n    CIE->>Agentic: Contextual assessment\n    Agentic->>IPIME: Advisory recommendation\n    IPIME->>Reviewer: Policy response and notification\n    Reviewer->>FastAPI: Record human action\n    FastAPI->>PostgreSQL: Persist decision and audit trail\n  end"))
 
     # 3.16 class
-    class_items = [
-        "Institution\ninstitution_id\nname",
-        "User\nuser_id\nemail\nstatus",
-        "Role\nrole_id\nname",
-        "UserRole\nuser_id\nrole_id",
-        "Candidate\ncandidate_id\nstudent/candidate ref",
-        "Examination\nexamination_id\ntitle",
-        "Assignment\nassignment_id\nstatus",
-        "ExaminationSession\nsession_id\nstatus\nmonitoring_mode",
-        "EvidenceEvent\nevent_id\nevent_type\nconfidence",
-        "ContextualAssessment\nassessment_id\nrisk_score\nrisk_level",
-        "Recommendation\nrecommendation_id\naction",
-        "PolicyRule\npolicy_id\ncondition\naction",
-        "Incident\nincident_id\npolicy_response",
-        "Acknowledgement\nack_id\ncandidate_statement",
-        "ReviewerAction\naction_id\ndecision\nrationale",
-        "AuditLog\naudit_id\naction\ntimestamp",
+    class_boxes = {
+        "Institution": Box(95, 190, 310, 140, "Institution\ninstitution_id\nname\ncreated_at", fill=TEAL_LIGHT, title=True),
+        "StaffUser": Box(575, 190, 310, 140, "StaffUser\nuser_id\ninstitution_id\nemail\nstatus", fill=WHITE, title=True),
+        "UserRole": Box(1055, 190, 310, 140, "UserRole\nuser_id\nrole_id", fill=WHITE, title=True),
+        "Role": Box(1535, 190, 310, 140, "Role\nrole_id\nname", fill=WHITE, title=True),
+        "Candidate": Box(95, 470, 310, 150, "Candidate\ncandidate_id\ninstitution_id\nstudent/candidate_ref\nemail", fill=WHITE, title=True),
+        "Assignment": Box(575, 470, 310, 150, "CandidateExam\nAssignment\nassignment_id\ncandidate_id\nexamination_id\nstatus", fill=WHITE, title=True),
+        "Examination": Box(1055, 470, 310, 150, "Examination\nexamination_id\ninstitution_id\ntitle\nstatus", fill=WHITE, title=True),
+        "Session": Box(1535, 470, 310, 150, "ExaminationSession\nsession_id\nassignment_id\nstatus\nmonitoring_mode", fill=WHITE, title=True),
+        "Evidence": Box(95, 760, 310, 150, "EvidenceEvent\nevent_id\nsession_id\nevent_type\nconfidence", fill=AMBER_LIGHT, title=True),
+        "Assessment": Box(575, 760, 310, 150, "ContextualAssessment\nassessment_id\nrisk_score\nrisk_level\nexplanation", fill=TEAL_LIGHT, title=True),
+        "Recommendation": Box(1055, 760, 310, 150, "Recommendation\nrecommendation_id\naction\nrationale", fill=TEAL_LIGHT, title=True),
+        "PolicyRule": Box(1535, 760, 310, 150, "PolicyRule\npolicy_id\ncondition\naction", fill=WHITE, title=True),
+        "Incident": Box(95, 1050, 310, 150, "Incident\nincident_id\nalert_id\npolicy_response\nstatus", fill=AMBER_LIGHT, title=True),
+        "Acknowledgement": Box(575, 1050, 310, 150, "Acknowledgement\nack_id\nincident_id\ncandidate_statement\nsigned_at", fill=WHITE, title=True),
+        "ReviewerAction": Box(1055, 1050, 310, 150, "ReviewerAction\naction_id\nincident_id\ndecision\nrationale", fill=WHITE, title=True),
+        "AuditLog": Box(1535, 1050, 310, 150, "AuditLog\naudit_id\naction\ntimestamp", fill=WHITE, title=True),
+    }
+    shapes = list(class_boxes.values())
+    def edge(name: str, side: str) -> tuple[float, float]:
+        box = class_boxes[name]
+        if side == "r":
+            return box.x + box.w, box.y + box.h / 2
+        if side == "l":
+            return box.x, box.y + box.h / 2
+        if side == "b":
+            return box.x + box.w / 2, box.y + box.h
+        return box.x + box.w / 2, box.y
+    rels = [
+        ("Institution", "r", "StaffUser", "l", "1 to many"),
+        ("StaffUser", "r", "UserRole", "l", "1 to many"),
+        ("UserRole", "r", "Role", "l", "many to 1"),
+        ("Institution", "b", "Candidate", "t", "1 to many"),
+        ("Candidate", "r", "Assignment", "l", "1 to many"),
+        ("Assignment", "r", "Examination", "l", "many to 1"),
+        ("Assignment", "r", "Session", "l", "1 to many"),
+        ("Session", "b", "Evidence", "t", "records"),
+        ("Session", "b", "Assessment", "t", "assessed by"),
+        ("Assessment", "r", "Recommendation", "l", "1 to many"),
+        ("Recommendation", "r", "Incident", "l", "0 to 1"),
+        ("PolicyRule", "b", "Incident", "t", "governs"),
+        ("Incident", "r", "Acknowledgement", "l", "0 to 1"),
+        ("Incident", "r", "ReviewerAction", "l", "1 to many"),
+        ("ReviewerAction", "r", "AuditLog", "l", "records"),
     ]
-    shapes = grid_boxes(class_items, 80, 200, 4, 335, 132, 38, 55, WHITE)
-    centers = [(80 + (i % 4) * 373 + 167, 200 + (i // 4) * 187 + 66) for i in range(len(class_items))]
-    rels = [(0, 1, "1..*"), (1, 3, "1..*"), (2, 3, "1..*"), (0, 4, "1..*"), (0, 5, "1..*"), (4, 6, "1..*"), (5, 6, "1..*"), (6, 7, "0..*"), (7, 8, "0..*"), (8, 9, "0..*"), (9, 10, "0..*"), (10, 12, "0..*"), (11, 12, "0..*"), (12, 13, "0..1"), (12, 14, "0..*"), (14, 15, "1..*")]
-    for a, b, label in rels:
-        shapes.append(Arrow(*centers[a], *centers[b], label=label, dashed=True))
-    diagrams.append(Diagram("3.16", "Class Diagram of SERPS", "uml", (1600, 1020), shapes, "classDiagram\n  class Institution {+institution_id +name}\n  class User {+user_id +email +status}\n  class Role {+role_id +name}\n  class UserRole {+user_id +role_id}\n  class Candidate {+candidate_id +institution_reference}\n  class Examination {+examination_id +title}\n  class CandidateExaminationAssignment {+assignment_id +status}\n  class ExaminationSession {+session_id +status +monitoring_mode}\n  class EvidenceEvent {+event_id +event_type +confidence}\n  class ContextualAssessment {+assessment_id +risk_score +risk_level}\n  class Recommendation {+recommendation_id +action}\n  class PolicyRule {+policy_id +condition +action}\n  class Incident {+incident_id +policy_response}\n  class Acknowledgement {+ack_id +candidate_statement}\n  class ReviewerAction {+action_id +decision +rationale}\n  class AuditLog {+audit_id +action +timestamp}\n  Institution \"1\" --> \"many\" User\n  User \"1\" --> \"many\" UserRole\n  Role \"1\" --> \"many\" UserRole\n  Institution \"1\" --> \"many\" Candidate\n  Institution \"1\" --> \"many\" Examination\n  CandidateExaminationAssignment --> Candidate\n  CandidateExaminationAssignment --> Examination\n  ExaminationSession --> CandidateExaminationAssignment\n  ExaminationSession --> EvidenceEvent\n  EvidenceEvent --> ContextualAssessment\n  ContextualAssessment --> Recommendation\n  Recommendation --> Incident\n  PolicyRule --> Incident\n  Incident --> Acknowledgement\n  Incident --> ReviewerAction\n  ReviewerAction --> AuditLog"))
+    for a, aside, b, bside, label in rels:
+        shapes.append(Connector(*edge(a, aside), *edge(b, bside), label=label))
+    shapes.append(Note(95, 1255, "The class diagram summarises implementation and governance domain classes. Detection modules emit EvidenceEvents; CIE/IPIME support human review rather than final misconduct decisions.", size=22, color=MUTED))
+    diagrams.append(Diagram("3.16", "Class Diagram of SERPS", "uml", (1940, 1360), shapes, "classDiagram\n  class Institution {+institution_id +name +created_at}\n  class StaffUser {+user_id +email +status}\n  class Role {+role_id +name}\n  class UserRole {+user_id +role_id}\n  class Candidate {+candidate_id +institution_reference +email}\n  class Examination {+examination_id +title +status}\n  class CandidateExaminationAssignment {+assignment_id +status}\n  class ExaminationSession {+session_id +status +monitoring_mode}\n  class EvidenceEvent {+event_id +event_type +confidence}\n  class ContextualAssessment {+risk_score +risk_level +explanation}\n  class Recommendation {+action +rationale}\n  class PolicyRule {+condition +action}\n  class Incident {+policy_response +status}\n  class Acknowledgement {+candidate_statement +signed_at}\n  class ReviewerAction {+decision +rationale}\n  class AuditLog {+action +timestamp}\n  Institution \"1\" -- \"0..*\" StaffUser\n  StaffUser \"1\" -- \"0..*\" UserRole\n  Role \"1\" -- \"0..*\" UserRole\n  Institution \"1\" -- \"0..*\" Candidate\n  Candidate \"1\" -- \"0..*\" CandidateExaminationAssignment\n  Examination \"1\" -- \"0..*\" CandidateExaminationAssignment\n  CandidateExaminationAssignment \"1\" -- \"0..*\" ExaminationSession\n  ExaminationSession \"1\" -- \"0..*\" EvidenceEvent\n  EvidenceEvent \"0..*\" -- \"0..*\" ContextualAssessment\n  ContextualAssessment \"1\" -- \"0..*\" Recommendation\n  PolicyRule \"0..*\" -- \"0..*\" Incident\n  Incident \"1\" -- \"0..1\" Acknowledgement\n  Incident \"1\" -- \"0..*\" ReviewerAction\n  ReviewerAction \"1\" -- \"0..*\" AuditLog"))
 
     # 3.17 component
-    layer_y = [190, 310, 450, 590, 730, 870]
     shapes = [
-        Box(570, layer_y[0], 420, 70, "Next.js Frontend", fill=TEAL_LIGHT, title=True),
-        Box(570, layer_y[1], 420, 70, "FastAPI API Boundary", fill=AMBER_LIGHT, title=True),
+        Box(585, 80, 430, 72, 'Next.js Frontend', fill=TEAL_LIGHT, title=True),
+        Box(585, 190, 430, 72, 'FastAPI API Boundary', fill=AMBER_LIGHT, title=True),
+        Note(120, 330, 'Application Services', size=22, color=DEEP_NAVY),
+        Box(95, 375, 240, 64, 'Authentication', fill=WHITE),
+        Box(385, 375, 240, 64, 'Candidate', fill=WHITE),
+        Box(675, 375, 240, 64, 'Examination', fill=WHITE),
+        Box(965, 375, 240, 64, 'Session', fill=WHITE),
+        Box(1255, 375, 240, 64, 'Camera', fill=WHITE),
+        Note(120, 520, 'Detection and Evidence Services', size=22, color=DEEP_NAVY),
+        Box(95, 570, 300, 70, 'Vision Detection', fill=WHITE),
+        Box(455, 570, 300, 70, 'Audio Detection', fill=WHITE),
+        Box(815, 570, 300, 70, 'Identity Signals', fill=WHITE),
+        Box(1175, 570, 300, 70, 'Evidence Service', fill=AMBER_LIGHT),
+        Note(120, 725, 'Reasoning and Governance', size=22, color=DEEP_NAVY),
+        Box(160, 775, 390, 120, 'Contextual Intelligence\nEngine (CIE)', fill=TEAL_LIGHT, title=True),
+        Box(605, 775, 390, 120, 'Agentic Decision\nSupport', fill=TEAL_LIGHT, title=True),
+        Box(1050, 775, 390, 120, 'IPIME', fill=TEAL_LIGHT, title=True),
+        Note(120, 970, 'Persistence and Outputs', size=22, color=DEEP_NAVY),
+        Box(100, 1020, 290, 66, 'PostgreSQL', fill=GREY),
+        Box(450, 1020, 290, 66, 'Evidence Storage', fill=GREY),
+        Box(800, 1020, 290, 66, 'Reporting', fill=GREY),
+        Box(1150, 1020, 290, 66, 'Audit', fill=GREY),
+        Note(650, 1135, 'Detection emits structured evidence; CIE reasons; Agentic and IPIME remain advisory before human review.', size=18, color=MUTED),
     ]
-    shapes.extend(grid_boxes(["Authentication", "Candidate", "Examination", "Session", "Camera"], 105, layer_y[2], 5, 250, 68, 34, 20, WHITE))
-    shapes.extend(grid_boxes(["Vision", "Audio", "Evidence Services"], 270, layer_y[3], 3, 300, 68, 65, 20, WHITE))
-    shapes.extend(grid_boxes(["CIE", "Agentic Decision Support", "IPIME"], 270, layer_y[4], 3, 300, 68, 65, 20, TEAL_LIGHT))
-    shapes.extend(grid_boxes(["Reporting", "Audit", "PostgreSQL", "Evidence Storage"], 105, layer_y[5], 4, 300, 68, 45, 20, GREY))
-    shapes.extend([Arrow(780, 260, 780, 310), Arrow(780, 380, 780, 450), Arrow(780, 518, 780, 590), Arrow(780, 658, 780, 730), Arrow(780, 798, 780, 870)])
-    diagrams.append(Diagram("3.17", "Component Diagram of SERPS", "uml", (1500, 1040), shapes, "flowchart TB\n  Web[Next.js Frontend] --> API[FastAPI API]\n  API --> Auth[Authentication]\n  API --> Candidate\n  API --> Examination\n  API --> Session\n  API --> Camera\n  Camera --> Vision\n  Camera --> Audio\n  Vision --> Evidence[Evidence Services]\n  Audio --> Evidence\n  Evidence --> CIE\n  CIE --> Agentic[Agentic Decision Support]\n  Agentic --> IPIME\n  IPIME --> Reporting\n  IPIME --> Audit\n  Evidence --> PostgreSQL\n  Evidence --> Storage[Evidence Storage]"))
+    shapes.extend([
+        Arrow(800, 152, 800, 190),
+        Arrow(800, 262, 800, 350),
+        Arrow(800, 262, 215, 375), Arrow(800, 262, 505, 375), Arrow(800, 262, 795, 375), Arrow(800, 262, 1085, 375), Arrow(800, 262, 1375, 375),
+        Arrow(1375, 439, 245, 570), Arrow(1375, 439, 605, 570), Arrow(1375, 439, 965, 570),
+        Arrow(245, 640, 1325, 570), Arrow(605, 640, 1325, 570), Arrow(965, 640, 1325, 570),
+        Arrow(1325, 640, 355, 775),
+        Arrow(550, 835, 605, 835),
+        Arrow(995, 835, 1050, 835),
+        Arrow(1325, 640, 245, 1020, dashed=True),
+        Arrow(1325, 640, 595, 1020, dashed=True),
+        Arrow(1245, 895, 945, 1020),
+        Arrow(1245, 895, 1295, 1020),
+    ])
+    diagrams.append(Diagram('3.17', 'Component Diagram of SERPS', 'uml', (1600, 1260), shapes, 'flowchart TB\n  Web[Next.js Frontend] --> API[FastAPI API Boundary]\n  API --> Auth[Authentication]\n  API --> Candidate[Candidate]\n  API --> Exam[Examination]\n  API --> Session[Session]\n  API --> Camera[Camera]\n  Camera --> Vision[Vision Detection]\n  Camera --> Audio[Audio Detection]\n  Camera --> Identity[Identity Signals]\n  Vision --> Evidence[Evidence Service]\n  Audio --> Evidence\n  Identity --> Evidence\n  Evidence --> CIE[Contextual Intelligence Engine]\n  CIE --> Agentic[Agentic Decision Support]\n  Agentic --> IPIME[IPIME]\n  IPIME --> Reporting\n  IPIME --> Audit\n  Evidence -.-> PostgreSQL\n  Evidence -.-> Storage[Evidence Storage]'))
 
     # 3.18 deployment
     shapes = [
-        Box(470, 185, 910, 610, "Docker Network / Optional Edge or Cloud Boundary", fill="#F8FBFC", stroke=LINE, dashed=True),
-        Box(90, 210, 300, 90, "Candidate Device\nBrowser + camera/mic", fill=WHITE, title=True),
-        Box(90, 360, 300, 90, "Reviewer Device\nBrowser console", fill=WHITE, title=True),
-        Box(90, 510, 300, 90, "Administrator Device\nBrowser dashboard", fill=WHITE, title=True),
-        Box(520, 250, 340, 110, "Web Application Container\nNext.js", fill=TEAL_LIGHT, title=True),
-        Box(980, 250, 340, 110, "API Container\nFastAPI", fill=AMBER_LIGHT, title=True),
-        Box(980, 430, 340, 110, "AI / Monitoring Services\nOpenCV, MediaPipe, YOLO adapters", fill=WHITE, title=True),
-        Box(520, 640, 340, 100, "PostgreSQL Container\nSQL persistence", fill=GREY, title=True),
-        Box(980, 640, 340, 100, "Evidence Storage\nsnapshots and artefacts", fill=GREY, title=True),
+        Box(560, 150, 1120, 760, "SERPS Containerised Deployment Environment", fill="#F8FBFC", stroke=LINE, dashed=True),
+        Box(85, 250, 370, 130, "<<device>>\nCandidate Device\nBrowser + Camera / Mic", fill=WHITE, title=True),
+        Box(85, 485, 370, 120, "<<device>>\nReviewer Device\nBrowser Console", fill=WHITE, title=True),
+        Box(85, 700, 370, 120, "<<device>>\nAdministrator Device\nDashboard", fill=WHITE, title=True),
+        Box(640, 265, 365, 125, "<<container>>\nNext.js Web App\nCandidate / Reviewer UI", fill=TEAL_LIGHT, title=True),
+        Box(1210, 265, 365, 125, "<<container>>\nFastAPI API\nService Boundary", fill=AMBER_LIGHT, title=True),
+        Box(1210, 520, 365, 145, "<<service>>\nAI Monitoring Services\nOpenCV / MediaPipe / YOLO", fill=WHITE, title=True),
+        Box(640, 720, 365, 120, "<<database>>\nPostgreSQL\nRelational Persistence", fill=GREY, title=True),
+        Box(1210, 720, 365, 120, "<<storage>>\nEvidence Storage\nSnapshots", fill=GREY, title=True),
+        Box(690, 930, 480, 58, "Optional edge/cloud execution boundary for production hardening", fill=WHITE, stroke=LINE, dashed=True),
     ]
-    shapes.extend(
-        [
-            Arrow(390, 255, 520, 305, "HTTPS"),
-            Arrow(390, 405, 520, 305, "HTTPS"),
-            Arrow(390, 555, 520, 305, "HTTPS"),
-            Arrow(860, 305, 980, 305, "REST"),
-            Arrow(390, 255, 980, 485, "WebRTC", dashed=True),
-            Arrow(1150, 360, 1150, 430, "SSE/WebSocket"),
-            Arrow(1100, 360, 690, 640, "SQL"),
-            Arrow(1150, 540, 1150, 640, "evidence"),
-        ]
-    )
-    diagrams.append(Diagram("3.18", "Deployment Diagram of SERPS", "uml", (1450, 860), shapes, "flowchart LR\n  CandidateDevice -->|HTTPS| Web[Web Application Container]\n  ReviewerDevice -->|HTTPS| Web\n  AdminDevice -->|HTTPS| Web\n  Web -->|REST| API[API Container]\n  CandidateDevice -. WebRTC .-> AI[AI / Monitoring Services]\n  API <--> |SSE / WebSocket| AI\n  API -->|SQL| DB[(PostgreSQL Container)]\n  AI -->|Evidence storage protocol| Storage[Evidence Storage]\n  subgraph DockerNetwork[Docker Network / Optional Edge or Cloud Boundary]\n    Web\n    API\n    AI\n    DB\n    Storage\n  end"))
+    shapes.extend([
+        Arrow(455, 315, 640, 315, "HTTPS"),
+        Arrow(455, 545, 640, 335, "HTTPS"),
+        Arrow(455, 760, 640, 355, "HTTPS"),
+        Arrow(1005, 327, 1210, 327, "REST"),
+        Arrow(825, 390, 1210, 575, "WebRTC media", dashed=True),
+        Arrow(1392, 390, 1392, 520, "WebSocket / SSE"),
+        Arrow(1392, 390, 825, 720, "SQL"),
+        Arrow(1320, 665, 900, 720, "event metadata", dashed=True),
+        Arrow(1392, 665, 1392, 720, "snapshots"),
+    ])
+    diagrams.append(Diagram("3.18", "Deployment Diagram of SERPS", "uml", (1760, 1010), shapes, "flowchart LR\n  CandidateDevice[<<device>> Candidate Device Browser + Camera/Mic] -->|HTTPS| Web[<<container>> Next.js Web App]\n  ReviewerDevice[<<device>> Reviewer Device Browser Console] -->|HTTPS| Web\n  AdminDevice[<<device>> Administrator Device Dashboard] -->|HTTPS| Web\n  Web -->|REST| API[<<container>> FastAPI API]\n  Web -. WebRTC media .-> AI[<<service>> AI Monitoring Services]\n  API <--> |WebSocket / SSE| AI\n  API -->|SQL| DB[(<<database>> PostgreSQL)]\n  AI -->|snapshots| Storage[<<storage>> Evidence Storage]\n  AI -. event metadata .-> DB"))
 
-    # 3.19 from SQLAlchemy metadata
-    shapes = []
-    tables = list(Base.metadata.sorted_tables)
-    if not tables:
-        shapes.append(Box(450, 300, 600, 120, "No SQLAlchemy tables detected", fill=AMBER_LIGHT))
-    else:
-        for i, table in enumerate(tables):
-            cols = []
-            for col in table.columns:
-                if col.primary_key or col.foreign_keys or col.name in {"email", "name", "title", "status", "role_name", "event_type", "confidence", "monitoring_mode", "created_at"}:
-                    markers = []
-                    if col.primary_key:
-                        markers.append("PK")
-                    if col.foreign_keys:
-                        markers.append("FK")
-                    marker = f" ({'/'.join(markers)})" if markers else ""
-                    cols.append(f"{col.name}{marker}")
-            text = wrap_identifier(table.name, 24) + "\n" + "\n".join(cols[:10])
-            row, col_idx = divmod(i, 4)
-            shapes.append(Box(55 + col_idx * 440, 190 + row * 300, 400, 260, text, fill=TEAL_LIGHT if i == 0 else WHITE, title=True))
-    rows = max(1, math.ceil(max(len(tables), 1) / 4))
-    diagrams.append(
-        Diagram(
-            "3.19",
-            "Entity Relationship Diagram of SERPS Database",
-            "architecture",
-            (1840, max(920, 250 + rows * 300)),
-            shapes,
-            erd_mermaid_from_metadata(full=False),
-            notes=[
-                "Dissertation ERD generated from implemented SQLAlchemy metadata using primary keys, key foreign keys and selected major attributes. Full technical schema is exported separately.",
-            ],
-        )
-    )
+    # 3.19 logical ERD for dissertation presentation. The full SQLAlchemy schema is exported separately.
+    shapes = [
+        Box(660, 190, 380, 125, "Institution\ninstitution_id (PK)\nname\ncreated_at", fill=TEAL_LIGHT, title=True),
+        Box(90, 405, 330, 150, "Candidate\ncandidate_id (PK)\ninstitution_id (FK)\nemail\nstatus", fill=WHITE, title=True),
+        Box(490, 405, 330, 150, "Examination\nexamination_id (PK)\ninstitution_id (FK)\ntitle\nstatus", fill=WHITE, title=True),
+        Box(890, 405, 330, 150, "StaffUser\nuser_id (PK)\ninstitution_id (FK)\nemail\nstatus", fill=WHITE, title=True),
+        Box(1290, 405, 330, 150, "Role\nrole_id (PK)\nname", fill=WHITE, title=True),
+        Box(90, 675, 350, 165, "CandidateExam\nAssignment\nassignment_id (PK)\ncandidate_id (FK)\nexamination_id (FK)\nstatus", fill=WHITE, title=True),
+        Box(490, 675, 350, 155, "ExaminationSession\nsession_id (PK)\nassignment_id (FK)\nmonitoring_mode\nstatus", fill=TEAL_LIGHT, title=True),
+        Box(890, 675, 350, 155, "EvidenceEvent\nevent_id (PK)\nsession_id (FK)\nevent_type\nconfidence", fill=AMBER_LIGHT, title=True),
+        Box(1290, 675, 350, 155, "UserRole\nuser_role_id (PK)\nuser_id (FK)\nrole_id (FK)", fill=WHITE, title=True),
+        Box(490, 980, 350, 150, "ContextualAlert\nalert_id (PK)\nsession_id (FK)\nrisk_score\nrisk_level", fill=TEAL_LIGHT, title=True),
+        Box(890, 980, 350, 150, "Incident\nincident_id (PK)\nalert_id (FK)\npolicy_response\nstatus", fill=WHITE, title=True),
+        Box(1290, 980, 350, 150, "AuditLog\naudit_id (PK)\nactor_user_id (FK)\naction\ntimestamp", fill=WHITE, title=True),
+        Note(90, 150, "Logical ERD derived from the implemented SERPS domain schema", size=24, color=DEEP_NAVY),
+        Note(220, 1235, "Logical ERD highlights the dissertation-level persistence model. Raw evidence remains immutable; contextual alerts, incidents, and audit logs support human-governed decisions.", size=21, color=MUTED),
+    ]
+    shapes.extend([
+        Connector(720, 315, 255, 405, "1..*"),
+        Connector(805, 315, 655, 405, "1..*"),
+        Connector(895, 315, 1055, 405, "1..*"),
+        Connector(990, 315, 1455, 405, "1..*"),
+        Connector(255, 555, 265, 675, "1..*"),
+        Connector(655, 555, 265, 675, "1..*"),
+        Connector(440, 757, 490, 757, "1..*"),
+        Connector(840, 757, 890, 757, "1..*"),
+        Connector(1065, 830, 665, 980, "correlates"),
+        Connector(840, 1055, 890, 1055, "triggers"),
+        Connector(1220, 1055, 1290, 1055, "records"),
+        Connector(1055, 555, 1465, 980, "audits", dashed=True),
+        Connector(1455, 555, 1465, 675, "1..*"),
+    ])
+    diagrams.append(Diagram("3.19", "Logical Entity Relationship Diagram of SERPS Database", "erd", (1760, 1400), shapes, "erDiagram\n  INSTITUTION ||--o{ CANDIDATE : owns\n  INSTITUTION ||--o{ EXAMINATION : offers\n  INSTITUTION ||--o{ STAFF_USER : employs\n  INSTITUTION ||--o{ ROLE : defines\n  STAFF_USER ||--o{ USER_ROLE : assigned\n  ROLE ||--o{ USER_ROLE : grants\n  CANDIDATE ||--o{ CANDIDATE_EXAM_ASSIGNMENT : assigned\n  EXAMINATION ||--o{ CANDIDATE_EXAM_ASSIGNMENT : includes\n  CANDIDATE_EXAM_ASSIGNMENT ||--o{ EXAMINATION_SESSION : creates\n  EXAMINATION_SESSION ||--o{ EVIDENCE_EVENT : records\n  EVIDENCE_EVENT ||--o{ CONTEXTUAL_ALERT : contextualises\n  CONTEXTUAL_ALERT ||--o{ INCIDENT : triggers\n  INCIDENT ||--o{ AUDIT_LOG : records\n  STAFF_USER ||--o{ AUDIT_LOG : performs"))
 
     # 3.20 API hub
     shapes = [Box(575, 180, 400, 80, "React / Next.js", fill=TEAL_LIGHT, title=True), Box(575, 330, 400, 80, "REST API / WebSocket", fill=AMBER_LIGHT), Box(575, 480, 400, 80, "FastAPI Hub", fill=TEAL_LIGHT, title=True)]
@@ -954,6 +1116,30 @@ def validate_mono_png(path: Path) -> tuple[bool, str]:
     return True, "Transparent monochrome PNG"
 
 
+def validate_mono_white_png(path: Path) -> tuple[bool, str]:
+    with Image.open(path) as image:
+        rgba = image.convert("RGBA")
+        sampled_pixels = 0
+        coloured_pixels = 0
+        transparent_pixels = 0
+        step = max(1, rgba.width * rgba.height // 6000)
+        for index, (r, g, b, a) in enumerate(rgba.getdata()):
+            if index % step:
+                continue
+            if a < 255:
+                transparent_pixels += 1
+            if a == 0:
+                continue
+            sampled_pixels += 1
+            if max(r, g, b) - min(r, g, b) > 8:
+                coloured_pixels += 1
+        if transparent_pixels:
+            return False, "Transparent pixels detected in white-background variant"
+        if sampled_pixels and coloured_pixels / sampled_pixels > 0.002:
+            return False, "Detected non-monochrome coloured pixels"
+    return True, "White-background monochrome PNG"
+
+
 def write_full_schema_technical_erd() -> dict[str, str]:
     safe_name = "Figure3_19_full_schema_technical"
     mmd_path = OUT / "source" / "authoritative" / f"{safe_name}.mmd"
@@ -1015,12 +1201,14 @@ def write_visual_review(diagrams: list[Diagram], artefacts: dict[str, dict[str, 
         "",
         f"Generated at: {datetime.now(timezone.utc).isoformat()}",
         "",
-        "This review records the visual-readiness status of the official Chapter Three figure variants. Colour and monochrome-transparent variants are generated from the same authoritative source for dissertation traceability.",
+        "This review records the visual-readiness status of the official Chapter Three figure variants. Colour, monochrome-transparent and monochrome-white-background variants are generated from the same authoritative source for dissertation traceability.",
         "",
         "## Review Summary",
         "",
         "- Official colour SVG/PNG variants are generated for all 21 figures.",
         "- Official monochrome transparent SVG/PNG variants are generated for all 21 figures.",
+        "- Official monochrome white-background SVG/PNG variants are generated for all 21 figures.",
+        "- Final correction pass applied locally to Figures 3.1, 3.3, 3.4, 3.5, 3.8, 3.9, 3.10, 3.11, 3.12, 3.13, 3.15, 3.16, 3.17, 3.18 and 3.19.",
         "- Existing legacy outputs remain available in the original `png/`, `svg/` and `source/` folders.",
         "- Figure 3.19 has a readable dissertation ERD plus a separate full technical schema artefact.",
         "",
@@ -1031,10 +1219,12 @@ def write_visual_review(diagrams: list[Diagram], artefacts: dict[str, dict[str, 
         status = visual_status(d)
         orientation = figure_orientation(d)
         mono_ok = artefacts[d.number].get("mono_png_valid", "unknown")
+        mono_white_ok = artefacts[d.number].get("mono_white_png_valid", "unknown")
         lines.append(f"- Figure {d.number}: **{status}**")
         lines.append(f"  - Title: {d.title}")
         lines.append(f"  - Recommended Word orientation: {orientation}")
         lines.append(f"  - Monochrome transparency check: {mono_ok}")
+        lines.append(f"  - Monochrome white-background check: {mono_white_ok}")
         if d.notes:
             for note in d.notes:
                 lines.append(f"  - Note: {note}")
@@ -1066,6 +1256,8 @@ def write_index(diagrams: list[Diagram], artefacts: dict[str, dict[str, str]]) -
         lines.append(f"  - Official colour PNG: `{files['colour_png']}`")
         lines.append(f"  - Official monochrome transparent SVG: `{files['mono_svg']}`")
         lines.append(f"  - Official monochrome transparent PNG: `{files['mono_png']}`")
+        lines.append(f"  - Official monochrome white-background SVG: `{files['mono_white_svg']}`")
+        lines.append(f"  - Official monochrome white-background PNG: `{files['mono_white_png']}`")
         lines.append(f"  - Recommended Word orientation: {files['recommended_orientation']}")
     (OUT / "figure_index.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -1095,6 +1287,8 @@ def validate(diagrams: list[Diagram], artefacts: dict[str, dict[str, str]]) -> N
     colour_svg_count = len(list((OUT / "svg" / "colour").glob("Figure3_*_colour.svg")))
     mono_png_count = len(list((OUT / "png" / "mono_transparent").glob("Figure3_*_mono_transparent.png")))
     mono_svg_count = len(list((OUT / "svg" / "mono_transparent").glob("Figure3_*_mono_transparent.svg")))
+    mono_white_png_count = len(list((OUT / "png" / "mono_white_background").glob("Figure3_*_mono_white_background.png")))
+    mono_white_svg_count = len(list((OUT / "svg" / "mono_white_background").glob("Figure3_*_mono_white_background.svg")))
     lines = [
         "# Chapter Three Diagram Validation Report",
         "",
@@ -1111,6 +1305,8 @@ def validate(diagrams: list[Diagram], artefacts: dict[str, dict[str, str]]) -> N
         f"- Official colour SVG variants: {colour_svg_count}",
         f"- Official monochrome transparent PNG variants: {mono_png_count}",
         f"- Official monochrome transparent SVG variants: {mono_svg_count}",
+        f"- Official monochrome white-background PNG variants: {mono_white_png_count}",
+        f"- Official monochrome white-background SVG variants: {mono_white_svg_count}",
         "- Draw.io exports were not generated in this urgent sprint; Mermaid sources remain editable and SVG is the publication authority.",
         "",
         "## Validation Results",
@@ -1118,11 +1314,12 @@ def validate(diagrams: list[Diagram], artefacts: dict[str, dict[str, str]]) -> N
     ]
     for d in diagrams:
         files = artefacts[d.number]
-        ok = all((ROOT / files[key]).exists() for key in ("source", "category_source", "svg", "png", "authoritative_source", "colour_svg", "colour_png", "mono_svg", "mono_png"))
+        ok = all((ROOT / files[key]).exists() for key in ("source", "category_source", "svg", "png", "authoritative_source", "colour_svg", "colour_png", "mono_svg", "mono_png", "mono_white_svg", "mono_white_png"))
         lines.append(f"- Figure {d.number}: {'PASS' if ok else 'NEEDS REVIEW'} - {d.title}")
         lines.append(f"  - Visual status: {files['visual_review_status']}")
         lines.append(f"  - Recommended Word orientation: {files['recommended_orientation']}")
         lines.append(f"  - Monochrome check: {files['mono_png_valid']}")
+        lines.append(f"  - Monochrome white-background check: {files['mono_white_png_valid']}")
         for note in d.notes:
             lines.append(f"  - Note: {note}")
     lines.extend(
@@ -1165,6 +1362,8 @@ def main() -> None:
         colour_png = OUT / "png" / "colour" / f"{d.safe_name}_colour.png"
         mono_svg = OUT / "svg" / "mono_transparent" / f"{d.safe_name}_mono_transparent.svg"
         mono_png = OUT / "png" / "mono_transparent" / f"{d.safe_name}_mono_transparent.png"
+        mono_white_svg = OUT / "svg" / "mono_white_background" / f"{d.safe_name}_mono_white_background.svg"
+        mono_white_png = OUT / "png" / "mono_white_background" / f"{d.safe_name}_mono_white_background.png"
         category_mmd = OUT / d.category / f"{d.safe_name}.mmd"
         if mmd_path.exists() and not legacy_mmd.exists():
             shutil.copyfile(mmd_path, legacy_mmd)
@@ -1177,7 +1376,10 @@ def main() -> None:
         render_png(d, colour_png, COLOUR_THEME)
         render_svg(d, mono_svg, MONO_THEME)
         render_png(d, mono_png, MONO_THEME)
+        render_svg(d, mono_white_svg, MONO_WHITE_THEME)
+        render_png(d, mono_white_png, MONO_WHITE_THEME)
         mono_ok, mono_message = validate_mono_png(mono_png)
+        mono_white_ok, mono_white_message = validate_mono_white_png(mono_white_png)
         artefacts[d.number] = {
             "source": rel(mmd_path),
             "legacy_source": rel(legacy_mmd) if legacy_mmd.exists() else "",
@@ -1189,6 +1391,8 @@ def main() -> None:
             "colour_png": rel(colour_png),
             "mono_svg": rel(mono_svg),
             "mono_png": rel(mono_png),
+            "mono_white_svg": rel(mono_white_svg),
+            "mono_white_png": rel(mono_white_png),
             "source_sha256": checksum(mmd_path),
             "authoritative_source_sha256": checksum(authoritative_mmd),
             "svg_sha256": checksum(svg_path),
@@ -1197,7 +1401,10 @@ def main() -> None:
             "colour_png_sha256": checksum(colour_png),
             "mono_svg_sha256": checksum(mono_svg),
             "mono_png_sha256": checksum(mono_png),
+            "mono_white_svg_sha256": checksum(mono_white_svg),
+            "mono_white_png_sha256": checksum(mono_white_png),
             "mono_png_valid": "PASS" if mono_ok else f"NEEDS REVIEW - {mono_message}",
+            "mono_white_png_valid": "PASS" if mono_white_ok else f"NEEDS REVIEW - {mono_white_message}",
             "recommended_orientation": figure_orientation(d),
             "visual_review_status": visual_status(d),
         }

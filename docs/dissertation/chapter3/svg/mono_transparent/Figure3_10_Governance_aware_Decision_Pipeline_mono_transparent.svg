@@ -33,11 +33,11 @@
 <rect x="515" y="900" width="520" height="70" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
 <text x="775.0" y="942.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Audit</text>
 <line x1="775.0" y1="883" x2="775.0" y2="896" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
-<rect x="1075" y="680" width="330" height="150" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
-<text x="1240.0" y="720.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Human governance boundary:</text>
-<text x="1240.0" y="748.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">SERPS supports review, but does</text>
-<text x="1240.0" y="776.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">not issue automatic misconduct</text>
-<text x="1240.0" y="804.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">decisions.</text>
-<line x1="1035" y1="715" x2="1075" y2="735" stroke="#000000" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
+<rect x="1060" y="650" width="390" height="190" rx="18" fill="none" stroke="#000000" stroke-width="3"/>
+<text x="1255.0" y="710.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">Human Governance Boundary:</text>
+<text x="1255.0" y="738.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">SERPS supports review but does</text>
+<text x="1255.0" y="766.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">not make automatic misconduct</text>
+<text x="1255.0" y="794.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="500" fill="#000000">decisions.</text>
+<line x1="1035" y1="740" x2="1060" y2="745" stroke="#000000" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
 <text x="1430.0" y="1055.0" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500" fill="#000000">SERPS Architecture</text>
 </svg>
