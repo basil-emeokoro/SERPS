@@ -7,6 +7,7 @@ from apps.api.app.api.v1.routes.evidence import router as evidence_router
 from apps.api.app.api.v1.routes.examination_sessions import router as examination_sessions_router
 from apps.api.app.api.v1.routes.examinations import router as examinations_router
 from apps.api.app.api.v1.routes.health import router as health_router
+from apps.api.app.api.v1.routes.governance import router as governance_router
 from apps.api.app.api.v1.routes.institutions import router as institutions_router
 from apps.api.app.api.v1.routes.roles import router as roles_router
 from apps.api.app.api.v1.routes.users import router as users_router
@@ -26,3 +27,4 @@ api_v1_router.include_router(
 )
 api_v1_router.include_router(audit_logs_router, prefix="/audit-logs", tags=["audit-logs"])
 api_v1_router.include_router(evidence_router, prefix="/evidence-events", tags=["evidence"])
+api_v1_router.include_router(governance_router, tags=["governance"])
