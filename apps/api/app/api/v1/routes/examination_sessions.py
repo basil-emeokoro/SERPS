@@ -4,6 +4,12 @@ from sqlalchemy.orm import Session
 
 from apps.api.app.api.deps.auth import CurrentUser, require_roles
 from apps.api.app.api.deps.database import get_db
+from serps_pop.domain.evidence import EvidenceEvent
+from serps_pop.evidence.services import (
+    EvidenceAccessDenied,
+    EvidenceSessionNotFound,
+    list_session_evidence_events,
+)
 from serps_pop.identity.models import ExaminationSession
 from serps_pop.identity.schemas import ExaminationSessionCreate, ExaminationSessionRead, ExaminationSessionTransition
 from serps_pop.identity.services import (
@@ -76,3 +82,22 @@ def transition(
     db.commit()
     db.refresh(session)
     return session
+
+
+@router.get("/{session_id}/evidence-events", response_model=list[EvidenceEvent])
+def list_evidence_events(
+    session_id: str,
+    current_user: CurrentUser = Depends(require_roles(ROLE_ADMIN, ROLE_REVIEWER, ROLE_SYSADMIN)),
+    db: Session = Depends(get_db),
+) -> list[EvidenceEvent]:
+    try:
+        return list_session_evidence_events(
+            db,
+            session_id,
+            actor_institution_id=current_user.institution_id,
+            actor_roles=current_user.roles,
+        )
+    except EvidenceSessionNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Examination session not found.") from exc
+    except EvidenceAccessDenied as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions for this session.") from exc

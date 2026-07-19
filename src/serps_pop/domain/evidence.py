@@ -20,6 +20,7 @@ def utc_now() -> datetime:
 
 class EvidenceEventCreate(BaseModel):
     session_id: str = Field(min_length=1)
+    timestamp: datetime = Field(default_factory=utc_now)
     candidate_id: str = Field(min_length=1)
     source_module: str = Field(min_length=1)
     event_type: str = Field(min_length=1)
@@ -37,7 +38,6 @@ class EvidenceEventCreate(BaseModel):
 
 class EvidenceEvent(EvidenceEventCreate):
     event_id: str = Field(default_factory=lambda: f"EVT-{uuid4().hex[:8].upper()}")
-    timestamp: datetime = Field(default_factory=utc_now)
 
     def risk_points(self) -> int:
         return round(
@@ -49,3 +49,6 @@ class EvidenceEvent(EvidenceEventCreate):
     @classmethod
     def from_create(cls, payload: EvidenceEventCreate) -> "EvidenceEvent":
         return cls(**payload.model_dump())
+
+
+

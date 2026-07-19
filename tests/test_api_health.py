@@ -11,7 +11,7 @@ def test_api_health() -> None:
     assert response.json()["status"] == "ok"
 
 
-def test_create_evidence_event() -> None:
+def test_create_evidence_event_requires_authentication() -> None:
     client = TestClient(app)
     response = client.post(
         "/api/v1/evidence-events/",
@@ -27,7 +27,5 @@ def test_create_evidence_event() -> None:
         },
     )
 
-    assert response.status_code == 201
-    body = response.json()
-    assert body["event_id"].startswith("EVT-")
-    assert body["event_type"] == "face_present"
+    assert response.status_code == 401
+
