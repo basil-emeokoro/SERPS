@@ -1,0 +1,14 @@
+import type { OperationalSessionDetail } from "../lib/contracts";
+import { CameraPanel, EmptyState, RiskIndicator, StatusBadge } from "./OperationalStates";
+
+function text(value: unknown): string { return value == null ? "Unavailable" : String(value); }
+
+export function SessionOperationalView({ detail }: { detail: OperationalSessionDetail }) {
+  const assessment = detail.latest_assessment;
+  return <>
+    <section className="session-summary card"><div><span className="eyebrow dark">Operational session</span><h2>{text(detail.candidate.full_name)} · {text(detail.examination.title)}</h2><p>{text(detail.institution.name)} · Session {text(detail.session.session_id)}</p></div><StatusBadge label={text(detail.session.status)} tone={detail.session.status === "active" ? "success" : "neutral"} /></section>
+    <section className="dual-camera-grid" aria-label="Primary and secondary camera status"><CameraPanel title="Primary camera" camera={detail.primary_camera} /><CameraPanel title="Secondary camera" camera={detail.secondary_camera} /></section>
+    <section className="governance-grid"><article className="card"><span className="badge">Contextual intelligence</span><h2>Risk assessment</h2><RiskIndicator level={assessment ? text(assessment.risk_level) : null} score={assessment && typeof assessment.risk_score === "number" ? assessment.risk_score : null} /><p>{assessment ? text(assessment.explanation) : "No contextual assessment is available."}</p></article><article className="card"><span className="badge">Bounded advisory</span><h2>Agentic recommendation</h2><p>{detail.latest_recommendation ? text(detail.latest_recommendation.recommended_action) : "No recommendation available."}</p><p>{detail.latest_recommendation ? text(detail.latest_recommendation.explanation) : "Evidence has not produced a recommendation."}</p></article><article className="card"><span className="badge">Institution policy</span><h2>IPIME outcome</h2><p>{detail.latest_policy_evaluation ? text(detail.latest_policy_evaluation.approved_action) : "No policy evaluation available."}</p><p>{detail.latest_policy_evaluation ? text(detail.latest_policy_evaluation.explanation) : "Policy has not been evaluated."}</p></article></section>
+    <section className="card timeline-card"><h2>Evidence and governance timeline</h2>{detail.timeline.length ? <ol className="timeline">{detail.timeline.map((entry) => <li key={`${entry.entry_type}-${entry.entity_id}`}><time>{new Date(entry.timestamp).toLocaleString()}</time><strong>{entry.entry_type}</strong><span>{text(entry.payload.event_type ?? entry.payload.action ?? entry.payload.decision ?? entry.entity_id)}</span></li>)}</ol> : <EmptyState title="No timeline entries" detail="No EvidenceEvents or governance records have been persisted for this session." />}</section>
+  </>;
+}

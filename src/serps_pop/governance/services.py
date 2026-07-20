@@ -383,6 +383,22 @@ def record_reviewer_decision(
     return decision
 
 
+def _queue_camera_status(db: Session, session_id: str, role: str) -> str:
+    events = db.scalars(
+        select(EvidenceEventRecord)
+        .where(
+            EvidenceEventRecord.session_id == session_id,
+            EvidenceEventRecord.event_type.in_(("camera_connected", "camera_disconnected")),
+        )
+        .order_by(EvidenceEventRecord.timestamp.desc(), EvidenceEventRecord.event_id.desc())
+    ).all()
+    for event in events:
+        event_role = event.camera_id or "primary"
+        if event_role == role:
+            return "connected" if event.event_type == "camera_connected" else "disconnected"
+    return "not_seen"
+
+
 def reviewer_queue(
     db: Session,
     *,
@@ -467,6 +483,10 @@ def reviewer_queue(
                 "agent_recommendation": recommendation.recommended_action if recommendation else None,
                 "policy_outcome": evaluation.approved_action if evaluation else None,
                 "review_status": "resolved" if decision else "unresolved" if is_unresolved else "not_required",
+                "latest_event_timestamp": latest_evidence.timestamp if latest_evidence else None,
+                "primary_camera_status": _queue_camera_status(db, session_record.session_id, "primary"),
+                "secondary_camera_status": _queue_camera_status(db, session_record.session_id, "secondary"),
+                "reviewer_action_status": "resolved" if decision else "action_required" if is_unresolved else "not_required",
             }
         )
     return items
@@ -509,7 +529,7 @@ def governance_timeline(
             "entry_type": "EvidenceEvent",
             "entity_id": item.event_id,
             "timestamp": item.timestamp,
-            "payload": _model_payload(item, ("event_id", "candidate_id", "event_type", "source_module", "risk_weight", "confidence", "description")),
+            "payload": _model_payload(item, ("event_id", "candidate_id", "event_type", "source_module", "risk_weight", "confidence", "camera_id", "description")),
         })
     collections = (
         (ContextualAssessment, "ContextualAssessment", "assessment_id", "calculated_at", ASSESSMENT_FIELDS),

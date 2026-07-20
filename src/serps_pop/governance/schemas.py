@@ -132,6 +132,10 @@ class ReviewerQueueItem(BaseModel):
     agent_recommendation: str | None
     policy_outcome: str | None
     review_status: str
+    latest_event_timestamp: datetime | None = None
+    primary_camera_status: str = "not_seen"
+    secondary_camera_status: str = "not_seen"
+    reviewer_action_status: str = "not_required"
 
 
 class TimelineEntry(BaseModel):
@@ -150,5 +154,58 @@ class SessionReportRead(BaseModel):
     report_version: str
     summary: str
     report_payload: dict[str, Any]
+
+    model_config = {"from_attributes": True}
+
+
+class OperationalCameraStatus(BaseModel):
+    role: str
+    configured: bool
+    connection_status: str
+    last_seen_at: datetime | None
+    label: str | None
+    stream_mode: str = "metadata_only"
+    failure_reason: str | None = None
+
+
+class OperationalSessionDetail(BaseModel):
+    session: dict[str, Any]
+    candidate: dict[str, Any]
+    institution: dict[str, Any]
+    examination: dict[str, Any]
+    primary_camera: OperationalCameraStatus
+    secondary_camera: OperationalCameraStatus
+    latest_assessment: dict[str, Any] | None
+    latest_recommendation: dict[str, Any] | None
+    latest_policy_evaluation: dict[str, Any] | None
+    reviewer_decisions: list[dict[str, Any]]
+    timeline: list[TimelineEntry]
+    reports: list[dict[str, Any]]
+
+
+class AdministratorMetricsRead(BaseModel):
+    institution_id: str
+    active_candidates: int
+    active_sessions: int
+    completed_sessions: int
+    risk_counts: dict[str, int]
+    unresolved_reviewer_cases: int
+    connected_primary_cameras: int
+    connected_secondary_cameras: int
+    camera_failure_count: int
+    recent_audit_activity: list[dict[str, Any]]
+
+
+class InstitutionalPolicyRead(BaseModel):
+    policy_id: str
+    institution_id: str
+    policy_version: str
+    high_risk_action: str
+    critical_risk_action: str
+    reviewer_notification_threshold: str
+    candidate_acknowledgement_required: bool
+    reauthentication_threshold: str
+    automatic_exam_termination_allowed: bool
+    status: str
 
     model_config = {"from_attributes": True}

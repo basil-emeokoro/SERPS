@@ -6,9 +6,12 @@ from sqlalchemy.orm import Session
 from apps.api.app.api.deps.auth import CurrentUser, require_roles
 from apps.api.app.api.deps.database import get_db
 from serps_pop.governance.schemas import (
+    AdministratorMetricsRead,
     AgentRecommendationRead,
     AssessmentCreate,
     ContextualAssessmentRead,
+    InstitutionalPolicyRead,
+    OperationalSessionDetail,
     PolicyEvaluationRead,
     ReviewerDecisionCreate,
     ReviewerDecisionRead,
@@ -16,6 +19,7 @@ from serps_pop.governance.schemas import (
     SessionReportRead,
     TimelineEntry,
 )
+from serps_pop.governance.operational import administrator_metrics, current_policy, operational_session_detail
 from serps_pop.governance.services import (
     GovernanceAccessDenied,
     GovernanceConflict,
@@ -166,6 +170,64 @@ def get_reviewer_queue(
         examination_id=examination,
         active_session=active_session,
     )
+
+
+@router.get("/reviewer/sessions/{session_id}", response_model=OperationalSessionDetail)
+def reviewer_session_detail(
+    session_id: str,
+    current_user: CurrentUser = Depends(require_roles(*GOVERNANCE_ROLES)),
+    db: Session = Depends(get_db),
+) -> dict:
+    try:
+        return operational_session_detail(
+            db,
+            session_id=session_id,
+            actor_institution_id=current_user.institution_id,
+            actor_roles=current_user.roles,
+        )
+    except (GovernanceNotFound, GovernanceAccessDenied) as exc:
+        _raise_http(exc)
+
+
+@router.get("/admin/metrics", response_model=AdministratorMetricsRead)
+def admin_metrics(
+    institution: str | None = Query(default=None),
+    current_user: CurrentUser = Depends(require_roles(ROLE_ADMIN, ROLE_SYSADMIN)),
+    db: Session = Depends(get_db),
+) -> dict:
+    if institution and not current_user.has_role(ROLE_SYSADMIN) and institution != current_user.institution_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions for institution filter.")
+    return administrator_metrics(
+        db,
+        actor_institution_id=current_user.institution_id,
+        actor_roles=current_user.roles,
+        institution_id=institution,
+    )
+
+
+@router.get("/admin/sessions/{session_id}", response_model=OperationalSessionDetail)
+def admin_session_detail(
+    session_id: str,
+    current_user: CurrentUser = Depends(require_roles(ROLE_ADMIN, ROLE_SYSADMIN)),
+    db: Session = Depends(get_db),
+) -> dict:
+    try:
+        return operational_session_detail(
+            db,
+            session_id=session_id,
+            actor_institution_id=current_user.institution_id,
+            actor_roles=current_user.roles,
+        )
+    except (GovernanceNotFound, GovernanceAccessDenied) as exc:
+        _raise_http(exc)
+
+
+@router.get("/admin/policy", response_model=InstitutionalPolicyRead | None)
+def admin_policy(
+    current_user: CurrentUser = Depends(require_roles(ROLE_ADMIN, ROLE_SYSADMIN)),
+    db: Session = Depends(get_db),
+) -> object | None:
+    return current_policy(db, current_user.institution_id)
 
 
 @router.post(
