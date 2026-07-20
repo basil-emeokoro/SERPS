@@ -71,6 +71,9 @@ class ConsentRead(BaseModel):
 
 
 class DeviceCheckCreate(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    attestation_source: Literal["candidate_browser"] = "candidate_browser"
     supported_browser: bool
     secure_context: bool
     camera_available: bool
@@ -78,7 +81,7 @@ class DeviceCheckCreate(BaseModel):
     browser_name: str = Field(min_length=1, max_length=80)
     browser_version: str | None = Field(default=None, max_length=40)
     operating_system: str | None = Field(default=None, max_length=120)
-    user_agent: str | None = None
+    user_agent: str | None = Field(default=None, max_length=2048)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -102,6 +105,9 @@ class DeviceCheckRead(BaseModel):
 
 
 class CameraSelectionCreate(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    attestation_source: Literal["candidate_browser"] = "candidate_browser"
     camera_role: Literal["primary", "secondary"]
     device_id: str = Field(min_length=1, max_length=255)
     label: str | None = Field(default=None, max_length=255)
@@ -126,9 +132,12 @@ class CameraSelectionRead(BaseModel):
 
 
 class CameraPermissionCreate(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    attestation_source: Literal["candidate_browser"] = "candidate_browser"
     camera_role: Literal["primary", "secondary"]
     status: Literal["granted", "denied", "prompt", "unavailable"]
-    user_agent: str | None = None
+    user_agent: str | None = Field(default=None, max_length=2048)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

@@ -199,6 +199,21 @@ def record_device_check(
     passed = all(
         (payload.supported_browser, payload.secure_context, payload.camera_available, payload.microphone_available)
     )
+    received_at = utc_now()
+    attestation_metadata = {
+        **payload.metadata,
+        "attestation_source": payload.attestation_source,
+        "attestation_status": "passed" if passed else "failed",
+        "server_received_at": received_at.isoformat(),
+        "browser_context": {
+            "browser_name": payload.browser_name,
+            "browser_version": payload.browser_version,
+            "operating_system": payload.operating_system,
+            "secure_context": payload.secure_context,
+            "user_agent": payload.user_agent,
+        },
+        "trust_boundary": "client_reported",
+    }
     record = DeviceCheckRecord(
         institution_id=candidate.institution_id,
         candidate_id=candidate.candidate_id,
@@ -211,8 +226,9 @@ def record_device_check(
         browser_version=payload.browser_version,
         operating_system=payload.operating_system,
         passed=passed,
+        checked_at=received_at,
         user_agent=payload.user_agent,
-        metadata_json=payload.metadata,
+        metadata_json=attestation_metadata,
     )
     db.add(record)
     db.flush()
@@ -224,7 +240,7 @@ def record_device_check(
         actor_user_id=user_id,
         target_type="device_check",
         target_id=record.device_check_id,
-        metadata={"passed": passed},
+        metadata={"passed": passed, "attestation_source": payload.attestation_source, "trust_boundary": "client_reported"},
     )
     return record
 
@@ -242,6 +258,7 @@ def record_camera_selection(
     )
     if other and other.device_id == payload.device_id:
         raise CandidatePrerequisiteMissing("Primary and secondary cameras must use distinct devices.")
+    received_at = utc_now()
     record = CameraSelectionRecord(
         institution_id=candidate.institution_id,
         candidate_id=candidate.candidate_id,
@@ -251,7 +268,14 @@ def record_camera_selection(
         label=payload.label,
         group_id=payload.group_id,
         camera_count=payload.camera_count,
-        metadata_json=payload.metadata,
+        selected_at=received_at,
+        metadata_json={
+            **payload.metadata,
+            "attestation_source": payload.attestation_source,
+            "attestation_status": "selected",
+            "server_received_at": received_at.isoformat(),
+            "trust_boundary": "client_reported",
+        },
     )
     db.add(record)
     db.flush()
@@ -271,6 +295,7 @@ def record_camera_selection(
 def record_camera_permission(
     db: Session, *, candidate: Candidate, user_id: str, payload: CameraPermissionCreate
 ) -> CameraPermissionRecord:
+    received_at = utc_now()
     record = CameraPermissionRecord(
         institution_id=candidate.institution_id,
         candidate_id=candidate.candidate_id,
@@ -278,8 +303,16 @@ def record_camera_permission(
         camera_role=payload.camera_role,
         status=payload.status,
         granted=payload.status == "granted",
+        checked_at=received_at,
         user_agent=payload.user_agent,
-        metadata_json=payload.metadata,
+        metadata_json={
+            **payload.metadata,
+            "attestation_source": payload.attestation_source,
+            "attestation_status": payload.status,
+            "server_received_at": received_at.isoformat(),
+            "browser_context": {"user_agent": payload.user_agent},
+            "trust_boundary": "client_reported",
+        },
     )
     db.add(record)
     db.flush()

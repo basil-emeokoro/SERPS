@@ -244,6 +244,59 @@ def test_start_rejects_consent_and_camera_bypass(client: TestClient, db: Session
     assert "primary_camera_permission_granted" in denied.json()["detail"]
 
 
+def test_device_and_permission_attestations_are_bounded_and_candidate_owned(client: TestClient, db: Session):
+    institution_id = seed_institution(db)
+    first, first_token = register_and_login(client, suffix="1")
+    second, second_token = register_and_login(client, suffix="2")
+    payload = {
+        "supported_browser": True,
+        "secure_context": True,
+        "camera_available": True,
+        "microphone_available": True,
+        "browser_name": "Chrome",
+        "browser_version": "126",
+        "operating_system": "Test OS",
+        "user_agent": "pytest-browser",
+    }
+
+    recorded = client.post("/api/v1/candidate/device-checks", headers=auth(first_token), json=payload)
+    assert recorded.status_code == 201
+    assert recorded.json()["candidate_id"] == first["candidate_id"]
+    assert recorded.json()["institution_id"] == institution_id
+    assert recorded.json()["metadata_json"]["trust_boundary"] == "client_reported"
+    assert recorded.json()["metadata_json"]["attestation_status"] == "passed"
+    assert recorded.json()["metadata_json"]["server_received_at"]
+
+    forbidden_identity = client.post(
+        "/api/v1/candidate/device-checks",
+        headers=auth(second_token),
+        json={**payload, "candidate_id": first["candidate_id"]},
+    )
+    assert forbidden_identity.status_code == 422
+    assert client.post(
+        "/api/v1/candidate/device-checks",
+        headers=auth(second_token),
+        json={**payload, "attestation_source": "reviewer_console"},
+    ).status_code == 422
+
+    permission = client.post(
+        "/api/v1/candidate/camera-permissions",
+        headers=auth(first_token),
+        json={"camera_role": "primary", "status": "granted", "user_agent": "pytest-browser"},
+    )
+    assert permission.status_code == 201
+    assert permission.json()["metadata_json"]["attestation_source"] == "candidate_browser"
+    assert permission.json()["metadata_json"]["attestation_status"] == "granted"
+    assert permission.json()["metadata_json"]["browser_context"]["user_agent"] == "pytest-browser"
+    assert client.post(
+        "/api/v1/candidate/camera-permissions",
+        headers=auth(first_token),
+        json={"camera_role": "primary", "status": "verified_by_server"},
+    ).status_code == 422
+
+    assert second["institution_id"] == institution_id
+
+
 def test_session_creation_links_preflight_and_dashboard(client: TestClient, db: Session):
     seed_institution(db)
     candidate, token = register_and_login(client)
