@@ -100,7 +100,7 @@ def seed() -> None:
 
         candidate_user = first_or_none(db, User, User.email == "candidate@miva.edu.ng")
         if candidate_user is None:
-            create_user(
+            candidate_user = create_user(
                 db,
                 UserCreate(
                     institution_id=institution.institution_id,
@@ -135,6 +135,8 @@ def seed() -> None:
                 institution_id=institution.institution_id,
                 actor_user_id=admin.user_id,
             )
+        if candidate.user_id is None:
+            candidate.user_id = candidate_user.user_id
 
         exam = first_or_none(db, Examination, Examination.exam_code == "SERPS-DEMO-001")
         if exam is None:

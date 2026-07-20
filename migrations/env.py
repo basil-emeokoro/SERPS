@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 
 from serps_pop.config.settings import get_settings
+from serps_pop.candidate_workflow import models as candidate_workflow_models  # noqa: F401
 from serps_pop.evidence import models  # noqa: F401
 from serps_pop.governance import models as governance_models  # noqa: F401
 from serps_pop.identity import models as identity_models  # noqa: F401

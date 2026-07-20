@@ -108,6 +108,7 @@ class Candidate(Base):
     )
 
     candidate_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    user_id: Mapped[str | None] = mapped_column(ForeignKey("users.user_id"), nullable=True, unique=True)
     institution_id: Mapped[str] = mapped_column(ForeignKey("institutions.institution_id"), nullable=False)
     candidate_identifier: Mapped[str] = mapped_column(String(80), nullable=False)
     identifier_type: Mapped[str] = mapped_column(String(40), nullable=False, default="candidate_id")
@@ -190,6 +191,14 @@ class ExaminationSession(Base):
     examination_id: Mapped[str] = mapped_column(ForeignKey("examinations.examination_id"), nullable=False)
     assignment_id: Mapped[str | None] = mapped_column(
         ForeignKey("candidate_examination_assignments.assignment_id"), nullable=True
+    )
+    consent_id: Mapped[str | None] = mapped_column(ForeignKey("candidate_consents.consent_id"), nullable=True)
+    device_check_id: Mapped[str | None] = mapped_column(ForeignKey("device_check_records.device_check_id"), nullable=True)
+    camera_selection_id: Mapped[str | None] = mapped_column(
+        ForeignKey("camera_selection_records.camera_selection_id"), nullable=True
+    )
+    camera_permission_id: Mapped[str | None] = mapped_column(
+        ForeignKey("camera_permission_records.camera_permission_id"), nullable=True
     )
     status: Mapped[str] = mapped_column(String(40), nullable=False, default="authentication_pending")
     deployment_mode: Mapped[str] = mapped_column(String(10), nullable=False, default="A")
