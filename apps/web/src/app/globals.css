@@ -156,6 +156,29 @@ input {
   background: #f8fcfd;
   font: inherit;
 }
+select {
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid var(--serps-border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+video {
+  width: 100%;
+  min-height: 180px;
+  margin-top: 14px;
+  border-radius: 8px;
+  background: #102333;
+}
+.workflow-status { border: 1px solid var(--serps-border); border-radius: 8px; padding: 14px; background: #fff; }
+.assignment { display: grid; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--serps-border); }
+.assignment span { color: var(--serps-muted); }
+.check-row { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; line-height: 1.5; }
+.check-row input { width: auto; margin-top: 4px; }
+.readiness-card { margin-top: 20px; }
+.state-pass { border-color: #58a77f !important; background: #e8f8ef !important; }
+.state-fail { border-color: #cb7b7b !important; background: #fff0f0 !important; }
 button,
 .button-link {
   display: inline-flex;
