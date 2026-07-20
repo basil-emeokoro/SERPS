@@ -102,6 +102,7 @@ class DeviceCheckRead(BaseModel):
 
 
 class CameraSelectionCreate(BaseModel):
+    camera_role: Literal["primary", "secondary"]
     device_id: str = Field(min_length=1, max_length=255)
     label: str | None = Field(default=None, max_length=255)
     group_id: str | None = Field(default=None, max_length=255)
@@ -113,6 +114,7 @@ class CameraSelectionRead(BaseModel):
     camera_selection_id: str
     institution_id: str
     candidate_id: str
+    camera_role: str
     device_id: str
     label: str | None
     group_id: str | None
@@ -124,6 +126,7 @@ class CameraSelectionRead(BaseModel):
 
 
 class CameraPermissionCreate(BaseModel):
+    camera_role: Literal["primary", "secondary"]
     status: Literal["granted", "denied", "prompt", "unavailable"]
     user_agent: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -133,6 +136,7 @@ class CameraPermissionRead(BaseModel):
     camera_permission_id: str
     institution_id: str
     candidate_id: str
+    camera_role: str
     status: str
     granted: bool
     checked_at: datetime
@@ -156,6 +160,8 @@ class CandidateSessionRead(BaseModel):
     device_check_id: str
     camera_selection_id: str
     camera_permission_id: str
+    secondary_camera_selection_id: str
+    secondary_camera_permission_id: str
     status: str
     authentication_gate_status: str
     device_check_status: str
@@ -170,7 +176,22 @@ class CandidateDashboardRead(BaseModel):
     assigned_examinations: list[AssignedExaminationRead]
     consent: ConsentRead | None
     device_check: DeviceCheckRead | None
-    camera_selection: CameraSelectionRead | None
-    camera_permission: CameraPermissionRead | None
+    primary_camera_selection: CameraSelectionRead | None
+    primary_camera_permission: CameraPermissionRead | None
+    secondary_camera_selection: CameraSelectionRead | None
+    secondary_camera_permission: CameraPermissionRead | None
     active_session: CandidateSessionRead | None
     readiness: dict[str, bool]
+
+
+class CandidateWorkspaceRead(BaseModel):
+    candidate: dict[str, Any]
+    institution: dict[str, Any]
+    examination: dict[str, Any]
+    session: CandidateSessionRead
+    consent: ConsentRead
+    device_check: DeviceCheckRead
+    primary_camera: CameraSelectionRead
+    primary_permission: CameraPermissionRead
+    secondary_camera: CameraSelectionRead
+    secondary_permission: CameraPermissionRead

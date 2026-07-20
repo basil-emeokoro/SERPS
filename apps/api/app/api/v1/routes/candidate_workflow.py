@@ -18,6 +18,7 @@ from serps_pop.candidate_workflow.schemas import (
     CandidateRegistrationRead,
     CandidateSessionRead,
     CandidateSessionStart,
+    CandidateWorkspaceRead,
     ConsentCreate,
     ConsentRead,
     DeviceCheckCreate,
@@ -25,9 +26,12 @@ from serps_pop.candidate_workflow.schemas import (
 )
 from serps_pop.candidate_workflow.services import (
     CandidatePrerequisiteMissing,
+    CandidateAccessDenied,
     assigned_examinations,
     candidate_dashboard,
     candidate_for_user,
+    candidate_workspace,
+    complete_candidate_session,
     record_camera_permission,
     record_camera_selection,
     record_consent,
@@ -149,9 +153,13 @@ def select_camera(
     current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE)),
     db: Session = Depends(get_db),
 ) -> object:
-    record = record_camera_selection(
-        db, candidate=_candidate(db, current_user), user_id=current_user.user_id, payload=payload
-    )
+    try:
+        record = record_camera_selection(
+            db, candidate=_candidate(db, current_user), user_id=current_user.user_id, payload=payload
+        )
+    except CandidatePrerequisiteMissing as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     db.commit()
     db.refresh(record)
     return record
@@ -196,6 +204,46 @@ def start_session(
     except DomainNotFound as exc:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except (DomainConflict, CandidatePrerequisiteMissing) as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+
+@router.get("/sessions/{session_id}", response_model=CandidateWorkspaceRead)
+def get_workspace(
+    session_id: str,
+    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE)),
+    db: Session = Depends(get_db),
+) -> dict:
+    try:
+        return candidate_workspace(db, _candidate(db, current_user), session_id)
+    except DomainNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except CandidateAccessDenied as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    except CandidatePrerequisiteMissing as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+
+@router.post("/sessions/{session_id}/complete", response_model=CandidateSessionRead)
+def complete_session(
+    session_id: str,
+    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE)),
+    db: Session = Depends(get_db),
+) -> object:
+    try:
+        session = complete_candidate_session(
+            db, _candidate(db, current_user), session_id, current_user.user_id
+        )
+        db.commit()
+        db.refresh(session)
+        return session
+    except DomainNotFound as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except CandidateAccessDenied as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
     except (DomainConflict, CandidatePrerequisiteMissing) as exc:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc

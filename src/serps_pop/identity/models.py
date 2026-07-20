@@ -200,6 +200,12 @@ class ExaminationSession(Base):
     camera_permission_id: Mapped[str | None] = mapped_column(
         ForeignKey("camera_permission_records.camera_permission_id"), nullable=True
     )
+    secondary_camera_selection_id: Mapped[str | None] = mapped_column(
+        ForeignKey("camera_selection_records.camera_selection_id"), nullable=True
+    )
+    secondary_camera_permission_id: Mapped[str | None] = mapped_column(
+        ForeignKey("camera_permission_records.camera_permission_id"), nullable=True
+    )
     status: Mapped[str] = mapped_column(String(40), nullable=False, default="authentication_pending")
     deployment_mode: Mapped[str] = mapped_column(String(10), nullable=False, default="A")
     authentication_gate_status: Mapped[str] = mapped_column(String(40), nullable=False, default="pending")

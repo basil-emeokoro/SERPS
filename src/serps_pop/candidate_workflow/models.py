@@ -70,12 +70,14 @@ class CameraSelectionRecord(Base):
         CheckConstraint("camera_count >= 1", name="camera_count_positive"),
         Index("ix_camera_selections_institution_candidate", "institution_id", "candidate_id"),
         Index("ix_camera_selections_candidate_selected", "candidate_id", "selected_at"),
+        Index("ix_camera_selections_candidate_role_selected", "candidate_id", "camera_role", "selected_at"),
     )
 
     camera_selection_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
     institution_id: Mapped[str] = mapped_column(ForeignKey("institutions.institution_id"), nullable=False)
     candidate_id: Mapped[str] = mapped_column(ForeignKey("candidates.candidate_id"), nullable=False)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.user_id"), nullable=False)
+    camera_role: Mapped[str] = mapped_column(String(20), nullable=False, default="primary")
     device_id: Mapped[str] = mapped_column(String(255), nullable=False)
     label: Mapped[str | None] = mapped_column(String(255), nullable=True)
     group_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -89,6 +91,7 @@ class CameraPermissionRecord(Base):
     __table_args__ = (
         Index("ix_camera_permissions_institution_candidate", "institution_id", "candidate_id"),
         Index("ix_camera_permissions_candidate_checked", "candidate_id", "checked_at"),
+        Index("ix_camera_permissions_candidate_role_checked", "candidate_id", "camera_role", "checked_at"),
         Index("ix_camera_permissions_status", "status"),
     )
 
@@ -96,6 +99,7 @@ class CameraPermissionRecord(Base):
     institution_id: Mapped[str] = mapped_column(ForeignKey("institutions.institution_id"), nullable=False)
     candidate_id: Mapped[str] = mapped_column(ForeignKey("candidates.candidate_id"), nullable=False)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.user_id"), nullable=False)
+    camera_role: Mapped[str] = mapped_column(String(20), nullable=False, default="primary")
     status: Mapped[str] = mapped_column(String(30), nullable=False)
     granted: Mapped[bool] = mapped_column(Boolean, nullable=False)
     checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)

@@ -52,10 +52,16 @@ class CandidatePrerequisiteMissing(ValueError):
 T = TypeVar("T")
 
 
-def _latest(db: Session, model: type[T], candidate_id: str, timestamp_column: Any) -> T | None:
+def _latest(
+    db: Session,
+    model: type[T],
+    candidate_id: str,
+    timestamp_column: Any,
+    *criteria: Any,
+) -> T | None:
     return db.scalar(
         select(model)
-        .where(model.candidate_id == candidate_id)
+        .where(model.candidate_id == candidate_id, *criteria)
         .order_by(timestamp_column.desc())
         .limit(1)
     )
@@ -226,10 +232,21 @@ def record_device_check(
 def record_camera_selection(
     db: Session, *, candidate: Candidate, user_id: str, payload: CameraSelectionCreate
 ) -> CameraSelectionRecord:
+    other_role = "secondary" if payload.camera_role == "primary" else "primary"
+    other = _latest(
+        db,
+        CameraSelectionRecord,
+        candidate.candidate_id,
+        CameraSelectionRecord.selected_at,
+        CameraSelectionRecord.camera_role == other_role,
+    )
+    if other and other.device_id == payload.device_id:
+        raise CandidatePrerequisiteMissing("Primary and secondary cameras must use distinct devices.")
     record = CameraSelectionRecord(
         institution_id=candidate.institution_id,
         candidate_id=candidate.candidate_id,
         user_id=user_id,
+        camera_role=payload.camera_role,
         device_id=payload.device_id,
         label=payload.label,
         group_id=payload.group_id,
@@ -246,7 +263,7 @@ def record_camera_selection(
         actor_user_id=user_id,
         target_type="camera_selection",
         target_id=record.camera_selection_id,
-        metadata={"camera_count": record.camera_count},
+        metadata={"camera_count": record.camera_count, "camera_role": record.camera_role},
     )
     return record
 
@@ -258,6 +275,7 @@ def record_camera_permission(
         institution_id=candidate.institution_id,
         candidate_id=candidate.candidate_id,
         user_id=user_id,
+        camera_role=payload.camera_role,
         status=payload.status,
         granted=payload.status == "granted",
         user_agent=payload.user_agent,
@@ -273,7 +291,7 @@ def record_camera_permission(
         actor_user_id=user_id,
         target_type="camera_permission",
         target_id=record.camera_permission_id,
-        metadata={"status": record.status, "granted": record.granted},
+        metadata={"status": record.status, "granted": record.granted, "camera_role": record.camera_role},
     )
     return record
 
@@ -281,8 +299,22 @@ def record_camera_permission(
 def latest_readiness(db: Session, candidate: Candidate) -> dict[str, Any]:
     consent = _latest(db, CandidateConsent, candidate.candidate_id, CandidateConsent.accepted_at)
     device = _latest(db, DeviceCheckRecord, candidate.candidate_id, DeviceCheckRecord.checked_at)
-    selection = _latest(db, CameraSelectionRecord, candidate.candidate_id, CameraSelectionRecord.selected_at)
-    permission = _latest(db, CameraPermissionRecord, candidate.candidate_id, CameraPermissionRecord.checked_at)
+    primary_selection = _latest(
+        db, CameraSelectionRecord, candidate.candidate_id, CameraSelectionRecord.selected_at,
+        CameraSelectionRecord.camera_role == "primary",
+    )
+    secondary_selection = _latest(
+        db, CameraSelectionRecord, candidate.candidate_id, CameraSelectionRecord.selected_at,
+        CameraSelectionRecord.camera_role == "secondary",
+    )
+    primary_permission = _latest(
+        db, CameraPermissionRecord, candidate.candidate_id, CameraPermissionRecord.checked_at,
+        CameraPermissionRecord.camera_role == "primary",
+    )
+    secondary_permission = _latest(
+        db, CameraPermissionRecord, candidate.candidate_id, CameraPermissionRecord.checked_at,
+        CameraPermissionRecord.camera_role == "secondary",
+    )
     consent_valid = bool(
         consent
         and consent.accepted
@@ -295,15 +327,22 @@ def latest_readiness(db: Session, candidate: Candidate) -> dict[str, Any]:
         "authenticated": True,
         "consent_valid": consent_valid,
         "device_check_passed": bool(device and device.passed),
-        "camera_selected": selection is not None,
-        "camera_permission_granted": bool(permission and permission.granted),
+        "primary_camera_selected": primary_selection is not None,
+        "primary_camera_permission_granted": bool(primary_permission and primary_permission.granted),
+        "secondary_camera_selected": secondary_selection is not None,
+        "secondary_camera_permission_granted": bool(secondary_permission and secondary_permission.granted),
+        "distinct_cameras": bool(
+            primary_selection and secondary_selection and primary_selection.device_id != secondary_selection.device_id
+        ),
     }
     readiness["ready_to_start"] = all(readiness.values())
     return {
         "consent": consent,
         "device_check": device,
-        "camera_selection": selection,
-        "camera_permission": permission,
+        "primary_camera_selection": primary_selection,
+        "primary_camera_permission": primary_permission,
+        "secondary_camera_selection": secondary_selection,
+        "secondary_camera_permission": secondary_permission,
         "readiness": readiness,
     }
 
@@ -346,8 +385,10 @@ def start_examination_session(
         assignment_id=assignment.assignment_id,
         consent_id=state["consent"].consent_id,
         device_check_id=state["device_check"].device_check_id,
-        camera_selection_id=state["camera_selection"].camera_selection_id,
-        camera_permission_id=state["camera_permission"].camera_permission_id,
+        camera_selection_id=state["primary_camera_selection"].camera_selection_id,
+        camera_permission_id=state["primary_camera_permission"].camera_permission_id,
+        secondary_camera_selection_id=state["secondary_camera_selection"].camera_selection_id,
+        secondary_camera_permission_id=state["secondary_camera_permission"].camera_permission_id,
         status="active",
         deployment_mode=deployment_mode,
         authentication_gate_status="passed",
@@ -371,6 +412,8 @@ def start_examination_session(
             "device_check_id": session.device_check_id,
             "camera_selection_id": session.camera_selection_id,
             "camera_permission_id": session.camera_permission_id,
+            "secondary_camera_selection_id": session.secondary_camera_selection_id,
+            "secondary_camera_permission_id": session.secondary_camera_permission_id,
         },
     )
     return session
@@ -399,8 +442,71 @@ def candidate_dashboard(db: Session, candidate: Candidate) -> dict[str, Any]:
         "assigned_examinations": assigned_examinations(db, candidate),
         "consent": state["consent"],
         "device_check": state["device_check"],
-        "camera_selection": state["camera_selection"],
-        "camera_permission": state["camera_permission"],
+        "primary_camera_selection": state["primary_camera_selection"],
+        "primary_camera_permission": state["primary_camera_permission"],
+        "secondary_camera_selection": state["secondary_camera_selection"],
+        "secondary_camera_permission": state["secondary_camera_permission"],
         "active_session": active_session,
         "readiness": state["readiness"],
     }
+
+
+def candidate_workspace(db: Session, candidate: Candidate, session_id: str) -> dict[str, Any]:
+    session = db.get(ExaminationSession, session_id)
+    if session is None:
+        raise DomainNotFound("Examination session not found.")
+    if session.candidate_id != candidate.candidate_id or session.institution_id != candidate.institution_id:
+        raise CandidateAccessDenied("Candidate cannot access another candidate's examination session.")
+    institution = db.get(Institution, session.institution_id)
+    examination = db.get(Examination, session.examination_id)
+    consent = db.get(CandidateConsent, session.consent_id)
+    device = db.get(DeviceCheckRecord, session.device_check_id)
+    primary = db.get(CameraSelectionRecord, session.camera_selection_id)
+    primary_permission = db.get(CameraPermissionRecord, session.camera_permission_id)
+    secondary = db.get(CameraSelectionRecord, session.secondary_camera_selection_id)
+    secondary_permission = db.get(CameraPermissionRecord, session.secondary_camera_permission_id)
+    if not all((institution, examination, consent, device, primary, primary_permission, secondary, secondary_permission)):
+        raise CandidatePrerequisiteMissing("Session pre-examination records are incomplete.")
+    return {
+        "candidate": {
+            "candidate_id": candidate.candidate_id,
+            "full_name": candidate.full_name,
+            "email": candidate.email,
+        },
+        "institution": {"institution_id": institution.institution_id, "name": institution.name, "code": institution.code},
+        "examination": {
+            "examination_id": examination.examination_id,
+            "title": examination.title,
+            "exam_code": examination.exam_code,
+            "duration_minutes": examination.duration_minutes,
+        },
+        "session": session,
+        "consent": consent,
+        "device_check": device,
+        "primary_camera": primary,
+        "primary_permission": primary_permission,
+        "secondary_camera": secondary,
+        "secondary_permission": secondary_permission,
+    }
+
+
+def complete_candidate_session(db: Session, candidate: Candidate, session_id: str, user_id: str) -> ExaminationSession:
+    workspace = candidate_workspace(db, candidate, session_id)
+    session = workspace["session"]
+    if session.status != "active":
+        raise DomainConflict("Only an active demonstration session can be completed.")
+    session.status = "completed"
+    session.monitoring_status = "completed"
+    session.ended_at = utc_now()
+    db.flush()
+    audit(
+        db,
+        action="candidate.session.complete",
+        result="success",
+        institution_id=candidate.institution_id,
+        actor_user_id=user_id,
+        target_type="examination_session",
+        target_id=session.session_id,
+        metadata={"workspace": "demonstration_examination"},
+    )
+    return session
