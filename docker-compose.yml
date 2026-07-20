@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: serps
-      POSTGRES_PASSWORD: serps
+      POSTGRES_PASSWORD: ${SERPS_POSTGRES_PASSWORD:?Set SERPS_POSTGRES_PASSWORD}
       POSTGRES_DB: serps_pop
     ports:
       - "5432:5432"
@@ -20,7 +20,10 @@ services:
       context: .
       dockerfile: docker/api.Dockerfile
     environment:
-      SERPS_DATABASE_URL: postgresql+psycopg://serps:serps@db:5432/serps_pop
+      SERPS_ENV: ${SERPS_ENV:-production}
+      SERPS_DATABASE_URL: ${SERPS_DATABASE_URL:?Set SERPS_DATABASE_URL with host db}
+      SERPS_JWT_SECRET: ${SERPS_JWT_SECRET:?Set SERPS_JWT_SECRET}
+      SERPS_CORS_ORIGINS: ${SERPS_CORS_ORIGINS:-http://localhost:3000}
     ports:
       - "8000:8000"
     depends_on:
@@ -32,7 +35,7 @@ services:
       context: .
       dockerfile: docker/web.Dockerfile
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
     depends_on:

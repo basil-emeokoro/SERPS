@@ -1,6 +1,240 @@
 {
   "components": {
     "schemas": {
+      "AdministratorMetricsRead": {
+        "properties": {
+          "active_candidates": {
+            "title": "Active Candidates",
+            "type": "integer"
+          },
+          "active_sessions": {
+            "title": "Active Sessions",
+            "type": "integer"
+          },
+          "camera_failure_count": {
+            "title": "Camera Failure Count",
+            "type": "integer"
+          },
+          "completed_sessions": {
+            "title": "Completed Sessions",
+            "type": "integer"
+          },
+          "connected_primary_cameras": {
+            "title": "Connected Primary Cameras",
+            "type": "integer"
+          },
+          "connected_secondary_cameras": {
+            "title": "Connected Secondary Cameras",
+            "type": "integer"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "recent_audit_activity": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Recent Audit Activity",
+            "type": "array"
+          },
+          "risk_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Risk Counts",
+            "type": "object"
+          },
+          "unresolved_reviewer_cases": {
+            "title": "Unresolved Reviewer Cases",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "institution_id",
+          "active_candidates",
+          "active_sessions",
+          "completed_sessions",
+          "risk_counts",
+          "unresolved_reviewer_cases",
+          "connected_primary_cameras",
+          "connected_secondary_cameras",
+          "camera_failure_count",
+          "recent_audit_activity"
+        ],
+        "title": "AdministratorMetricsRead",
+        "type": "object"
+      },
+      "AgentRecommendationRead": {
+        "properties": {
+          "assessment_id": {
+            "title": "Assessment Id",
+            "type": "string"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "metadata_json": {
+            "additionalProperties": true,
+            "title": "Metadata Json",
+            "type": "object"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "string"
+          },
+          "recommendation_id": {
+            "title": "Recommendation Id",
+            "type": "string"
+          },
+          "recommended_action": {
+            "enum": [
+              "CONTINUE_MONITORING",
+              "REQUEST_REAUTHENTICATION",
+              "NOTIFY_REVIEWER",
+              "REQUEST_CANDIDATE_ACKNOWLEDGEMENT",
+              "ESCALATE_INCIDENT"
+            ],
+            "title": "Recommended Action",
+            "type": "string"
+          },
+          "requires_reviewer": {
+            "title": "Requires Reviewer",
+            "type": "boolean"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recommendation_id",
+          "institution_id",
+          "session_id",
+          "assessment_id",
+          "created_by",
+          "created_at",
+          "recommended_action",
+          "priority",
+          "confidence",
+          "explanation",
+          "requires_reviewer",
+          "status",
+          "metadata_json"
+        ],
+        "title": "AgentRecommendationRead",
+        "type": "object"
+      },
+      "AssessmentCreate": {
+        "properties": {
+          "window_seconds": {
+            "default": 60,
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Window Seconds",
+            "type": "integer"
+          }
+        },
+        "title": "AssessmentCreate",
+        "type": "object"
+      },
+      "AssignedExaminationRead": {
+        "properties": {
+          "assignment_id": {
+            "title": "Assignment Id",
+            "type": "string"
+          },
+          "assignment_status": {
+            "title": "Assignment Status",
+            "type": "string"
+          },
+          "duration_minutes": {
+            "title": "Duration Minutes",
+            "type": "integer"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "exam_code": {
+            "title": "Exam Code",
+            "type": "string"
+          },
+          "examination_id": {
+            "title": "Examination Id",
+            "type": "string"
+          },
+          "monitoring_mode": {
+            "title": "Monitoring Mode",
+            "type": "string"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "assignment_id",
+          "assignment_status",
+          "examination_id",
+          "exam_code",
+          "title",
+          "status",
+          "starts_at",
+          "ends_at",
+          "duration_minutes",
+          "monitoring_mode"
+        ],
+        "title": "AssignedExaminationRead",
+        "type": "object"
+      },
       "AssignmentCreate": {
         "properties": {
           "candidate_id": {
@@ -135,6 +369,246 @@
         "title": "AuditLogRead",
         "type": "object"
       },
+      "CameraPermissionCreate": {
+        "properties": {
+          "camera_role": {
+            "enum": [
+              "primary",
+              "secondary"
+            ],
+            "title": "Camera Role",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "granted",
+              "denied",
+              "prompt",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          }
+        },
+        "required": [
+          "camera_role",
+          "status"
+        ],
+        "title": "CameraPermissionCreate",
+        "type": "object"
+      },
+      "CameraPermissionRead": {
+        "properties": {
+          "camera_permission_id": {
+            "title": "Camera Permission Id",
+            "type": "string"
+          },
+          "camera_role": {
+            "title": "Camera Role",
+            "type": "string"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "checked_at": {
+            "format": "date-time",
+            "title": "Checked At",
+            "type": "string"
+          },
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "metadata_json": {
+            "additionalProperties": true,
+            "title": "Metadata Json",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          }
+        },
+        "required": [
+          "camera_permission_id",
+          "institution_id",
+          "candidate_id",
+          "camera_role",
+          "status",
+          "granted",
+          "checked_at",
+          "user_agent",
+          "metadata_json"
+        ],
+        "title": "CameraPermissionRead",
+        "type": "object"
+      },
+      "CameraSelectionCreate": {
+        "properties": {
+          "camera_count": {
+            "maximum": 64.0,
+            "minimum": 1.0,
+            "title": "Camera Count",
+            "type": "integer"
+          },
+          "camera_role": {
+            "enum": [
+              "primary",
+              "secondary"
+            ],
+            "title": "Camera Role",
+            "type": "string"
+          },
+          "device_id": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Device Id",
+            "type": "string"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          }
+        },
+        "required": [
+          "camera_role",
+          "device_id",
+          "camera_count"
+        ],
+        "title": "CameraSelectionCreate",
+        "type": "object"
+      },
+      "CameraSelectionRead": {
+        "properties": {
+          "camera_count": {
+            "title": "Camera Count",
+            "type": "integer"
+          },
+          "camera_role": {
+            "title": "Camera Role",
+            "type": "string"
+          },
+          "camera_selection_id": {
+            "title": "Camera Selection Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "device_id": {
+            "title": "Device Id",
+            "type": "string"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "metadata_json": {
+            "additionalProperties": true,
+            "title": "Metadata Json",
+            "type": "object"
+          },
+          "selected_at": {
+            "format": "date-time",
+            "title": "Selected At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "camera_selection_id",
+          "institution_id",
+          "candidate_id",
+          "camera_role",
+          "device_id",
+          "label",
+          "group_id",
+          "camera_count",
+          "selected_at",
+          "metadata_json"
+        ],
+        "title": "CameraSelectionRead",
+        "type": "object"
+      },
       "CandidateCreate": {
         "properties": {
           "candidate_identifier": {
@@ -247,6 +721,113 @@
           "email"
         ],
         "title": "CandidateCreate",
+        "type": "object"
+      },
+      "CandidateDashboardRead": {
+        "properties": {
+          "active_session": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CandidateSessionRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "assigned_examinations": {
+            "items": {
+              "$ref": "#/components/schemas/AssignedExaminationRead"
+            },
+            "title": "Assigned Examinations",
+            "type": "array"
+          },
+          "candidate": {
+            "additionalProperties": true,
+            "title": "Candidate",
+            "type": "object"
+          },
+          "consent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConsentRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "device_check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeviceCheckRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "primary_camera_permission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CameraPermissionRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "primary_camera_selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CameraSelectionRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "readiness": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Readiness",
+            "type": "object"
+          },
+          "secondary_camera_permission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CameraPermissionRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "secondary_camera_selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CameraSelectionRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "candidate",
+          "assigned_examinations",
+          "consent",
+          "device_check",
+          "primary_camera_selection",
+          "primary_camera_permission",
+          "secondary_camera_selection",
+          "secondary_camera_permission",
+          "active_session",
+          "readiness"
+        ],
+        "title": "CandidateDashboardRead",
         "type": "object"
       },
       "CandidateRead": {
@@ -364,6 +945,245 @@
         "title": "CandidateRead",
         "type": "object"
       },
+      "CandidateRegistrationCreate": {
+        "properties": {
+          "candidate_identifier": {
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Candidate Identifier",
+            "type": "string"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "full_name": {
+            "maxLength": 180,
+            "minLength": 2,
+            "title": "Full Name",
+            "type": "string"
+          },
+          "identifier_type": {
+            "default": "candidate_id",
+            "maxLength": 40,
+            "title": "Identifier Type",
+            "type": "string"
+          },
+          "institution_code": {
+            "maxLength": 32,
+            "minLength": 2,
+            "title": "Institution Code",
+            "type": "string"
+          },
+          "matric_number": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matric Number"
+          },
+          "password": {
+            "maxLength": 256,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          },
+          "programme": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Programme"
+          },
+          "registration_number": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration Number"
+          }
+        },
+        "required": [
+          "institution_code",
+          "candidate_identifier",
+          "full_name",
+          "email",
+          "password"
+        ],
+        "title": "CandidateRegistrationCreate",
+        "type": "object"
+      },
+      "CandidateRegistrationRead": {
+        "properties": {
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "candidate_identifier": {
+            "title": "Candidate Identifier",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "user_id",
+          "institution_id",
+          "candidate_identifier",
+          "full_name",
+          "email",
+          "status"
+        ],
+        "title": "CandidateRegistrationRead",
+        "type": "object"
+      },
+      "CandidateSessionRead": {
+        "properties": {
+          "assignment_id": {
+            "title": "Assignment Id",
+            "type": "string"
+          },
+          "authentication_gate_status": {
+            "title": "Authentication Gate Status",
+            "type": "string"
+          },
+          "camera_permission_id": {
+            "title": "Camera Permission Id",
+            "type": "string"
+          },
+          "camera_selection_id": {
+            "title": "Camera Selection Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "consent_id": {
+            "title": "Consent Id",
+            "type": "string"
+          },
+          "device_check_id": {
+            "title": "Device Check Id",
+            "type": "string"
+          },
+          "device_check_status": {
+            "title": "Device Check Status",
+            "type": "string"
+          },
+          "examination_id": {
+            "title": "Examination Id",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "monitoring_status": {
+            "title": "Monitoring Status",
+            "type": "string"
+          },
+          "secondary_camera_permission_id": {
+            "title": "Secondary Camera Permission Id",
+            "type": "string"
+          },
+          "secondary_camera_selection_id": {
+            "title": "Secondary Camera Selection Id",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "institution_id",
+          "candidate_id",
+          "examination_id",
+          "assignment_id",
+          "consent_id",
+          "device_check_id",
+          "camera_selection_id",
+          "camera_permission_id",
+          "secondary_camera_selection_id",
+          "secondary_camera_permission_id",
+          "status",
+          "authentication_gate_status",
+          "device_check_status",
+          "monitoring_status",
+          "started_at"
+        ],
+        "title": "CandidateSessionRead",
+        "type": "object"
+      },
+      "CandidateSessionStart": {
+        "properties": {
+          "deployment_mode": {
+            "default": "A",
+            "pattern": "^[ABC]$",
+            "title": "Deployment Mode",
+            "type": "string"
+          }
+        },
+        "title": "CandidateSessionStart",
+        "type": "object"
+      },
       "CandidateUpdate": {
         "properties": {
           "department": {
@@ -435,6 +1255,469 @@
           }
         },
         "title": "CandidateUpdate",
+        "type": "object"
+      },
+      "CandidateWorkspaceRead": {
+        "properties": {
+          "candidate": {
+            "additionalProperties": true,
+            "title": "Candidate",
+            "type": "object"
+          },
+          "consent": {
+            "$ref": "#/components/schemas/ConsentRead"
+          },
+          "device_check": {
+            "$ref": "#/components/schemas/DeviceCheckRead"
+          },
+          "examination": {
+            "additionalProperties": true,
+            "title": "Examination",
+            "type": "object"
+          },
+          "institution": {
+            "additionalProperties": true,
+            "title": "Institution",
+            "type": "object"
+          },
+          "primary_camera": {
+            "$ref": "#/components/schemas/CameraSelectionRead"
+          },
+          "primary_permission": {
+            "$ref": "#/components/schemas/CameraPermissionRead"
+          },
+          "secondary_camera": {
+            "$ref": "#/components/schemas/CameraSelectionRead"
+          },
+          "secondary_permission": {
+            "$ref": "#/components/schemas/CameraPermissionRead"
+          },
+          "session": {
+            "$ref": "#/components/schemas/CandidateSessionRead"
+          }
+        },
+        "required": [
+          "candidate",
+          "institution",
+          "examination",
+          "session",
+          "consent",
+          "device_check",
+          "primary_camera",
+          "primary_permission",
+          "secondary_camera",
+          "secondary_permission"
+        ],
+        "title": "CandidateWorkspaceRead",
+        "type": "object"
+      },
+      "ConsentCreate": {
+        "properties": {
+          "consent_version": {
+            "default": "CONSENT-1.0",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Consent Version",
+            "type": "string"
+          },
+          "institutional_policy_accepted": {
+            "title": "Institutional Policy Accepted",
+            "type": "boolean"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "monitoring_consent": {
+            "title": "Monitoring Consent",
+            "type": "boolean"
+          },
+          "privacy_notice_accepted": {
+            "title": "Privacy Notice Accepted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "monitoring_consent",
+          "privacy_notice_accepted",
+          "institutional_policy_accepted"
+        ],
+        "title": "ConsentCreate",
+        "type": "object"
+      },
+      "ConsentRead": {
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "accepted_at": {
+            "format": "date-time",
+            "title": "Accepted At",
+            "type": "string"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "consent_id": {
+            "title": "Consent Id",
+            "type": "string"
+          },
+          "consent_version": {
+            "title": "Consent Version",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "institutional_policy_accepted": {
+            "title": "Institutional Policy Accepted",
+            "type": "boolean"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "metadata_json": {
+            "additionalProperties": true,
+            "title": "Metadata Json",
+            "type": "object"
+          },
+          "monitoring_consent": {
+            "title": "Monitoring Consent",
+            "type": "boolean"
+          },
+          "privacy_notice_accepted": {
+            "title": "Privacy Notice Accepted",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consent_id",
+          "institution_id",
+          "candidate_id",
+          "user_id",
+          "consent_version",
+          "monitoring_consent",
+          "privacy_notice_accepted",
+          "institutional_policy_accepted",
+          "accepted",
+          "accepted_at",
+          "ip_address",
+          "user_agent",
+          "metadata_json"
+        ],
+        "title": "ConsentRead",
+        "type": "object"
+      },
+      "ContextualAssessmentRead": {
+        "properties": {
+          "assessment_id": {
+            "title": "Assessment Id",
+            "type": "string"
+          },
+          "calculated_at": {
+            "format": "date-time",
+            "title": "Calculated At",
+            "type": "string"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "evidence_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Event Ids",
+            "type": "array"
+          },
+          "evidence_window_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Window End"
+          },
+          "evidence_window_start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Window Start"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "metadata_json": {
+            "additionalProperties": true,
+            "title": "Metadata Json",
+            "type": "object"
+          },
+          "risk_level": {
+            "title": "Risk Level",
+            "type": "string"
+          },
+          "risk_score": {
+            "title": "Risk Score",
+            "type": "number"
+          },
+          "rule_version": {
+            "title": "Rule Version",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "assessment_id",
+          "institution_id",
+          "session_id",
+          "candidate_id",
+          "created_by",
+          "calculated_at",
+          "risk_score",
+          "risk_level",
+          "confidence",
+          "explanation",
+          "evidence_window_start",
+          "evidence_window_end",
+          "evidence_event_ids",
+          "rule_version",
+          "status",
+          "metadata_json"
+        ],
+        "title": "ContextualAssessmentRead",
+        "type": "object"
+      },
+      "DeviceCheckCreate": {
+        "properties": {
+          "browser_name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Browser Name",
+            "type": "string"
+          },
+          "browser_version": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Version"
+          },
+          "camera_available": {
+            "title": "Camera Available",
+            "type": "boolean"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "microphone_available": {
+            "title": "Microphone Available",
+            "type": "boolean"
+          },
+          "operating_system": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating System"
+          },
+          "secure_context": {
+            "title": "Secure Context",
+            "type": "boolean"
+          },
+          "supported_browser": {
+            "title": "Supported Browser",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          }
+        },
+        "required": [
+          "supported_browser",
+          "secure_context",
+          "camera_available",
+          "microphone_available",
+          "browser_name"
+        ],
+        "title": "DeviceCheckCreate",
+        "type": "object"
+      },
+      "DeviceCheckRead": {
+        "properties": {
+          "browser_name": {
+            "title": "Browser Name",
+            "type": "string"
+          },
+          "browser_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Version"
+          },
+          "camera_available": {
+            "title": "Camera Available",
+            "type": "boolean"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "checked_at": {
+            "format": "date-time",
+            "title": "Checked At",
+            "type": "string"
+          },
+          "device_check_id": {
+            "title": "Device Check Id",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "metadata_json": {
+            "additionalProperties": true,
+            "title": "Metadata Json",
+            "type": "object"
+          },
+          "microphone_available": {
+            "title": "Microphone Available",
+            "type": "boolean"
+          },
+          "operating_system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating System"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "secure_context": {
+            "title": "Secure Context",
+            "type": "boolean"
+          },
+          "supported_browser": {
+            "title": "Supported Browser",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          }
+        },
+        "required": [
+          "device_check_id",
+          "institution_id",
+          "candidate_id",
+          "supported_browser",
+          "secure_context",
+          "camera_available",
+          "microphone_available",
+          "browser_name",
+          "browser_version",
+          "operating_system",
+          "passed",
+          "checked_at",
+          "user_agent",
+          "metadata_json"
+        ],
+        "title": "DeviceCheckRead",
         "type": "object"
       },
       "EvidenceEvent": {
@@ -579,6 +1862,11 @@
           "source_module": {
             "minLength": 1,
             "title": "Source Module",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
             "type": "string"
           }
         },
@@ -964,6 +2252,64 @@
         "title": "InstitutionRead",
         "type": "object"
       },
+      "InstitutionalPolicyRead": {
+        "properties": {
+          "automatic_exam_termination_allowed": {
+            "title": "Automatic Exam Termination Allowed",
+            "type": "boolean"
+          },
+          "candidate_acknowledgement_required": {
+            "title": "Candidate Acknowledgement Required",
+            "type": "boolean"
+          },
+          "critical_risk_action": {
+            "title": "Critical Risk Action",
+            "type": "string"
+          },
+          "high_risk_action": {
+            "title": "High Risk Action",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "policy_id": {
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "reauthentication_threshold": {
+            "title": "Reauthentication Threshold",
+            "type": "string"
+          },
+          "reviewer_notification_threshold": {
+            "title": "Reviewer Notification Threshold",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy_id",
+          "institution_id",
+          "policy_version",
+          "high_risk_action",
+          "critical_risk_action",
+          "reviewer_notification_threshold",
+          "candidate_acknowledgement_required",
+          "reauthentication_threshold",
+          "automatic_exam_termination_allowed",
+          "status"
+        ],
+        "title": "InstitutionalPolicyRead",
+        "type": "object"
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -1042,6 +2388,267 @@
         "title": "MeResponse",
         "type": "object"
       },
+      "OperationalCameraStatus": {
+        "properties": {
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "connection_status": {
+            "title": "Connection Status",
+            "type": "string"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "stream_mode": {
+            "default": "metadata_only",
+            "title": "Stream Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "configured",
+          "connection_status",
+          "last_seen_at",
+          "label"
+        ],
+        "title": "OperationalCameraStatus",
+        "type": "object"
+      },
+      "OperationalSessionDetail": {
+        "properties": {
+          "candidate": {
+            "additionalProperties": true,
+            "title": "Candidate",
+            "type": "object"
+          },
+          "examination": {
+            "additionalProperties": true,
+            "title": "Examination",
+            "type": "object"
+          },
+          "institution": {
+            "additionalProperties": true,
+            "title": "Institution",
+            "type": "object"
+          },
+          "latest_assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Assessment"
+          },
+          "latest_policy_evaluation": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Policy Evaluation"
+          },
+          "latest_recommendation": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Recommendation"
+          },
+          "primary_camera": {
+            "$ref": "#/components/schemas/OperationalCameraStatus"
+          },
+          "reports": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Reports",
+            "type": "array"
+          },
+          "reviewer_decisions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Reviewer Decisions",
+            "type": "array"
+          },
+          "secondary_camera": {
+            "$ref": "#/components/schemas/OperationalCameraStatus"
+          },
+          "session": {
+            "additionalProperties": true,
+            "title": "Session",
+            "type": "object"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEntry"
+            },
+            "title": "Timeline",
+            "type": "array"
+          }
+        },
+        "required": [
+          "session",
+          "candidate",
+          "institution",
+          "examination",
+          "primary_camera",
+          "secondary_camera",
+          "latest_assessment",
+          "latest_recommendation",
+          "latest_policy_evaluation",
+          "reviewer_decisions",
+          "timeline",
+          "reports"
+        ],
+        "title": "OperationalSessionDetail",
+        "type": "object"
+      },
+      "PolicyEvaluationRead": {
+        "properties": {
+          "approved_action": {
+            "enum": [
+              "CONTINUE_MONITORING",
+              "REQUEST_REAUTHENTICATION",
+              "NOTIFY_REVIEWER",
+              "REQUEST_CANDIDATE_ACKNOWLEDGEMENT",
+              "ESCALATE_INCIDENT"
+            ],
+            "title": "Approved Action",
+            "type": "string"
+          },
+          "continue_examination": {
+            "title": "Continue Examination",
+            "type": "boolean"
+          },
+          "evaluated_at": {
+            "format": "date-time",
+            "title": "Evaluated At",
+            "type": "string"
+          },
+          "evaluated_by": {
+            "title": "Evaluated By",
+            "type": "string"
+          },
+          "evaluation_id": {
+            "title": "Evaluation Id",
+            "type": "string"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "metadata_json": {
+            "additionalProperties": true,
+            "title": "Metadata Json",
+            "type": "object"
+          },
+          "policy_id": {
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "recommendation_id": {
+            "title": "Recommendation Id",
+            "type": "string"
+          },
+          "requires_candidate_acknowledgement": {
+            "title": "Requires Candidate Acknowledgement",
+            "type": "boolean"
+          },
+          "requires_reviewer": {
+            "title": "Requires Reviewer",
+            "type": "boolean"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evaluation_id",
+          "institution_id",
+          "session_id",
+          "recommendation_id",
+          "policy_id",
+          "evaluated_by",
+          "evaluated_at",
+          "approved_action",
+          "requires_reviewer",
+          "requires_candidate_acknowledgement",
+          "continue_examination",
+          "explanation",
+          "policy_version",
+          "status",
+          "metadata_json"
+        ],
+        "title": "PolicyEvaluationRead",
+        "type": "object"
+      },
       "RefreshRequest": {
         "properties": {
           "refresh_token": {
@@ -1053,6 +2660,273 @@
           "refresh_token"
         ],
         "title": "RefreshRequest",
+        "type": "object"
+      },
+      "ReviewerDecisionCreate": {
+        "properties": {
+          "assessment_id": {
+            "title": "Assessment Id",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "CONTINUE",
+              "REQUEST_REAUTHENTICATION",
+              "ACKNOWLEDGE",
+              "ESCALATE",
+              "REQUEST_MORE_EVIDENCE"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "policy_evaluation_id": {
+            "title": "Policy Evaluation Id",
+            "type": "string"
+          },
+          "rationale": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Rationale",
+            "type": "string"
+          },
+          "recommendation_id": {
+            "title": "Recommendation Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "assessment_id",
+          "recommendation_id",
+          "policy_evaluation_id",
+          "decision",
+          "rationale"
+        ],
+        "title": "ReviewerDecisionCreate",
+        "type": "object"
+      },
+      "ReviewerDecisionRead": {
+        "properties": {
+          "assessment_id": {
+            "title": "Assessment Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "CONTINUE",
+              "REQUEST_REAUTHENTICATION",
+              "ACKNOWLEDGE",
+              "ESCALATE",
+              "REQUEST_MORE_EVIDENCE"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_id": {
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "metadata_json": {
+            "additionalProperties": true,
+            "title": "Metadata Json",
+            "type": "object"
+          },
+          "policy_evaluation_id": {
+            "title": "Policy Evaluation Id",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "recommendation_id": {
+            "title": "Recommendation Id",
+            "type": "string"
+          },
+          "reviewer_user_id": {
+            "title": "Reviewer User Id",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision_id",
+          "institution_id",
+          "session_id",
+          "reviewer_user_id",
+          "assessment_id",
+          "recommendation_id",
+          "policy_evaluation_id",
+          "decision",
+          "rationale",
+          "created_at",
+          "metadata_json"
+        ],
+        "title": "ReviewerDecisionRead",
+        "type": "object"
+      },
+      "ReviewerQueueItem": {
+        "properties": {
+          "agent_recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Recommendation"
+          },
+          "assessment_explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Explanation"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "candidate_name": {
+            "title": "Candidate Name",
+            "type": "string"
+          },
+          "examination": {
+            "title": "Examination",
+            "type": "string"
+          },
+          "examination_id": {
+            "title": "Examination Id",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "latest_event_timestamp": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Event Timestamp"
+          },
+          "latest_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Evidence"
+          },
+          "latest_risk_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Risk Level"
+          },
+          "latest_risk_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Risk Score"
+          },
+          "policy_outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Outcome"
+          },
+          "primary_camera_status": {
+            "default": "not_seen",
+            "title": "Primary Camera Status",
+            "type": "string"
+          },
+          "review_status": {
+            "title": "Review Status",
+            "type": "string"
+          },
+          "reviewer_action_status": {
+            "default": "not_required",
+            "title": "Reviewer Action Status",
+            "type": "string"
+          },
+          "secondary_camera_status": {
+            "default": "not_seen",
+            "title": "Secondary Camera Status",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "session_status": {
+            "title": "Session Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "institution_id",
+          "candidate_id",
+          "candidate_name",
+          "examination_id",
+          "examination",
+          "session_status",
+          "latest_risk_score",
+          "latest_risk_level",
+          "latest_evidence",
+          "assessment_explanation",
+          "agent_recommendation",
+          "policy_outcome",
+          "review_status"
+        ],
+        "title": "ReviewerQueueItem",
         "type": "object"
       },
       "RoleRead": {
@@ -1082,6 +2956,86 @@
           "name"
         ],
         "title": "RoleRead",
+        "type": "object"
+      },
+      "SessionReportRead": {
+        "properties": {
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "generated_by": {
+            "title": "Generated By",
+            "type": "string"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "report_id": {
+            "title": "Report Id",
+            "type": "string"
+          },
+          "report_payload": {
+            "additionalProperties": true,
+            "title": "Report Payload",
+            "type": "object"
+          },
+          "report_version": {
+            "title": "Report Version",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "report_id",
+          "institution_id",
+          "session_id",
+          "generated_at",
+          "generated_by",
+          "report_version",
+          "summary",
+          "report_payload"
+        ],
+        "title": "SessionReportRead",
+        "type": "object"
+      },
+      "TimelineEntry": {
+        "properties": {
+          "entity_id": {
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "entry_type": {
+            "title": "Entry Type",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry_type",
+          "entity_id",
+          "timestamp",
+          "payload"
+        ],
+        "title": "TimelineEntry",
         "type": "object"
       },
       "TokenResponse": {
@@ -1245,6 +3199,188 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/metrics": {
+      "get": {
+        "operationId": "admin_metrics_api_v1_admin_metrics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "institution",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Institution"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministratorMetricsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Metrics",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/api/v1/admin/policy": {
+      "get": {
+        "operationId": "admin_policy_api_v1_admin_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InstitutionalPolicyRead"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Admin Policy Api V1 Admin Policy Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Policy",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/api/v1/admin/sessions/{session_id}": {
+      "get": {
+        "operationId": "admin_session_detail_api_v1_admin_sessions__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationalSessionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Session Detail",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/api/v1/agent-recommendations/{recommendation_id}/policy-evaluations": {
+      "post": {
+        "operationId": "evaluate_policy_api_v1_agent_recommendations__recommendation_id__policy_evaluations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "recommendation_id",
+            "required": true,
+            "schema": {
+              "title": "Recommendation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyEvaluationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Evaluate Policy",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
     "/api/v1/audit-logs/": {
       "get": {
         "operationId": "list_audit_logs_api_v1_audit_logs__get",
@@ -1419,6 +3555,494 @@
         "summary": "Refresh",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/candidate/camera-permissions": {
+      "post": {
+        "operationId": "camera_permission_api_v1_candidate_camera_permissions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraPermissionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CameraPermissionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Camera Permission",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/cameras": {
+      "post": {
+        "operationId": "select_camera_api_v1_candidate_cameras_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraSelectionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CameraSelectionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Select Camera",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/consents": {
+      "get": {
+        "operationId": "list_consents_api_v1_candidate_consents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConsentRead"
+                  },
+                  "title": "Response List Consents Api V1 Candidate Consents Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Consents",
+        "tags": [
+          "candidate-workflow"
+        ]
+      },
+      "post": {
+        "operationId": "create_consent_api_v1_candidate_consents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Consent",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/dashboard": {
+      "get": {
+        "operationId": "dashboard_api_v1_candidate_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateDashboardRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Dashboard",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/device-checks": {
+      "get": {
+        "operationId": "list_device_checks_api_v1_candidate_device_checks_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceCheckRead"
+                  },
+                  "title": "Response List Device Checks Api V1 Candidate Device Checks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Device Checks",
+        "tags": [
+          "candidate-workflow"
+        ]
+      },
+      "post": {
+        "operationId": "create_device_check_api_v1_candidate_device_checks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCheckCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCheckRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Device Check",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/examinations": {
+      "get": {
+        "operationId": "examinations_api_v1_candidate_examinations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssignedExaminationRead"
+                  },
+                  "title": "Response Examinations Api V1 Candidate Examinations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Examinations",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/examinations/{examination_id}/start": {
+      "post": {
+        "operationId": "start_session_api_v1_candidate_examinations__examination_id__start_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "examination_id",
+            "required": true,
+            "schema": {
+              "title": "Examination Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateSessionStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateSessionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Session",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/register": {
+      "post": {
+        "operationId": "register_api_v1_candidate_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateRegistrationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateRegistrationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/sessions/{session_id}": {
+      "get": {
+        "operationId": "get_workspace_api_v1_candidate_sessions__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateWorkspaceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Workspace",
+        "tags": [
+          "candidate-workflow"
+        ]
+      }
+    },
+    "/api/v1/candidate/sessions/{session_id}/complete": {
+      "post": {
+        "operationId": "complete_session_api_v1_candidate_sessions__session_id__complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateSessionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete Session",
+        "tags": [
+          "candidate-workflow"
         ]
       }
     },
@@ -1626,9 +4250,55 @@
         ]
       }
     },
+    "/api/v1/contextual-assessments/{assessment_id}/recommendations": {
+      "post": {
+        "operationId": "generate_recommendation_api_v1_contextual_assessments__assessment_id__recommendations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assessment_id",
+            "required": true,
+            "schema": {
+              "title": "Assessment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRecommendationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Generate Recommendation",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
     "/api/v1/evidence-events/": {
       "post": {
-        "description": "Accept a structured evidence event.\n\nSprint 1 validates the API contract and domain schema. Repository-backed\npersistence is wired through SQLAlchemy models and will be enabled in the\nnext migration sprint.",
         "operationId": "create_evidence_event_api_v1_evidence_events__post",
         "requestBody": {
           "content": {
@@ -1662,6 +4332,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Evidence Event",
         "tags": [
           "evidence"
@@ -1739,6 +4414,376 @@
         "summary": "Create",
         "tags": [
           "examination-sessions"
+        ]
+      }
+    },
+    "/api/v1/examination-sessions/{session_id}/contextual-assessments": {
+      "get": {
+        "operationId": "get_contextual_assessments_api_v1_examination_sessions__session_id__contextual_assessments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ContextualAssessmentRead"
+                  },
+                  "title": "Response Get Contextual Assessments Api V1 Examination Sessions  Session Id  Contextual Assessments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Contextual Assessments",
+        "tags": [
+          "governance"
+        ]
+      },
+      "post": {
+        "operationId": "run_contextual_assessment_api_v1_examination_sessions__session_id__contextual_assessments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssessmentCreate",
+                "default": {
+                  "window_seconds": 60
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextualAssessmentRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Run Contextual Assessment",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/api/v1/examination-sessions/{session_id}/evidence-events": {
+      "get": {
+        "operationId": "list_evidence_events_api_v1_examination_sessions__session_id__evidence_events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EvidenceEvent"
+                  },
+                  "title": "Response List Evidence Events Api V1 Examination Sessions  Session Id  Evidence Events Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Evidence Events",
+        "tags": [
+          "examination-sessions"
+        ]
+      }
+    },
+    "/api/v1/examination-sessions/{session_id}/governance-timeline": {
+      "get": {
+        "operationId": "get_governance_timeline_api_v1_examination_sessions__session_id__governance_timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TimelineEntry"
+                  },
+                  "title": "Response Get Governance Timeline Api V1 Examination Sessions  Session Id  Governance Timeline Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Governance Timeline",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/api/v1/examination-sessions/{session_id}/reports": {
+      "post": {
+        "operationId": "create_report_api_v1_examination_sessions__session_id__reports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionReportRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Report",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/api/v1/examination-sessions/{session_id}/reports/{report_id}": {
+      "get": {
+        "operationId": "retrieve_report_api_v1_examination_sessions__session_id__reports__report_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "title": "Report Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionReportRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Retrieve Report",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/api/v1/examination-sessions/{session_id}/reviewer-decisions": {
+      "post": {
+        "operationId": "create_reviewer_decision_api_v1_examination_sessions__session_id__reviewer_decisions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewerDecisionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewerDecisionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Reviewer Decision",
+        "tags": [
+          "governance"
         ]
       }
     },
@@ -2015,6 +5060,175 @@
         "summary": "Create",
         "tags": [
           "institutions"
+        ]
+      }
+    },
+    "/api/v1/reviewer/sessions": {
+      "get": {
+        "operationId": "get_reviewer_queue_api_v1_reviewer_sessions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "institution",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Institution"
+            }
+          },
+          {
+            "in": "query",
+            "name": "risk_level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risk Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unresolved",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unresolved"
+            }
+          },
+          {
+            "in": "query",
+            "name": "examination",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Examination"
+            }
+          },
+          {
+            "in": "query",
+            "name": "active_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Active Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewerQueueItem"
+                  },
+                  "title": "Response Get Reviewer Queue Api V1 Reviewer Sessions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Reviewer Queue",
+        "tags": [
+          "governance"
+        ]
+      }
+    },
+    "/api/v1/reviewer/sessions/{session_id}": {
+      "get": {
+        "operationId": "reviewer_session_detail_api_v1_reviewer_sessions__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationalSessionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reviewer Session Detail",
+        "tags": [
+          "governance"
         ]
       }
     },
