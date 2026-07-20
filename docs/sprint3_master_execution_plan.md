@@ -12,7 +12,7 @@ Candidate Registration → Consent Acceptance → Candidate Authentication → A
 | --- | --- | --- | --- |
 | Sprint 3A | Repository recovery and EvidenceEvent persistence | Establishes the evidence foundation | Complete: repository recovered; EvidenceEvents persist and can be retrieved; 14 tests passed at checkpoint `30176c1` |
 | Sprint 3B | CIE, Agentic Decision Support, IPIME, reviewer decision, audit and report API | Implements the governance backend chain | Complete: persisted governance chain, APIs, audit/report snapshots, 21-test regression suite, and SQLite migration cycle verified; local Docker/PostgreSQL verification was unavailable and is recorded as a limitation |
-| Sprint 3C | Registration, consent, assignment retrieval, device and camera checks, session start | Implements the candidate pre-examination workflow | Not started |
+| Sprint 3C | Registration, consent, assignment retrieval, device and camera checks, session start | Implements the candidate pre-examination workflow | Complete: live registration/authentication, immutable consent, browser preflight, gated session start, real EvidenceEvents, and automatic Sprint 3B governance integration verified; local PostgreSQL remained unavailable |
 | Sprint 3D | Next.js candidate, reviewer and administrator portals | Exposes the complete workflow through operational interfaces | Not started |
 | Sprint 3E | PostgreSQL, Docker, migrations, seeded workflow, Playwright and full E2E validation | Proves every original Sprint 3 success criterion | Not started |
 
