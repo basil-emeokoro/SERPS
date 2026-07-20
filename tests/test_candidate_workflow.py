@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from apps.api.app.api.deps.database import get_db
+from apps.api.app.api.deps.auth import CurrentUser, get_current_user
 from apps.api.app.main import app
 from serps_pop.candidate_workflow.models import CandidateConsent
 from serps_pop.governance.models import (
@@ -20,6 +21,7 @@ from serps_pop.governance.models import (
 from serps_pop.identity.models import Candidate, CandidateExaminationAssignment, Examination, ExaminationSession
 from serps_pop.identity.schemas import InstitutionCreate
 from serps_pop.identity.services import create_institution
+from serps_pop.identity.services import ROLE_ADMIN, ROLE_REVIEWER
 from serps_pop.infrastructure.database import Base
 
 
@@ -133,15 +135,27 @@ def complete_preflight(client: TestClient, token: str) -> None:
     camera = client.post(
         "/api/v1/candidate/cameras",
         headers=headers,
-        json={"device_id": "real-browser-device-id", "label": "Integrated Camera", "camera_count": 1},
+        json={"camera_role": "primary", "device_id": "primary-browser-device", "label": "Integrated Camera", "camera_count": 2},
     )
     assert camera.status_code == 201, camera.text
     permission = client.post(
         "/api/v1/candidate/camera-permissions",
         headers=headers,
-        json={"status": "granted", "user_agent": "pytest-browser"},
+        json={"camera_role": "primary", "status": "granted", "user_agent": "pytest-browser"},
     )
     assert permission.status_code == 201 and permission.json()["granted"] is True
+    secondary = client.post(
+        "/api/v1/candidate/cameras",
+        headers=headers,
+        json={"camera_role": "secondary", "device_id": "secondary-browser-device", "label": "Room Camera", "camera_count": 2},
+    )
+    assert secondary.status_code == 201, secondary.text
+    secondary_permission = client.post(
+        "/api/v1/candidate/camera-permissions",
+        headers=headers,
+        json={"camera_role": "secondary", "status": "granted", "user_agent": "pytest-browser"},
+    )
+    assert secondary_permission.status_code == 201 and secondary_permission.json()["granted"] is True
 
 
 def test_registration_authentication_and_institution_validation(client: TestClient, db: Session):
@@ -220,14 +234,14 @@ def test_start_rejects_consent_and_camera_bypass(client: TestClient, db: Session
     client.post(
         "/api/v1/candidate/cameras",
         headers=auth(token),
-        json={"device_id": "camera", "camera_count": 1},
+        json={"camera_role": "primary", "device_id": "camera", "camera_count": 2},
     )
     client.post(
-        "/api/v1/candidate/camera-permissions", headers=auth(token), json={"status": "denied"}
+        "/api/v1/candidate/camera-permissions", headers=auth(token), json={"camera_role": "primary", "status": "denied"}
     )
     denied = client.post(start, headers=auth(token), json={})
     assert denied.status_code == 409
-    assert "camera_permission_granted" in denied.json()["detail"]
+    assert "primary_camera_permission_granted" in denied.json()["detail"]
 
 
 def test_session_creation_links_preflight_and_dashboard(client: TestClient, db: Session):
@@ -243,7 +257,41 @@ def test_session_creation_links_preflight_and_dashboard(client: TestClient, db: 
     assert started.status_code == 201, started.text
     body = started.json()
     assert body["status"] == "active"
-    assert all(body[field] for field in ("consent_id", "device_check_id", "camera_selection_id", "camera_permission_id"))
+    assert all(body[field] for field in ("consent_id", "device_check_id", "camera_selection_id", "camera_permission_id", "secondary_camera_selection_id", "secondary_camera_permission_id"))
+
+
+def test_duplicate_dual_camera_selection_is_rejected(client: TestClient, db: Session):
+    seed_institution(db)
+    _, token = register_and_login(client)
+    primary = client.post(
+        "/api/v1/candidate/cameras", headers=auth(token),
+        json={"camera_role": "primary", "device_id": "same-device", "camera_count": 2},
+    )
+    assert primary.status_code == 201
+    duplicate = client.post(
+        "/api/v1/candidate/cameras", headers=auth(token),
+        json={"camera_role": "secondary", "device_id": "same-device", "camera_count": 2},
+    )
+    assert duplicate.status_code == 409
+    assert "distinct devices" in duplicate.json()["detail"]
+
+
+def test_candidate_workspace_ownership_and_completion(client: TestClient, db: Session):
+    seed_institution(db)
+    first, first_token = register_and_login(client, suffix="1")
+    _, second_token = register_and_login(client, suffix="2")
+    exam = assign_exam(db, first)
+    complete_preflight(client, first_token)
+    session = client.post(
+        f"/api/v1/candidate/examinations/{exam.examination_id}/start", headers=auth(first_token), json={}
+    ).json()
+    own = client.get(f"/api/v1/candidate/sessions/{session['session_id']}", headers=auth(first_token))
+    assert own.status_code == 200
+    assert own.json()["primary_camera"]["camera_role"] == "primary"
+    assert own.json()["secondary_camera"]["camera_role"] == "secondary"
+    assert client.get(f"/api/v1/candidate/sessions/{session['session_id']}", headers=auth(second_token)).status_code == 403
+    completed = client.post(f"/api/v1/candidate/sessions/{session['session_id']}/complete", headers=auth(first_token))
+    assert completed.status_code == 200 and completed.json()["status"] == "completed"
 
 
 def test_real_event_ingestion_triggers_governance_chain(client: TestClient, db: Session):
@@ -298,3 +346,52 @@ def test_candidate_cannot_spoof_another_session(client: TestClient, db: Session)
     )
     assert spoof.status_code == 403
     assert db.scalar(select(ExaminationSession).where(ExaminationSession.session_id == session["session_id"]))
+
+
+def test_reviewer_and_admin_operational_views_are_scoped_and_dual_camera_aware(client: TestClient, db: Session):
+    institution_id = seed_institution(db)
+    candidate, token = register_and_login(client)
+    exam = assign_exam(db, candidate)
+    complete_preflight(client, token)
+    session = client.post(
+        f"/api/v1/candidate/examinations/{exam.examination_id}/start", headers=auth(token), json={}
+    ).json()
+    for role in ("primary", "secondary"):
+        event = client.post(
+            "/api/v1/evidence-events/", headers=auth(token),
+            json={
+                "session_id": session["session_id"], "candidate_id": candidate["candidate_id"],
+                "source_module": "candidate_browser", "event_type": "CAMERA_CONNECTED",
+                "camera_id": role, "risk_weight": 0.1, "confidence": 1.0,
+                "description": f"{role} camera connected",
+            },
+        )
+        assert event.status_code == 201, event.text
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        user_id="REVIEWER", institution_id=institution_id, roles=(ROLE_REVIEWER,)
+    )
+    queue = client.get("/api/v1/reviewer/sessions")
+    assert queue.status_code == 200
+    assert queue.json()[0]["primary_camera_status"] == "connected"
+    assert queue.json()[0]["secondary_camera_status"] == "connected"
+    detail = client.get(f"/api/v1/reviewer/sessions/{session['session_id']}")
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["primary_camera"]["stream_mode"] == "metadata_only"
+    assert detail.json()["secondary_camera"]["connection_status"] == "connected"
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        user_id="ADMIN", institution_id=institution_id, roles=(ROLE_ADMIN,)
+    )
+    metrics = client.get("/api/v1/admin/metrics")
+    assert metrics.status_code == 200, metrics.text
+    assert metrics.json()["active_sessions"] == 1
+    assert metrics.json()["connected_primary_cameras"] == 1
+    assert metrics.json()["connected_secondary_cameras"] == 1
+    assert client.get(f"/api/v1/admin/sessions/{session['session_id']}").status_code == 200
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        user_id="OTHER", institution_id="OTHER-INSTITUTION", roles=(ROLE_ADMIN,)
+    )
+    assert client.get(f"/api/v1/admin/sessions/{session['session_id']}").status_code == 403
+    app.dependency_overrides.pop(get_current_user, None)
