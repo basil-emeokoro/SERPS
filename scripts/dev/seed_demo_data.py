@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import os
-import secrets
 
 from sqlalchemy import select
 
 from serps_pop.evidence import models as evidence_models  # noqa: F401
 from serps_pop.identity import models as identity_models  # noqa: F401
-from serps_pop.identity.models import Candidate, CandidateExaminationAssignment, Examination, ExaminationSession, Institution, User
+from serps_pop.identity.models import Candidate, CandidateExaminationAssignment, Examination, Institution, User
 from serps_pop.identity.schemas import CandidateCreate, ExaminationCreate, InstitutionCreate, UserCreate
 from serps_pop.identity.services import (
     ROLE_ADMIN,
@@ -17,7 +16,6 @@ from serps_pop.identity.services import (
     create_assignment,
     create_candidate,
     create_examination,
-    create_examination_session,
     create_institution,
     create_user,
     ensure_roles,
@@ -26,7 +24,12 @@ from serps_pop.infrastructure.database import Base, SessionLocal, engine
 
 
 def demo_password() -> str:
-    return os.getenv("SERPS_DEMO_PASSWORD") or f"Demo-{secrets.token_urlsafe(12)}1!"
+    password = os.getenv("SERPS_DEMO_PASSWORD")
+    if not password:
+        raise RuntimeError("Set SERPS_DEMO_PASSWORD before seeding demonstration users.")
+    if len(password) < 12:
+        raise RuntimeError("SERPS_DEMO_PASSWORD must contain at least 12 characters.")
+    return password
 
 
 def first_or_none(session, model, *conditions):
@@ -170,24 +173,12 @@ def seed() -> None:
                 actor_user_id=admin.user_id,
             )
 
-        session = first_or_none(db, ExaminationSession, ExaminationSession.assignment_id == assignment.assignment_id)
-        if session is None:
-            create_examination_session(
-                db,
-                assignment_id=assignment.assignment_id,
-                deployment_mode="B",
-                institution_id=institution.institution_id,
-                actor_user_id=admin.user_id,
-            )
-
         db.commit()
         print("Seeded SERPS POP demo data.")
         print(f"  Institution: {institution.code} ({institution.institution_id})")
         print("  Demo users: sysadmin@serps.local, admin@miva.edu.ng, reviewer@miva.edu.ng, candidate@miva.edu.ng")
-        if "SERPS_DEMO_PASSWORD" in os.environ:
-            print("  Demo password: read from SERPS_DEMO_PASSWORD")
-        else:
-            print(f"  Generated one-time demo password for newly created users: {password}")
+        print("  Demo password: read from SERPS_DEMO_PASSWORD")
+        print("  Session: candidate creates it after consent and dual-camera readiness")
         print(f"  Roles available: {', '.join(sorted(roles))}")
     finally:
         db.close()
