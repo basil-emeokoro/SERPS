@@ -14,22 +14,22 @@ const portalPanels = [
     title: "Administrator Portal",
     badge: "Admin",
     href: "/admin",
-    summary: "Create institutions, staff users, candidates, examinations, assignments and controlled examination sessions.",
-    items: ["Institution-scoped RBAC", "Candidate registry", "Exam/session lifecycle", "Audit visibility"],
+    summary: "Inspect live institution-scoped metrics, audit activity and dual-camera session state.",
+    items: ["Operational metrics", "Risk distribution", "Dual-camera oversight", "Audit visibility"],
   },
   {
     title: "Reviewer / Proctor Portal",
     badge: "Reviewer",
     href: "/reviewer",
-    summary: "Monitor assigned examination sessions and review evidence without making automated misconduct decisions.",
-    items: ["Assigned session queue", "Evidence timeline", "CIE/IPIME summaries", "Reviewer rationale capture"],
+    summary: "Review evidence, explainable risk, policy outcomes and both camera roles before recording a human decision.",
+    items: ["Live session queue", "Dual-camera metadata", "CIE/IPIME timeline", "Immutable reviewer rationale"],
   },
   {
     title: "Candidate Portal",
     badge: "Candidate",
     href: "/candidate",
-    summary: "Candidate-facing exam flow remains separated from reviewer intelligence and policy internals.",
-    items: ["Authentication gate", "Device-check readiness", "Exam session status", "Due-process notices"],
+    summary: "Complete mandatory dual-camera readiness and enter the bounded assessment demonstration harness.",
+    items: ["Consent and device checks", "Two distinct cameras", "Sample-question workspace", "Real browser evidence events"],
   },
 ];
 
@@ -50,8 +50,8 @@ export default function HomePage() {
         <p className="eyebrow">SERPS POP</p>
         <h1 id="hero-title">Secure Explainable Remote Proctoring System</h1>
         <p>
-          Production-oriented prototype foundation preserving the validated SERPS governance pipeline while separating frontend, API,
-          persistence and domain logic.
+          Production-Oriented Prototype — Operational Early Alpha. SERPS is an explainable identity-assurance, monitoring and
+          governance layer designed to integrate with external assessment systems.
         </p>
         <Link className="hero-link" href="/login">Open authenticated portal login</Link>
       </section>
@@ -68,7 +68,7 @@ export default function HomePage() {
                 <li key={item}>{item}</li>
               ))}
             </ul>
-            <Link className="button-link" href={panel.href}>Open portal foundation</Link>
+            <Link className="button-link" href={panel.href}>Open operational portal</Link>
           </article>
         ))}
       </section>
@@ -78,8 +78,8 @@ export default function HomePage() {
           <span className="badge">Frozen Governance Pipeline</span>
           <h2 id="pipeline-title">Role-aware workflows still route through SERPS reasoning controls</h2>
           <p>
-            Sprint 2 introduces identity, RBAC, candidate, examination and session foundations. It does not move decision authority
-            into the portals. Detection modules still produce evidence only; human reviewers remain responsible for final outcomes.
+            Sprint 3D exposes the Sprint 3A–3C services through operational portals without moving governance authority into the
+            frontend. Evidence informs explainable recommendations; human reviewers remain responsible for final actions.
           </p>
         </div>
         <div className="pipeline">
@@ -91,9 +91,9 @@ export default function HomePage() {
 
       <section className="two-column">
         <article className="card">
-          <span className="badge">Session Foundation</span>
-          <h2>Controlled Session Lifecycle</h2>
-          <p>Examination sessions now follow an auditable state model that prevents duplicate active sessions.</p>
+          <span className="badge">Demonstration Workspace</span>
+          <h2>Controlled monitored-session lifecycle</h2>
+          <p>The bounded question workspace generates realistic browser events. It is not a full CBT platform or secure browser.</p>
           <div className="state-list" aria-label="Supported examination session states">
             {sessionStates.map((state) => (
               <span key={state}>{state.replaceAll("_", " ")}</span>
@@ -102,11 +102,11 @@ export default function HomePage() {
         </article>
 
         <article className="card">
-          <span className="badge">API-first Boundary</span>
-          <h2>Backend endpoints now own identity workflows</h2>
+          <span className="badge">Honest dual-camera boundary</span>
+          <h2>Local previews, persisted operational metadata</h2>
           <p>
-            Authentication, refresh tokens, role checks, candidates, exams, assignments and session transitions are exposed through
-            FastAPI route groups for future secure exam-player integration.
+            Candidate-facing and environmental cameras are acquired locally where hardware permits. SERPS records connection evidence
+            and privacy-safe metadata, not raw video, and does not claim enterprise remote streaming.
           </p>
         </article>
       </section>
