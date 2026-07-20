@@ -1,51 +1,31 @@
-# SERPS POP Security Review Notes
+# SERPS RC1 Security Review
 
-## Sprint 2 Review
+## Confirmed controls
 
-### Authentication and Token Handling
+- PBKDF2-HMAC-SHA256 passwords use per-password salts; generic login failures avoid account enumeration.
+- Access JWTs validate HMAC signature, issuer, access-token type, and expiry. Opaque refresh tokens are stored as SHA-256 hashes and revoked on logout.
+- API role dependencies enforce Candidate, Reviewer/Proctor, Administrator, and System Administrator authority.
+- Candidate assignments, sessions, completion, and evidence enforce authenticated ownership.
+- Reviewer and administrator access is institution-scoped; negative cross-institution tests pass.
+- Reviewer decisions require a supported action and rationale; administrator oversight is read-only.
+- Consent/readiness and governance models use ORM update/delete hooks to enforce append-only records.
+- IPIME remains advisory and explicitly prohibits automatic examination termination.
+- Raw video, authentication tokens, passwords, and biometric templates are not persisted in audit/report payloads.
+- `.env` is ignored; Compose requires externally supplied database and JWT secrets.
 
-- Passwords are hashed with PBKDF2-HMAC-SHA256 and per-password salts.
-- JWT access tokens are signed with an environment-controlled secret when `SERPS_JWT_SECRET` is set.
-- Development runs without `SERPS_JWT_SECRET` generate a process-local development secret and should not be used as production identity configuration.
-- Refresh tokens are generated as opaque random values and stored only as SHA-256 hashes.
-- Login failures use generic messages and do not expose account existence.
-- Logout revokes the stored refresh-token record.
+## Needs improvement
 
-### Audit Discipline
+- Browser tokens remain in session storage; production should adopt secure, HttpOnly, SameSite cookies with CSRF design.
+- JWT roles/institution are claims for the short token lifetime; sensitive deployments should revalidate current assignments or use revocation/versioning.
+- Add security headers, TLS policy, rate limiting, account lockout/monitoring, key rotation, and central secret management.
+- Browser device/permission data is an operational attestation, not tamper-proof hardware evidence.
+- Add PostgreSQL-backed tenancy/security tests, dependency scanning in CI, SAST/DAST, and penetration testing.
+- Establish formal retention, subject-rights, encryption, backup, incident, DPIA, and ethics processes.
 
-Implemented audit events include login success/failure, token refresh, logout, user creation, candidate creation/update, examination creation, assignment creation, session creation and session transition.
+## Dependency audit
 
-Audit records must not contain plaintext passwords, JWTs, refresh tokens or biometric data.
+`npm audit --workspace apps/web --audit-level=moderate` reports two moderate findings through `postcss <8.5.10` and Next.js. The only registry-proposed automated fix forces a breaking downgrade to Next.js 9.3.3, so it was not applied. Track a compatible upstream upgrade and reassess before a production pilot.
 
-### NPM Audit
+## RC1 conclusion
 
-Command:
-
-```powershell
-npm.cmd audit --workspace apps/web --audit-level=moderate
-```
-
-Result:
-
-- `postcss < 8.5.10` moderate advisory via `next`.
-- NPM reports 2 moderate findings.
-- The only available automated fix is `npm audit fix --force`, which would install `next@9.3.3` and is a breaking downgrade from the current Next.js scaffold.
-
-Decision:
-
-- Do not apply the forced downgrade during Sprint 2.
-- Track the finding and upgrade Next.js/PostCSS safely when the upstream dependency path supports a non-breaking update.
-
-### Repository Discipline
-
-- No real personal credentials should be committed.
-- `scripts/dev/seed_demo_data.py` uses `SERPS_DEMO_PASSWORD` or prints a generated one-time password for newly created users.
-- Private dissertation and supervisor materials remain outside the POP repository.
-
-### Remaining Security Hardening
-
-- Replace local development token storage in the Next.js prototype with hardened cookie-backed session handling.
-- Add production secret management documentation and deployment checks.
-- Add CORS origin configuration through environment variables.
-- Add security headers at the web/API deployment boundary.
-- Add PostgreSQL-backed integration tests for migration and tenancy enforcement.
+No known critical security defect was found in the bounded research workflow. These controls support a controlled dissertation demonstration, not production certification. Full findings and future controls appear in `sprint3e_validation_report.md` and `prototype_limitations.md`.

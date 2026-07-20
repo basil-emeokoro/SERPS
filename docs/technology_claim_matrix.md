@@ -1,14 +1,20 @@
-# SERPS POP Technology Claim Matrix
+# SERPS RC1 Technology Claim Matrix
 
-| Technology | Dissertation Claim | Implemented Status | Integration Evidence | Automated Test Evidence | Next Action |
-| --- | --- | --- | --- | --- | --- |
-| FastAPI | Backend API/service boundary | Implemented foundation with auth/RBAC route groups | `apps/api/app/main.py`, `/api/v1/health`, `/api/v1/evidence-events`, `/api/v1/auth`, `/api/v1/candidates`, `/api/v1/examination-sessions` | `tests/test_api_health.py`, `tests/test_auth_rbac_sessions.py` | Add generated frontend client and PostgreSQL integration checks |
-| Next.js / React / TypeScript | Production-oriented frontend | Implemented foundation with role-aware portal landing panels | `apps/web/src/app/page.tsx`, strict TS config | `apps/web/src/lib/api.test.ts` | Add protected route groups |
-| PostgreSQL | Authoritative POP database | Configured, not runtime-verified yet | `docker-compose.yml`, SQLAlchemy URL, Alembic migration | Pending database integration test | Run migration against PostgreSQL |
-| SQLAlchemy 2.x | ORM/repository layer | Implemented foundation with identity, RBAC, candidate, examination and session models | `src/serps_pop/infrastructure/database.py`, `src/serps_pop/identity/models.py`, `EvidenceEventRecord` | `tests/test_auth_rbac_sessions.py` | Add assignment-scoped reviewer filtering |
-| Alembic | Migrations | Implemented foundation plus Sprint 2 identity/exam/session migration | `migrations/versions/0001_initial_evidence_events.py`, `migrations/versions/0002_auth_rbac_exam_foundation.py` | Pending migration test | Add CI database service |
-| Docker Compose | Local service orchestration | Configured | `docker-compose.yml`, Dockerfiles | `docker compose config` | Validate build after dependencies install |
-| JWT/RBAC | Real authentication | Implemented foundation | `src/serps_pop/security/`, `apps/api/app/api/deps/auth.py`, `/api/v1/auth/*` | `tests/test_auth_rbac_sessions.py` | Replace development secret fallback with deployed secret management |
-| WebRTC | Media transport | Future | None | None | Add WebRTC-ready components after portals |
-| MediaPipe / YOLO | AI detectors | Future migration | POC modules only | POC tests only | Migrate after evidence/API pipeline |
-| CIE | Contextual reasoning | Future migration | POC modules only | POC tests only | Migrate after persistence stabilises |
+| Technology/component | RC1 status | Evidence | Qualification / next action |
+| --- | --- | --- | --- |
+| FastAPI | Implemented | 40 live OpenAPI paths across identity, candidate, evidence, governance, reviewer/admin, audit, and reports | Add production gateway, telemetry, and rate limiting. |
+| Next.js/React/TypeScript | Implemented | Nine built routes; candidate/reviewer/admin operational portals; 18 frontend tests | Add comprehensive hardware/browser E2E. |
+| SQLAlchemy | Implemented | Identity, readiness, evidence, governance, audit, and report models/services | Profile and remove N+1 aggregation queries before scale. |
+| Alembic | Implemented | Single chain 0001-0005; SQLite upgrade/downgrade/re-upgrade passed | Verify against target PostgreSQL. |
+| PostgreSQL | Configured, unverified | Compose target and psycopg URL; Docker engine unavailable | Run migrations and full workflow on PostgreSQL before pilot. |
+| Docker Compose | Configured/validated | Secret-required Compose config passes | Engine/build/runtime validation remains environmental. |
+| JWT/RBAC | Implemented | Signed access tokens, hashed refresh tokens, role dependencies, negative access tests | Harden browser session storage and key/revocation operations. |
+| Dual local cameras | Partial | Distinct selection, permission, two local previews, lifecycle EvidenceEvents | Real hardware E2E and distributed secondary-device design remain. |
+| WebRTC/remote media | Future | No implementation claim | Design TURN/signalling/privacy/retention before remote streaming. |
+| FaceDetector | Capability-dependent | Explicit feature detection; no fabricated face event | Migrate/evaluate production detector with fairness and liveness testing. |
+| CIE | Implemented, bounded | Deterministic temporal rules, evidence linkage, risk/confidence/explanation | Validate rules empirically and tune under ethics governance. |
+| Agentic decision support | Implemented, bounded | Persisted advisory actions and explanations | No autonomous misconduct authority; evaluate model/rule alternatives later. |
+| IPIME | Implemented | Persisted institutional policy evaluation and reviewer requirement | Add controlled policy administration/version lifecycle. |
+| Reviewer/admin portals | Implemented | Queue, dual metadata, decisions, reports, metrics, audit oversight | Remote media and production notification integrations remain. |
+
+The matrix describes research-prototype evidence, not production certification.

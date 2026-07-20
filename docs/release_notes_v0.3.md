@@ -33,4 +33,12 @@ Verification passed for 31 backend tests, 18 frontend tests, TypeScript, ESLint,
 
 Current maturity: **Production-Oriented Prototype - Operational Early Alpha**.
 
+## Sprint 3E RC1 validation
+
+The end-to-end candidate, evidence, governance, reviewer, administrator, audit, and report workflow is now covered by one database-backed validation test using real role JWTs. The demo seed was corrected to require an explicit password and to preserve candidate-authoritative session start. OpenAPI now matches all 40 live paths, and Compose requires externally supplied database/JWT secrets.
+
+The backend, frontend tests, TypeScript, ESLint, production build, migration cycle, seed, and Compose configuration pass. PostgreSQL remains honestly unverified because Docker engine discovery was unresponsive. Two moderate PostCSS dependency findings remain without a safe non-breaking automated fix.
+
+Current maturity after Sprint 3E: **Research Prototype Version 1.0 Release Candidate (RC1)**. See `version_1.0_release_candidate.md` and `sprint3e_validation_report.md`.
+
 SERPS integrates with external examination systems; it does not replace a full assessment platform, question bank, secure browser, or enterprise video-streaming service.
