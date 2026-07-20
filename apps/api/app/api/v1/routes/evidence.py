@@ -7,6 +7,7 @@ from serps_pop.domain.evidence import EvidenceEvent, EvidenceEventCreate
 from serps_pop.evidence.services import (
     EvidenceAccessDenied,
     EvidenceCandidateMismatch,
+    EvidenceEventTypeDenied,
     EvidenceSessionNotFound,
     EvidenceSessionNotActive,
     create_evidence_event as persist_evidence_event,
@@ -17,7 +18,7 @@ from serps_pop.governance.services import (
     create_contextual_assessment,
     create_policy_evaluation,
 )
-from serps_pop.identity.services import ROLE_ADMIN, ROLE_CANDIDATE, ROLE_REVIEWER, ROLE_SYSADMIN
+from serps_pop.identity.services import ROLE_CANDIDATE
 
 router = APIRouter()
 
@@ -25,7 +26,7 @@ router = APIRouter()
 @router.post("/", response_model=EvidenceEvent, status_code=status.HTTP_201_CREATED)
 def create_evidence_event(
     payload: EvidenceEventCreate,
-    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE, ROLE_ADMIN, ROLE_REVIEWER, ROLE_SYSADMIN)),
+    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE)),
     db: Session = Depends(get_db),
 ) -> EvidenceEvent:
     try:
@@ -51,6 +52,9 @@ def create_evidence_event(
     except EvidenceSessionNotActive as exc:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Candidate evidence requires an active session.") from exc
+    except EvidenceEventTypeDenied as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
     if event.event_type in SUPPORTED_EVENT_TYPES:
         assessment = create_contextual_assessment(
             db,

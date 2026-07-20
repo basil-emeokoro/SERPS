@@ -7,7 +7,16 @@ from sqlalchemy.orm import Session
 from serps_pop.domain.evidence import EvidenceEvent, EvidenceEventCreate
 from serps_pop.evidence.repository import EvidenceEventRepository
 from serps_pop.identity.models import Candidate, ExaminationSession
-from serps_pop.identity.services import ROLE_CANDIDATE, ROLE_SYSADMIN
+from serps_pop.identity.services import ROLE_ADMIN, ROLE_CANDIDATE, ROLE_REVIEWER, ROLE_SYSADMIN
+
+CANDIDATE_EVENT_TYPES = {
+    "camera_connected",
+    "camera_disconnected",
+    "face_detected",
+    "face_not_detected",
+    "tab_focus_lost",
+}
+CANDIDATE_SOURCE_MODULES = {"candidate_browser"}
 
 
 class EvidenceSessionNotFound(Exception):
@@ -23,6 +32,10 @@ class EvidenceCandidateMismatch(Exception):
 
 
 class EvidenceSessionNotActive(Exception):
+    pass
+
+
+class EvidenceEventTypeDenied(ValueError):
     pass
 
 
@@ -43,7 +56,7 @@ def get_session_for_evidence(
     roles = _role_set(actor_roles)
     if ROLE_SYSADMIN not in roles and examination_session.institution_id != actor_institution_id:
         raise EvidenceAccessDenied(session_id)
-    if ROLE_CANDIDATE in roles and not roles.intersection({"Administrator", "Reviewer/Proctor", ROLE_SYSADMIN}):
+    if ROLE_CANDIDATE in roles and not roles.intersection({ROLE_ADMIN, ROLE_REVIEWER, ROLE_SYSADMIN}):
         candidate = db.get(Candidate, examination_session.candidate_id)
         if candidate is None or candidate.user_id != actor_user_id:
             raise EvidenceAccessDenied(session_id)
@@ -59,6 +72,13 @@ def create_evidence_event(
     actor_roles: Iterable[str],
     actor_user_id: str | None = None,
 ) -> EvidenceEvent:
+    roles = _role_set(actor_roles)
+    if ROLE_CANDIDATE not in roles or roles.intersection({ROLE_ADMIN, ROLE_REVIEWER, ROLE_SYSADMIN}):
+        raise EvidenceAccessDenied(payload.session_id)
+    if payload.event_type not in CANDIDATE_EVENT_TYPES:
+        raise EvidenceEventTypeDenied(f"Candidate EvidenceEvent type is not permitted: {payload.event_type}.")
+    if payload.source_module not in CANDIDATE_SOURCE_MODULES:
+        raise EvidenceEventTypeDenied(f"Candidate evidence source is not permitted: {payload.source_module}.")
     examination_session = get_session_for_evidence(
         db,
         payload.session_id,
