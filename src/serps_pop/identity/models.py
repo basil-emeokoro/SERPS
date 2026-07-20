@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    event,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -267,3 +268,11 @@ class AuditLog(Base):
     result: Mapped[str] = mapped_column(String(30), nullable=False)
     metadata_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
+
+
+def _reject_audit_mutation(_mapper: object, _connection: object, _target: AuditLog) -> None:
+    raise ValueError("AuditLog records are append-only.")
+
+
+event.listen(AuditLog, "before_update", _reject_audit_mutation)
+event.listen(AuditLog, "before_delete", _reject_audit_mutation)
