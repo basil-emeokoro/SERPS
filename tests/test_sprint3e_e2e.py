@@ -186,7 +186,7 @@ def test_complete_operational_workflow(e2e_client: TestClient, e2e_db: Session) 
             json={
                 "session_id": session_id,
                 "candidate_id": candidate["candidate_id"],
-                "source_module": "sprint3e_validation",
+                "source_module": "candidate_browser",
                 "event_type": event_type,
                 "camera_id": camera_id,
                 "risk_weight": risk_weight,
