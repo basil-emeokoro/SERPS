@@ -13,6 +13,7 @@
   "dependencies": {
     "@serps/shared-types": "file:../../packages/shared-types",
     "next": "latest",
+    "postcss": "8.5.18",
     "react": "latest",
     "react-dom": "latest"
   },

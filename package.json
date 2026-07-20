@@ -13,5 +13,8 @@
     "lint": "npm run lint -w apps/web",
     "typecheck": "npm run typecheck -w apps/web",
     "test": "npm run test -w apps/web"
+  },
+  "overrides": {
+    "postcss": "8.5.18"
   }
 }
