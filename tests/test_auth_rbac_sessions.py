@@ -12,10 +12,11 @@ from apps.api.app.api.deps.database import get_db
 from apps.api.app.main import app
 from serps_pop.evidence import models as evidence_models  # noqa: F401
 from serps_pop.identity import models as identity_models  # noqa: F401
-from serps_pop.identity.models import AuditLog, Institution
+from serps_pop.identity.models import AuditLog, Institution, User
 from serps_pop.identity.services import ROLE_ADMIN, ROLE_CANDIDATE, ROLE_REVIEWER, ROLE_SYSADMIN, create_institution, create_user
 from serps_pop.identity.schemas import InstitutionCreate, UserCreate
 from serps_pop.infrastructure.database import Base
+from serps_pop.security.tokens import create_access_token
 
 
 @pytest.fixture()
@@ -144,6 +145,29 @@ def test_generic_login_failure_and_audit(client: TestClient, db_session: Session
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid email or password."
     assert db_session.query(AuditLog).filter(AuditLog.action == "auth.login", AuditLog.result == "failure").count() == 1
+
+
+def test_protected_request_rejects_stale_roles_institution_and_disabled_user(client: TestClient, db_session: Session) -> None:
+    users = seed_users(db_session)
+    admin = db_session.query(User).filter(User.email == users["admin"]).one()
+    wrong_role = create_access_token(
+        subject=admin.user_id,
+        institution_id=admin.institution_id,
+        roles=[ROLE_REVIEWER],
+    )
+    wrong_institution = create_access_token(
+        subject=admin.user_id,
+        institution_id=users["other_institution_id"],
+        roles=[ROLE_ADMIN],
+    )
+
+    assert client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {wrong_role}"}).status_code == 401
+    assert client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {wrong_institution}"}).status_code == 401
+
+    valid = login(client, users["admin"])
+    admin.status = "disabled"
+    db_session.commit()
+    assert client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {valid}"}).status_code == 401
 
 
 def test_candidate_cannot_access_admin_candidate_list(client: TestClient, db_session: Session) -> None:

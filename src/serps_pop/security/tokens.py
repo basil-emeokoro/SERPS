@@ -10,9 +10,6 @@ from typing import Any
 
 from serps_pop.config.settings import get_settings
 
-_DEV_SECRET = secrets.token_urlsafe(32)
-
-
 class TokenError(ValueError):
     pass
 
@@ -27,13 +24,10 @@ def _b64url_decode(data: str) -> bytes:
 
 
 def _secret() -> str:
-    settings = get_settings()
-    configured = settings.jwt_secret.get_secret_value() if settings.jwt_secret else None
-    if configured:
-        return configured
-    if settings.env.lower() not in {"development", "test", "local"}:
-        raise TokenError("SERPS_JWT_SECRET must be configured outside development.")
-    return _DEV_SECRET
+    configured = get_settings().jwt_secret.get_secret_value()
+    if len(configured) < 32:
+        raise TokenError("SERPS_JWT_SECRET must contain at least 32 characters.")
+    return configured
 
 
 def create_access_token(
@@ -48,6 +42,7 @@ def create_access_token(
     expires = now + (expires_delta or timedelta(minutes=settings.access_token_minutes))
     payload: dict[str, Any] = {
         "iss": settings.jwt_issuer,
+        "aud": settings.jwt_audience,
         "sub": subject,
         "institution_id": institution_id,
         "roles": roles,
@@ -64,18 +59,37 @@ def create_access_token(
 def decode_access_token(token: str) -> dict[str, Any]:
     try:
         header_b64, payload_b64, signature_b64 = token.split(".")
+        header = json.loads(_b64url_decode(header_b64))
+        if header.get("alg") != "HS256" or header.get("typ") != "JWT":
+            raise TokenError("Invalid token header.")
         signing_input = f"{header_b64}.{payload_b64}"
         expected = hmac.new(_secret().encode("utf-8"), signing_input.encode("ascii"), hashlib.sha256).digest()
         actual = _b64url_decode(signature_b64)
         if not hmac.compare_digest(actual, expected):
             raise TokenError("Invalid token signature.")
         payload = json.loads(_b64url_decode(payload_b64))
+        required = {"iss", "aud", "sub", "institution_id", "roles", "iat", "exp", "typ"}
+        if not required.issubset(payload):
+            raise TokenError("Token is missing required claims.")
         if payload.get("typ") != "access":
             raise TokenError("Invalid token type.")
-        if payload.get("iss") != get_settings().jwt_issuer:
+        settings = get_settings()
+        if payload.get("iss") != settings.jwt_issuer:
             raise TokenError("Invalid token issuer.")
-        if int(payload.get("exp", 0)) < int(datetime.now(timezone.utc).timestamp()):
+        if payload.get("aud") != settings.jwt_audience:
+            raise TokenError("Invalid token audience.")
+        if not isinstance(payload.get("sub"), str) or not payload["sub"]:
+            raise TokenError("Invalid token subject.")
+        if not isinstance(payload.get("institution_id"), str) or not payload["institution_id"]:
+            raise TokenError("Invalid token institution.")
+        roles = payload.get("roles")
+        if not isinstance(roles, list) or not roles or not all(isinstance(role, str) and role for role in roles):
+            raise TokenError("Invalid token roles.")
+        now = int(datetime.now(timezone.utc).timestamp())
+        if int(payload.get("exp", 0)) <= now:
             raise TokenError("Token expired.")
+        if int(payload.get("iat", 0)) > now + 60:
+            raise TokenError("Token issued-at time is invalid.")
         return payload
     except TokenError:
         raise

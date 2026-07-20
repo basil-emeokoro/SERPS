@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from apps.api.app.api.deps.database import get_db
-from serps_pop.identity.models import User
+from serps_pop.identity.models import User, UserRole
 from serps_pop.security.tokens import TokenError, decode_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -34,13 +34,21 @@ def get_current_user(
         payload = decode_access_token(credentials.credentials)
     except TokenError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired credentials.")
-    user = db.scalar(select(User).where(User.user_id == payload["sub"]))
+    user = db.scalar(
+        select(User)
+        .options(selectinload(User.roles).selectinload(UserRole.role))
+        .where(User.user_id == payload["sub"])
+    )
     if user is None or user.status != "active":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired credentials.")
+    trusted_roles = tuple(sorted(association.role.name for association in user.roles))
+    token_roles = tuple(sorted(payload["roles"]))
+    if payload["institution_id"] != user.institution_id or token_roles != trusted_roles:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or stale credentials.")
     return CurrentUser(
         user_id=user.user_id,
-        institution_id=payload["institution_id"],
-        roles=tuple(payload.get("roles", [])),
+        institution_id=user.institution_id,
+        roles=trusted_roles,
     )
 
 

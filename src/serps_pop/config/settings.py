@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,10 +10,11 @@ class Settings(BaseSettings):
     env: str = "development"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    database_url: str = "postgresql+psycopg://serps:serps@localhost:5432/serps_pop"
-    jwt_secret: SecretStr | None = None
+    database_url: str
+    jwt_secret: SecretStr
     jwt_issuer: str = "serps-pop"
-    access_token_minutes: int = 20
+    jwt_audience: str = "serps-api"
+    access_token_minutes: int = Field(default=10, ge=1, le=20)
     refresh_token_days: int = 7
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
