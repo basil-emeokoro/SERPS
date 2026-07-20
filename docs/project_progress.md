@@ -2,61 +2,39 @@
 
 ## Current status
 
-**Production-Oriented Prototype — Early Alpha**
+**Production-Oriented Prototype - Operational Early Alpha**
 
-Sprint 3C is complete. The repository now implements the candidate pre-examination journey from institution-scoped registration through authenticated examination start and real browser EvidenceEvent ingestion. Sprint 3A and Sprint 3B remain frozen and integrated.
+Sprint 3D is implementation-complete. Candidate, reviewer, and administrator operational interfaces expose the accepted Sprint 3A-3C services while preserving backend RBAC, institution isolation, append-only governance, and human decision authority.
 
 ## Completed Sprint 3 checkpoints
 
-- Sprint 3A: repository recovery and persistent EvidenceEvents.
-- Sprint 3B: deterministic contextual assessment, bounded recommendation, institutional policy evaluation, reviewer governance, immutable audit, timeline, and report APIs.
-- Sprint 3C: candidate registration/authentication, assignments, immutable consent, browser/device/camera preflight, gated session start, and automatic evidence-to-governance integration.
+- Sprint 3A: repository recovery and persistent, retrievable EvidenceEvents.
+- Sprint 3B: contextual assessment, bounded recommendation, institutional policy evaluation, reviewer governance, immutable audit, timelines, and structured reports.
+- Sprint 3C: candidate registration/authentication, assignments, immutable consent, browser/device preflight, gated session start, and automatic evidence-to-governance integration.
+- Sprint 3D: shared frontend foundation, bounded demonstration workspace, mandatory dual-camera setup, reviewer dual-view review, administrator oversight, accessibility/error states, and operational tests.
 
-## Sprint 3C commit range
+## Sprint 3D verification
 
-Starting checkpoint: `2ecde4c`
-
-- `476bbfb` — candidate registration, account binding, persistence, authenticated assignments/dashboard, and session prerequisites
-- `a4a4020` — immutable consent workflow client
-- `534e00d` — browser device compatibility, camera discovery/permission, and functional candidate dashboard
-- `4e7e0b4` — candidate-owned EvidenceEvent ingestion and automatic Sprint 3B governance integration
-- `52f4f79` — complete candidate backend integration tests
-
-The documentation commit follows this report.
-
-## Verified capabilities
-
-- Candidate accounts are persisted as linked `User` and `Candidate` records with the Candidate role.
-- Registration validates active institution codes and preserves institution isolation.
-- Existing password hashing, JWT access/refresh tokens, and RBAC secure candidate authentication.
-- Candidate APIs expose only the authenticated candidate's assignments and dashboard state.
-- Consent records preserve version, three explicit acknowledgements, acceptance state, timestamp, candidate, institution, IP address, and user agent; records are append-only.
-- Device checks persist browser-reported secure context, browser support, camera availability, and microphone availability.
-- Camera discovery uses `navigator.mediaDevices.enumerateDevices()` and permission uses `getUserMedia()`; only device metadata is persisted.
-- Session start requires a valid current consent, a passed device check, selected camera, granted permission, an eligible same-institution assignment, and authenticated candidate ownership.
-- Sessions link the exact consent, device check, camera selection, and permission records used at start.
-- Live browser camera, track-ended, visibility, and supported `FaceDetector` observations create EvidenceEvents.
-- Supported events automatically create persisted contextual assessments, recommendations, policy evaluations, and governance audit entries without modifying Sprint 3B behavior.
-
-## Verification
-
-- Python compile: passed.
-- Focused Sprint 3C tests: `7 passed in 41.44s`.
-- Full Python suite: `28 passed in 126.87s`.
-- Alembic head: `0004_sprint3c_candidate`.
-- SQLite upgrade, downgrade to Sprint 3B, re-upgrade, and metadata alignment: passed.
-- Web TypeScript check: passed.
-- Web Vitest suite: 1 file and 1 test passed.
+- API entrypoint compilation: passed.
+- Full Python suite: `31 passed in 145.77s` (cache-write warning only under the restricted workspace).
+- Frontend Vitest: `2 files, 18 tests passed`.
+- TypeScript: passed with `tsc --noEmit --incremental false`.
+- ESLint: passed.
+- Next.js production build: passed; nine application routes generated.
 - Docker Compose configuration: valid.
-- PostgreSQL: not verified because the local Docker database did not become available.
+- Alembic single head: `0005_sprint3d_dual_camera`.
+- SQLite migration cycle: fresh upgrade 0001-0005, downgrade 0005-0004, and re-upgrade to 0005 passed.
+- PostgreSQL: unavailable because the local Docker engine did not respond; no PostgreSQL success is claimed.
+- Manual UI: landing maturity text, six protected operational routes, candidate workspace guard, and 768px layout without horizontal overflow verified.
 
-## Known limitations
+## Honest prototype boundaries
 
-- PostgreSQL lifecycle verification remains outstanding.
-- Browser Face Detection is emitted only when the browser exposes the `FaceDetector` API; the system does not fabricate face results when unsupported.
-- Browser device reports are operational client attestations and should receive stronger integrity controls before production use.
-- External reviewer notifications, downloadable reports, hardened browser token storage, and full browser E2E remain later work.
+- Candidate camera previews are live local browser streams where two distinct devices and permissions exist.
+- Camera connection evidence and privacy-safe metadata are persisted; raw video is not recorded.
+- Reviewer and administrator dual views are verified metadata/status panels, not enterprise remote video streaming.
+- Face detection runs only when the browser exposes FaceDetector; unsupported browsers show an explicit limitation and produce no fabricated face event.
+- The workspace is an assessment demonstration harness, not a complete CBT platform, Safe Exam Browser equivalent, or operating-system lockdown tool.
 
-## Remaining Sprint 3 work
+## Remaining Sprint 3E work
 
-Sprint 3D must expose and harden the complete workflow through Next.js operational interfaces, especially reviewer and administrator portals, while reusing the existing API authority boundaries. Sprint 3E owns PostgreSQL/Docker seeded proof, migrations in the deployment environment, Playwright full E2E, and validation of every original Sprint 3 success criterion.
+Sprint 3E retains PostgreSQL/Docker seeded proof, complete browser-and-hardware E2E, production deployment validation, remote-stream architecture decisions, security hardening, and any release-tag decision. Sprint 3E is not started or marked complete.

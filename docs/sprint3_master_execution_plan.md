@@ -2,43 +2,31 @@
 
 ## Programme objective
 
-Sprint 3 delivers a working and testable **Production-Oriented Prototype — Early Alpha**. The implementation sequence below does not change, reduce, redesign, or reorder the final runtime workflow:
-
-Candidate Registration → Consent Acceptance → Candidate Authentication → Assigned Examination Retrieval → Device Compatibility Check → Camera Discovery → Camera Permission → Examination Session Creation → EvidenceEvent Generation → Contextual Intelligence Engine → Agentic Decision Support → IPIME Policy Evaluation → Reviewer Dashboard Notification → Reviewer Decision → Immutable Audit Logging → Candidate/Reviewer Report.
+Sprint 3 delivers a working and testable production-oriented prototype while preserving the workflow from candidate registration and monitored evidence through explainable governance, human review, audit, and reports.
 
 ## Checkpoints
 
-| Checkpoint | Scope | Relationship to the original Sprint 3 | Verification status |
-| --- | --- | --- | --- |
-| Sprint 3A | Repository recovery and EvidenceEvent persistence | Establishes the evidence foundation | Complete: repository recovered; EvidenceEvents persist and can be retrieved; 14 tests passed at checkpoint `30176c1` |
-| Sprint 3B | CIE, Agentic Decision Support, IPIME, reviewer decision, audit and report API | Implements the governance backend chain | Complete: persisted governance chain, APIs, audit/report snapshots, 21-test regression suite, and SQLite migration cycle verified; local Docker/PostgreSQL verification was unavailable and is recorded as a limitation |
-| Sprint 3C | Registration, consent, assignment retrieval, device and camera checks, session start | Implements the candidate pre-examination workflow | Complete: live registration/authentication, immutable consent, browser preflight, gated session start, real EvidenceEvents, and automatic Sprint 3B governance integration verified; local PostgreSQL remained unavailable |
-| Sprint 3D | Next.js candidate, reviewer and administrator portals | Exposes the complete workflow through operational interfaces | Not started |
-| Sprint 3E | PostgreSQL, Docker, migrations, seeded workflow, Playwright and full E2E validation | Proves every original Sprint 3 success criterion | Not started |
+| Checkpoint | Scope | Verification status |
+| --- | --- | --- |
+| Sprint 3A | Repository recovery and EvidenceEvent persistence | Complete |
+| Sprint 3B | CIE, bounded recommendation, IPIME, reviewer decision, audit, timeline, reports | Complete |
+| Sprint 3C | Registration, consent, assignment, device/camera preflight, session start | Complete |
+| Sprint 3D | Candidate demonstration workspace, dual cameras, reviewer/admin portals | Complete: automated suites, build, SQLite migration cycle, and bounded UI walkthrough passed; PostgreSQL unavailable |
+| Sprint 3E | PostgreSQL/Docker seeded proof, comprehensive browser E2E, deployment validation | Not started |
 
-## Original Sprint 3 success criteria
+## Sprint 3D delivered workflow
 
-Only verified Sprint 3A foundation capabilities are marked complete above. None of the end-to-end criteria below is complete yet because each requires later checkpoints and final integrated verification.
+Candidate registration -> consent -> authentication -> assignment -> device check -> primary and secondary camera readiness -> monitored demonstration workspace -> EvidenceEvents -> CIE -> recommendation -> IPIME -> reviewer queue and decision -> administrator oversight -> immutable audit and reports.
 
-- [ ] Register a candidate.
-- [ ] Accept consent.
-- [ ] Log in.
-- [ ] View assigned examinations.
-- [ ] Complete device and camera checks.
-- [ ] Start an examination.
-- [ ] Generate real EvidenceEvents.
-- [ ] Observe CIE risk assessment.
-- [ ] Receive an Agentic recommendation.
-- [ ] See IPIME evaluate institutional policy.
-- [ ] Review the session in the reviewer dashboard.
-- [ ] Record a reviewer decision.
-- [ ] Verify immutable audit records.
-- [ ] Generate a traceable session report.
+## Controls retained
 
-## Checkpoint controls
+- Backend RBAC, candidate ownership, and institution isolation are authoritative.
+- Frontend pages consume persisted APIs and do not reproduce governance decisions.
+- Dual-camera setup requires distinct devices and honest permission/availability states.
+- Metadata-only reviewer/admin camera panels do not claim remote live streaming.
+- Human reviewers retain final operational decision authority.
+- Sprint 3E owns final PostgreSQL, seeded full E2E, deployment, and tagging decisions.
 
-- Sprint 3B uses persisted database records throughout the governance chain and remains advisory, explainable, traceable, append-only, and human-governed.
-- Sprint 3C must implement only the candidate pre-examination workflow and real event-production dependencies; it must not change the governance authority boundary.
-- Sprint 3D must expose already-verified backend workflow through operational portals rather than duplicate business logic in the browser.
-- Sprint 3E owns PostgreSQL/Docker seeded workflow proof, Playwright, full end-to-end validation, and possible milestone tagging.
-- Chapter Three diagrams and documentation architecture remain frozen unless an implemented capability strictly requires a factual correction.
+## Integrated success criteria status
+
+The component and API capabilities required for the full workflow are implemented through Sprint 3D. Final environment-level proof across PostgreSQL, real two-camera hardware, and comprehensive browser automation remains intentionally assigned to Sprint 3E; therefore Sprint 3E and final production readiness are not marked complete.
