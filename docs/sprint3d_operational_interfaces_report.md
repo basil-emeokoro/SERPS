@@ -12,9 +12,9 @@
 
 - `/candidate`: consent, device discovery, two distinct camera selections, separate previews/permissions, readiness, session start/resume.
 - `/candidate/examinations/[sessionId]`: bounded sample questions, stable elapsed timer, navigation, primary/secondary local previews, capability disclosure, browser-originated events, explicit finish and track cleanup.
-- `/reviewer`: live institution-scoped queue with risk, unresolved/session filters, recommendation, policy, event, reviewer-action, and both-camera states.
+- `/reviewer`: API-backed institution-scoped queue with risk, unresolved/session filters, recommendation, policy, event, reviewer-action, and both-camera states.
 - `/reviewer/sessions/[sessionId]`: unified two-camera metadata/status view, CIE explanation, recommendation, IPIME result, timeline, decisions, reports, and confirmed rationale-required human action.
-- `/admin`: live operational metrics, risk distribution, active policy, recent audit, and session oversight.
+- `/admin`: API-backed operational metrics, risk distribution, active policy, recent audit, and session oversight.
 - `/admin/sessions/[sessionId]`: read-only institution-scoped dual-camera, risk, policy, reviewer, report, and timeline detail.
 
 ## Shared frontend foundation
@@ -29,9 +29,10 @@ Typed contracts and one API client now handle authentication tokens, cancellatio
 - Queue and timeline camera/status enrichment.
 - Migration `0005_sprint3d_dual_camera`, chained from `0004_sprint3c_candidate`, adds role columns and secondary session links with downgrade support.
 
-## Live versus metadata-only
+## Candidate-local versus metadata-only
 
-- Live: local getUserMedia previews, device enumeration, permission results, track-ended/device-change/visibility events, optional browser FaceDetector, API-backed governance and metrics.
+- Candidate-local/browser-interactive: `getUserMedia` previews, device enumeration, permission results, track-ended/device-change/visibility events, and optional browser FaceDetector.
+- API-backed: governance records, reviewer queues, administrator metrics, and audit data are fetched from persisted server state; this does not imply remote video streaming.
 - Metadata-only: reviewer/admin camera panels show persisted configuration, connection state, latest evidence timestamp, and failure reason. They never fabricate video.
 - Demonstration-only: three static sample questions and answer navigation. No scoring, authoring, autosave, secure-browser enforcement, or production CBT claim.
 
@@ -48,7 +49,7 @@ Operational states use status/alert semantics, visible focus, text plus color, l
 - `npm.cmd run typecheck -w apps/web` equivalent with incremental output disabled: passed.
 - `npm.cmd run test -w apps/web`: 2 files, 18 tests passed.
 - `npm.cmd run lint -w apps/web`: passed.
-- `npm.cmd run build -w apps/web`: passed; nine routes generated.
+- `npm.cmd run build -w apps/web`: passed; ten application routes are defined (excluding `/_not-found`), while the build separately reported nine generated static pages.
 - `docker compose config`: passed.
 
 ## Bounded manual walkthrough
@@ -57,7 +58,7 @@ Fully verified: production landing content, authentication guards for candidate/
 
 Partially verified: the complete operational sequence is proven across backend integration tests, frontend component/client tests, and browser route inspection, but not as one hardware-backed browser transaction.
 
-Unavailable: real two-camera hardware permission exercise, reviewer-side remote live streaming (not implemented), and PostgreSQL execution. Docker Compose was valid, but Docker Desktop did not provide a responsive engine.
+Unavailable: real two-camera hardware permission exercise, reviewer-side remote video streaming (not implemented), and PostgreSQL execution. Docker Compose was valid, but Docker Desktop did not provide a responsive engine.
 
 ## Known limitations and Sprint 3E
 

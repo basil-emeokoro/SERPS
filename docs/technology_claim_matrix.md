@@ -2,13 +2,13 @@
 
 | Technology/component | RC1 status | Evidence | Qualification / next action |
 | --- | --- | --- | --- |
-| FastAPI | Implemented | 40 live OpenAPI paths across identity, candidate, evidence, governance, reviewer/admin, audit, and reports | Add production gateway, telemetry, and rate limiting. |
-| Next.js/React/TypeScript | Implemented | Nine built routes; candidate/reviewer/admin operational portals; 18 frontend tests | Add comprehensive hardware/browser E2E. |
+| FastAPI | Implemented | 40 documented OpenAPI REST paths across identity, candidate, evidence, governance, reviewer/admin, audit, and reports | Add production gateway, telemetry, and rate limiting. |
+| Next.js/React/TypeScript | Implemented | Ten application routes excluding `/_not-found`; the build separately reports nine generated static pages; candidate/reviewer/admin operational portals; 18 frontend tests | Add comprehensive hardware/browser E2E. |
 | SQLAlchemy | Implemented | Identity, readiness, evidence, governance, audit, and report models/services | Profile and remove N+1 aggregation queries before scale. |
 | Alembic | Implemented | Single chain 0001-0005; SQLite upgrade/downgrade/re-upgrade passed | Verify against target PostgreSQL. |
 | PostgreSQL | Configured, unverified | Compose target and psycopg URL; Docker engine unavailable | Run migrations and full workflow on PostgreSQL before pilot. |
 | Docker Compose | Configured/validated | Secret-required Compose config passes | Engine/build/runtime validation remains environmental. |
-| JWT/RBAC | Implemented | Signed access tokens, hashed refresh tokens, role dependencies, negative access tests | Harden browser session storage and key/revocation operations. |
+| JWT/RBAC | Implemented | Strictly scoped short-lived access tokens, hashed refresh tokens, database-backed active-user/claim revalidation, role dependencies, and negative access tests | Harden browser session storage and immediate access-token revocation/key operations. |
 | Dual local cameras | Partial | Distinct selection, permission, two local previews, lifecycle EvidenceEvents | Real hardware E2E and distributed secondary-device design remain. |
 | WebRTC/remote media | Future | No implementation claim | Design TURN/signalling/privacy/retention before remote streaming. |
 | FaceDetector | Capability-dependent | Explicit feature detection; no fabricated face event | Migrate/evaluate production detector with fairness and liveness testing. |

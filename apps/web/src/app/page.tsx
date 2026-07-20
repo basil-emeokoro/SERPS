@@ -14,7 +14,7 @@ const portalPanels = [
     title: "Administrator Portal",
     badge: "Admin",
     href: "/admin",
-    summary: "Inspect live institution-scoped metrics, audit activity and dual-camera session state.",
+    summary: "Inspect API-backed institution-scoped metrics, audit activity and dual-camera session metadata.",
     items: ["Operational metrics", "Risk distribution", "Dual-camera oversight", "Audit visibility"],
   },
   {
@@ -22,7 +22,7 @@ const portalPanels = [
     badge: "Reviewer",
     href: "/reviewer",
     summary: "Review evidence, explainable risk, policy outcomes and both camera roles before recording a human decision.",
-    items: ["Live session queue", "Dual-camera metadata", "CIE/IPIME timeline", "Immutable reviewer rationale"],
+    items: ["API-backed session queue", "Dual-camera metadata", "CIE/IPIME timeline", "Immutable reviewer rationale"],
   },
   {
     title: "Candidate Portal",

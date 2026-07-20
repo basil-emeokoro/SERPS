@@ -20,14 +20,14 @@ This review compares the repository implementation with the Chapter Three design
 | Reports | Yes |  | Append-only structured session report snapshots generated and retrieved. |
 | Privacy |  | Yes | Metadata-only storage and no raw video are implemented; formal retention, DPIA, encryption operations, and institutional policy are future work. |
 | Deployment modes |  | Yes | Mode field and Compose packaging exist; distributed/enterprise modes and production orchestration remain future work. |
-| API interaction | Yes |  | Forty live OpenAPI paths document role-oriented REST interaction. Real-time WebSocket/SSE/WebRTC interfaces remain planned. |
+| API interaction | Yes |  | Forty documented OpenAPI REST paths describe role-oriented interaction. Real-time WebSocket/SSE/WebRTC interfaces are not implemented. |
 | Limitations | Yes |  | Dedicated limitations and validation documents explicitly bound every unsupported claim. |
 | Future enhancements |  | Yes | PostgreSQL proof, remote media, secure browser integration, load testing, detector migration, production identity provider, and deployment hardening. |
 
 ## Chapter-oriented interpretation
 
 - Chapter Three can cite the implemented architecture, data model, workflow, governance, and deployment package while labelling WebRTC, advanced detectors, and production biometrics as planned boundaries.
-- Chapter Four can report the 32-test API suite, 18 frontend tests, nine-route production build, single migration head, SQLite migration cycle, one complete workflow test, and the environmental PostgreSQL limitation.
+- Chapter Four can report the current Sprint 3F backend suite, 18 frontend tests, ten application routes (excluding `/_not-found`), nine pages reported by the static-generation phase, the single migration head, SQLite migration cycle, complete workflow test, and environmental PostgreSQL limitation. Exact current timings and counts belong in the Sprint 3F report.
 - Chapter Five can conclude that the research workflow is technically feasible and explainable at RC1 prototype scale, while recommendations must retain the limitations above.
 
 The defensible thesis position is: SERPS validates an explainable multi-modal governance layer that integrates with assessment systems; it does not demonstrate a production secure browser, enterprise surveillance platform, or final misconduct classifier.

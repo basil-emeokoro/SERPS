@@ -30,7 +30,7 @@ The CIE uses deterministic bounded rules, not a general-purpose autonomous adjud
 
 ## Security and privacy boundary
 
-JWT and RBAC controls are implemented, but browser tokens use session storage rather than hardened cookies. Production needs TLS termination, security headers, rate limiting, key rotation, secret management, database encryption/backup, retention/deletion rules, incident response, monitoring, penetration testing, DPIA/ethics approval, and institutional access governance. Two moderate PostCSS dependency findings remain without a safe non-breaking automated fix.
+JWT and RBAC controls are implemented, including short-lived access tokens and protected-request revalidation of active database user state. Browser tokens still use session storage rather than hardened cookies, and refresh-token revocation does not immediately revoke an already issued access token. Production needs TLS termination, security headers, rate limiting, key rotation, secret management, database encryption/backup, retention/deletion rules, incident response, monitoring, penetration testing, DPIA/ethics approval, and institutional access governance. The audited PostCSS findings were resolved with a compatible update; `npm audit` now reports zero vulnerabilities.
 
 ## Scale and performance boundary
 

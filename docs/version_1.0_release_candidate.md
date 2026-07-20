@@ -2,7 +2,7 @@
 
 ## Classification
 
-SERPS RC1 is a dissertation-ready research prototype. It implements and validates the complete explainable governance workflow at bounded prototype scale. It is not production-certified and must be evaluated with `prototype_limitations.md`.
+SERPS is currently classified as **Research Prototype Version 1.0 RC1 — Environment Validation Pending**. It implements the explainable governance workflow at bounded prototype scale, but Docker/PostgreSQL and physical dual-camera validation remain unavailable in the current environment. It is not production-certified and must be evaluated with `prototype_limitations.md`.
 
 ## Included capabilities
 
@@ -22,7 +22,7 @@ SERPS RC1 is a dissertation-ready research prototype. It implements and validate
 
 - Complete database-backed workflow test with real JWTs for all three operational roles: passed.
 - Full backend suite after adding the RC1 workflow test: 32 passed in 110.82 s.
-- Frontend: 18 tests, TypeScript, ESLint, and nine-route production build passed.
+- Frontend: 18 tests, TypeScript, ESLint, and production build passed. The application defines ten routes excluding `/_not-found`; the build separately reports nine generated static pages.
 - Migration: one head at `0005`; fresh SQLite upgrade/downgrade/re-upgrade and corrected seed passed.
 - Docker Compose: configuration validated with externally supplied secrets.
 - PostgreSQL: not verified because the local Docker engine was unresponsive; no success claim.
@@ -31,7 +31,7 @@ SERPS RC1 is a dissertation-ready research prototype. It implements and validate
 
 No production secure browser, enterprise WebRTC, raw-video storage, distributed second-device pairing, production biometric enrolment, load-test evidence, or certified institutional deployment. FaceDetector is browser-dependent. Reviewer/admin camera views are metadata-only.
 
-Two moderate npm/PostCSS advisories remain. The registry’s only automated remedy is a breaking forced Next.js downgrade and was rejected; a compatible dependency upgrade remains required.
+The audited PostCSS findings were resolved with a compatible 8.5.18 update/override; the current npm audit reports zero vulnerabilities. Major toolchain upgrades were deferred to avoid unrelated breaking change.
 
 ## Examiner entry points
 

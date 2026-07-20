@@ -45,10 +45,10 @@ The full migration chain was verified using a fresh SQLite database: upgrades `0
 | `npx tsc --noEmit --incremental false` | Passed, exit 0. |
 | `npm.cmd run test -w apps/web` | 2 files and 18 tests passed in 3.47 s. |
 | `npm.cmd run lint -w apps/web` | Passed, exit 0. |
-| `npm.cmd run build -w apps/web` | Passed; compiled in 19.2 s, TypeScript 18.7 s, nine routes generated. |
+| `npm.cmd run build -w apps/web` | Passed; compiled in 19.2 s, TypeScript 18.7 s. The application defines ten routes (excluding `/_not-found`); the build's separate static-generation phase reported nine pages. |
 | `docker compose config` | Passed with required secret variables supplied. |
 | `python -m alembic heads` | `0005_sprint3d_dual_camera (head)`. |
-| `npm audit --workspace apps/web --audit-level=moderate` | Two moderate findings through PostCSS/Next.js; only proposed automated fix is a breaking Next.js 9.3.3 downgrade, not applied. |
+| `npm audit --workspace apps/web --audit-level=moderate` | Historical Sprint 3E result: two moderate PostCSS findings. Sprint 3F safely upgraded/overrode PostCSS to 8.5.18 and the current audit reports zero vulnerabilities. |
 
 ## Security review
 
@@ -56,7 +56,7 @@ The full migration chain was verified using a fresh SQLite database: upgrades `0
 | --- | --- | --- |
 | RBAC and API authorization | Confirmed | Server dependencies enforce role sets; frontend navigation is supplementary only. |
 | Institution isolation | Confirmed | Candidate, reviewer, and administrator cross-institution access has negative tests. |
-| JWT | Confirmed with improvement | HMAC signature, issuer, type, and expiry validated; production requires external secret. Short-lived tokens carry role claims until expiry. |
+| JWT | Hardened in Sprint 3F | HS256 signature, issuer, audience, type, expiry, issue time, subject, role, and institution are validated; protected requests reload active user state and compare trusted role/institution data. Existing access tokens remain usable until their short expiry after refresh-token revocation. |
 | Candidate ownership | Confirmed | Session retrieval, completion, evidence ingestion, and assignments enforce the authenticated candidate. |
 | Reviewer permissions | Confirmed | Reviewer-only decision endpoint and institution scope tested. |
 | Administrator permissions | Confirmed | Oversight is institution-scoped and cannot submit reviewer decisions. |
@@ -65,9 +65,9 @@ The full migration chain was verified using a fresh SQLite database: upgrades `0
 | Governance/audit immutability | Confirmed | Assessment, recommendation, policy, decision, audit, and report snapshots reject mutation/deletion. |
 | Policy evaluation | Confirmed | Deterministic policy evaluation remains advisory and prohibits automatic exam termination. |
 | Secrets | Improved | Compose now requires database/JWT secrets; `.env` remains ignored; no committed operational credentials found. |
-| Dependencies | Needs improvement | Two moderate PostCSS findings remain because the registry offers only a breaking forced downgrade. |
+| Dependencies | Resolved for the audited finding | PostCSS 8.5.18 is deduplicated across the workspace and `npm audit` reports zero vulnerabilities. Major ESLint/TypeScript upgrades were intentionally deferred. |
 
-Future security work: cookie-backed browser sessions, CSRF protection for that session model, security headers, rate limiting, key rotation, current-role revalidation, dependency remediation, external secret management, PostgreSQL tenancy tests, and privacy/retention policy enforcement.
+Future security work: cookie-backed browser sessions, CSRF protection for that session model, security headers, rate limiting, key rotation, immediate access-token revocation/versioning, external secret management, PostgreSQL tenancy tests, and privacy/retention policy enforcement.
 
 ## Performance review
 
@@ -85,7 +85,7 @@ Scaling recommendations: profile before tuning; batch/debounce high-frequency ev
 ## Final repository review
 
 - Import, type, lint, test, build, route, and migration checks pass.
-- OpenAPI was regenerated from 17 stale paths to all 40 live paths.
+- OpenAPI was regenerated from 17 stale paths to all 40 documented REST paths.
 - No tracked bytecode, `.next`, `.env`, node modules, debug statements, TODO/FIXME markers, or operational secrets were found.
 - The demo seeder no longer creates a session that bypasses candidate readiness and now requires an explicit password.
 - Documentation consistently distinguishes local live camera preview, simulated validation input, metadata-only reviewer/admin views, and unimplemented enterprise streaming.
