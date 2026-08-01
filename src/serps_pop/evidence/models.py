@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, String, Text
+from sqlalchemy import JSON, DateTime, Float, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from serps_pop.infrastructure.database import Base
@@ -20,3 +20,4 @@ class EvidenceEventRecord(Base):
     camera_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
     evidence_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, nullable=False, default=dict)

@@ -12,9 +12,20 @@ from serps_pop.identity.services import ROLE_ADMIN, ROLE_CANDIDATE, ROLE_REVIEWE
 CANDIDATE_EVENT_TYPES = {
     "camera_connected",
     "camera_disconnected",
+    "camera_heartbeat",
+    "camera_reconnected",
     "face_detected",
     "face_not_detected",
     "tab_focus_lost",
+    "person_detected",
+    "multiple_persons_detected",
+    "mobile_phone_detected",
+    "object_detector_unavailable",
+    "microphone_connected",
+    "microphone_disconnected",
+    "audio_activity_detected",
+    "sustained_audio_activity",
+    "audio_monitor_unavailable",
 }
 CANDIDATE_SOURCE_MODULES = {"candidate_browser"}
 

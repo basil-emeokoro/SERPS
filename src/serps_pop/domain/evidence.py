@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import StrEnum
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -29,11 +30,26 @@ class EvidenceEventCreate(BaseModel):
     description: str = Field(min_length=1)
     camera_id: str | None = None
     evidence_path: str | None = None
+    metadata_json: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("event_type", "source_module")
     @classmethod
     def normalise_token(cls, value: str) -> str:
         return value.strip().lower().replace(" ", "_")
+
+    @field_validator("metadata_json")
+    @classmethod
+    def reject_raw_media(cls, value: dict[str, Any]) -> dict[str, Any]:
+        prohibited = {"raw_audio", "audio_samples", "audio_blob", "raw_video", "frame_bytes", "image_data"}
+        pending: list[dict[str, Any]] = [value]
+        while pending:
+            current = pending.pop()
+            for key, item in current.items():
+                if key.lower() in prohibited:
+                    raise ValueError(f"Raw media is not permitted in EvidenceEvent metadata: {key}.")
+                if isinstance(item, dict):
+                    pending.append(item)
+        return value
 
 
 class EvidenceEvent(EvidenceEventCreate):

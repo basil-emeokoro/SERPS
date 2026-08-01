@@ -38,4 +38,5 @@ class EvidenceEventRepository:
             camera_id=record.camera_id,
             evidence_path=record.evidence_path,
             description=record.description,
+            metadata_json=record.metadata_json,
         )

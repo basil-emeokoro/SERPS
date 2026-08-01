@@ -475,7 +475,15 @@ def reviewer_queue(
                 "latest_risk_score": assessment.risk_score if assessment else None,
                 "latest_risk_level": assessment.risk_level if assessment else None,
                 "latest_evidence": (
-                    {"event_id": latest_evidence.event_id, "event_type": latest_evidence.event_type, "timestamp": latest_evidence.timestamp}
+                    {
+                        "event_id": latest_evidence.event_id,
+                        "event_type": latest_evidence.event_type,
+                        "timestamp": latest_evidence.timestamp,
+                        "source_module": latest_evidence.source_module,
+                        "camera_id": latest_evidence.camera_id,
+                        "confidence": latest_evidence.confidence,
+                        "metadata_json": latest_evidence.metadata_json,
+                    }
                     if latest_evidence
                     else None
                 ),
@@ -529,7 +537,7 @@ def governance_timeline(
             "entry_type": "EvidenceEvent",
             "entity_id": item.event_id,
             "timestamp": item.timestamp,
-            "payload": _model_payload(item, ("event_id", "candidate_id", "event_type", "source_module", "risk_weight", "confidence", "camera_id", "description")),
+            "payload": _model_payload(item, ("event_id", "candidate_id", "event_type", "source_module", "risk_weight", "confidence", "camera_id", "description", "metadata_json")),
         })
     collections = (
         (ContextualAssessment, "ContextualAssessment", "assessment_id", "calculated_at", ASSESSMENT_FIELDS),
@@ -571,6 +579,16 @@ def _report_payload(db: Session, examination_session: ExaminationSession) -> dic
         "examination": _model_payload(examination, ("examination_id", "exam_code", "title", "status", "duration_minutes")),
         "session": _model_payload(examination_session, ("session_id", "institution_id", "candidate_id", "examination_id", "status", "started_at", "ended_at", "created_at")),
         "evidence_event_summary": {"total": len(events), "counts_by_type": event_counts, "event_ids": [event.event_id for event in events]},
+        "evidence_events": [
+            _model_payload(
+                event,
+                (
+                    "event_id", "timestamp", "event_type", "source_module", "risk_weight",
+                    "confidence", "camera_id", "description", "metadata_json",
+                ),
+            )
+            for event in events
+        ],
         "risk_history": [{"assessment_id": item.assessment_id, "calculated_at": _json_value(item.calculated_at), "risk_score": item.risk_score, "risk_level": item.risk_level} for item in assessments],
         "contextual_assessments": [_model_payload(item, ASSESSMENT_FIELDS) for item in assessments],
         "agent_recommendations": [_model_payload(item, RECOMMENDATION_FIELDS) for item in recommendations],

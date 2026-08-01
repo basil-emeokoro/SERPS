@@ -29,13 +29,13 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column("secondary_camera_selection_id", sa.String(length=36), nullable=True))
         batch_op.add_column(sa.Column("secondary_camera_permission_id", sa.String(length=36), nullable=True))
         batch_op.create_foreign_key(
-            "fk_examination_sessions_secondary_camera_selection_id_camera_selection_records",
+            "fk_sessions_secondary_camera_selection",
             "camera_selection_records",
             ["secondary_camera_selection_id"],
             ["camera_selection_id"],
         )
         batch_op.create_foreign_key(
-            "fk_examination_sessions_secondary_camera_permission_id_camera_permission_records",
+            "fk_sessions_secondary_camera_permission",
             "camera_permission_records",
             ["secondary_camera_permission_id"],
             ["camera_permission_id"],
@@ -45,11 +45,11 @@ def upgrade() -> None:
 def downgrade() -> None:
     with op.batch_alter_table("examination_sessions") as batch_op:
         batch_op.drop_constraint(
-            "fk_examination_sessions_secondary_camera_permission_id_camera_permission_records",
+            "fk_sessions_secondary_camera_permission",
             type_="foreignkey",
         )
         batch_op.drop_constraint(
-            "fk_examination_sessions_secondary_camera_selection_id_camera_selection_records",
+            "fk_sessions_secondary_camera_selection",
             type_="foreignkey",
         )
         batch_op.drop_column("secondary_camera_permission_id")

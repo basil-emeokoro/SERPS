@@ -115,18 +115,18 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column("device_check_id", sa.String(length=36), nullable=True))
         batch_op.add_column(sa.Column("camera_selection_id", sa.String(length=36), nullable=True))
         batch_op.add_column(sa.Column("camera_permission_id", sa.String(length=36), nullable=True))
-        batch_op.create_foreign_key("fk_examination_sessions_consent_id_candidate_consents", "candidate_consents", ["consent_id"], ["consent_id"])
-        batch_op.create_foreign_key("fk_examination_sessions_device_check_id_device_check_records", "device_check_records", ["device_check_id"], ["device_check_id"])
-        batch_op.create_foreign_key("fk_examination_sessions_camera_selection_id_camera_selection_records", "camera_selection_records", ["camera_selection_id"], ["camera_selection_id"])
-        batch_op.create_foreign_key("fk_examination_sessions_camera_permission_id_camera_permission_records", "camera_permission_records", ["camera_permission_id"], ["camera_permission_id"])
+        batch_op.create_foreign_key("fk_sessions_consent", "candidate_consents", ["consent_id"], ["consent_id"])
+        batch_op.create_foreign_key("fk_sessions_device_check", "device_check_records", ["device_check_id"], ["device_check_id"])
+        batch_op.create_foreign_key("fk_sessions_camera_selection", "camera_selection_records", ["camera_selection_id"], ["camera_selection_id"])
+        batch_op.create_foreign_key("fk_sessions_camera_permission", "camera_permission_records", ["camera_permission_id"], ["camera_permission_id"])
 
 
 def downgrade() -> None:
     with op.batch_alter_table("examination_sessions") as batch_op:
-        batch_op.drop_constraint("fk_examination_sessions_camera_permission_id_camera_permission_records", type_="foreignkey")
-        batch_op.drop_constraint("fk_examination_sessions_camera_selection_id_camera_selection_records", type_="foreignkey")
-        batch_op.drop_constraint("fk_examination_sessions_device_check_id_device_check_records", type_="foreignkey")
-        batch_op.drop_constraint("fk_examination_sessions_consent_id_candidate_consents", type_="foreignkey")
+        batch_op.drop_constraint("fk_sessions_camera_permission", type_="foreignkey")
+        batch_op.drop_constraint("fk_sessions_camera_selection", type_="foreignkey")
+        batch_op.drop_constraint("fk_sessions_device_check", type_="foreignkey")
+        batch_op.drop_constraint("fk_sessions_consent", type_="foreignkey")
         batch_op.drop_column("camera_permission_id")
         batch_op.drop_column("camera_selection_id")
         batch_op.drop_column("device_check_id")

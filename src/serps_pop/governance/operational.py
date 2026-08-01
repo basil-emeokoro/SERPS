@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Iterable
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -19,6 +20,7 @@ from serps_pop.governance.models import (
 from serps_pop.governance.services import _authorised_session, governance_timeline, reviewer_queue
 from serps_pop.identity.models import Candidate, Examination, ExaminationSession, Institution
 from serps_pop.identity.services import ROLE_SYSADMIN
+from serps_pop.identity_assurance.models import IdentityAssuranceProfile
 
 
 def _record(record: Any, fields: tuple[str, ...]) -> dict[str, Any] | None:
@@ -34,7 +36,7 @@ def camera_status(db: Session, session: ExaminationSession, role: str) -> dict[s
         select(EvidenceEventRecord)
         .where(
             EvidenceEventRecord.session_id == session.session_id,
-            EvidenceEventRecord.event_type.in_(("camera_connected", "camera_disconnected")),
+            EvidenceEventRecord.event_type.in_(("camera_connected", "camera_disconnected", "camera_heartbeat", "camera_reconnected")),
         )
         .order_by(EvidenceEventRecord.timestamp.desc(), EvidenceEventRecord.event_id.desc())
     ).all()
@@ -42,7 +44,11 @@ def camera_status(db: Session, session: ExaminationSession, role: str) -> dict[s
     connection = "not_seen"
     failure = None
     if latest:
-        connection = "connected" if latest.event_type == "camera_connected" else "disconnected"
+        connection = "connected" if latest.event_type in {"camera_connected", "camera_heartbeat", "camera_reconnected"} else "disconnected"
+        observed_at = latest.timestamp if latest.timestamp.tzinfo else latest.timestamp.replace(tzinfo=timezone.utc)
+        if connection == "connected" and observed_at < datetime.now(timezone.utc) - timedelta(seconds=35):
+            connection = "unavailable"
+            failure = "Candidate camera state is stale; no heartbeat was received within 35 seconds."
         if connection == "disconnected":
             failure = latest.description
     elif selection:
@@ -55,6 +61,7 @@ def camera_status(db: Session, session: ExaminationSession, role: str) -> dict[s
         "label": selection.label if selection else None,
         "stream_mode": "metadata_only",
         "failure_reason": failure,
+        "freshness_seconds": max(0, int((datetime.now(timezone.utc) - observed_at).total_seconds())) if latest else None,
     }
 
 
@@ -69,6 +76,9 @@ def operational_session_detail(
     candidate = db.get(Candidate, session.candidate_id)
     examination = db.get(Examination, session.examination_id)
     institution = db.get(Institution, session.institution_id)
+    identity_profile = db.scalar(
+        select(IdentityAssuranceProfile).where(IdentityAssuranceProfile.user_id == candidate.user_id)
+    ) if candidate and candidate.user_id else None
     assessment = db.scalar(
         select(ContextualAssessment)
         .where(ContextualAssessment.session_id == session_id)
@@ -98,8 +108,26 @@ def operational_session_detail(
         .order_by(SessionReportSnapshot.generated_at.desc())
     ).all()
     return {
-        "session": _record(session, ("session_id", "institution_id", "candidate_id", "examination_id", "status", "started_at", "ended_at", "monitoring_status")),
+        "session": _record(session, ("session_id", "institution_id", "candidate_id", "examination_id", "status", "deployment_mode", "started_at", "ended_at", "monitoring_status")),
         "candidate": _record(candidate, ("candidate_id", "candidate_identifier", "full_name", "email", "status")),
+        "identity_assurance": _record(
+            identity_profile,
+            (
+                "enrolment_status",
+                "authentication_result",
+                "identity_confidence",
+                "liveness_result",
+                "last_verified_at",
+                "demo_bypass",
+            ),
+        ) or {
+            "enrolment_status": "legacy_account",
+            "authentication_result": "password_only",
+            "identity_confidence": None,
+            "liveness_result": "not_required",
+            "last_verified_at": None,
+            "demo_bypass": False,
+        },
         "institution": _record(institution, ("institution_id", "code", "name")),
         "examination": _record(examination, ("examination_id", "exam_code", "title", "status", "duration_minutes")),
         "primary_camera": camera_status(db, session, "primary"),
@@ -172,8 +200,9 @@ def administrator_metrics(
         "connected_primary_cameras": sum(item["connection_status"] == "connected" for item in primary_states),
         "connected_secondary_cameras": sum(item["connection_status"] == "connected" for item in secondary_states),
         "camera_failure_count": sum(
-            item["connection_status"] == "disconnected" for item in primary_states + secondary_states
+            item["connection_status"] in {"disconnected", "unavailable"} for item in primary_states + secondary_states
         ),
+        "last_updated_at": datetime.now(timezone.utc),
         "recent_audit_activity": [
             _record(item, ("audit_id", "session_id", "actor_id", "action", "entity_type", "entity_id", "timestamp"))
             for item in recent_audits

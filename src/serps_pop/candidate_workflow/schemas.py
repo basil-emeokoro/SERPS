@@ -172,6 +172,7 @@ class CandidateSessionRead(BaseModel):
     secondary_camera_selection_id: str
     secondary_camera_permission_id: str
     status: str
+    deployment_mode: str
     authentication_gate_status: str
     device_check_status: str
     monitoring_status: str
