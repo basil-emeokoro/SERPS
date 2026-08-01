@@ -23,7 +23,7 @@ export default function ReviewerSessionPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
   const load = useCallback(async () => { await Promise.resolve(); setLoading(true); try { setDetail(await fetchReviewerSession(sessionId)); setError(""); } catch (reason) { setError(reason instanceof Error ? reason.message : "Session review unavailable."); } finally { setLoading(false); } }, [sessionId]);
-  useEffect(() => { const task = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(task); }, [load]);
+  useEffect(() => { const task = window.setTimeout(() => void load(), 0); const poll = window.setInterval(() => void load(), 10000); return () => { window.clearTimeout(task); window.clearInterval(poll); }; }, [load]);
   function prepare(event: FormEvent) { event.preventDefault(); const message = validateReviewerDecision(decision, rationale); setValidation(message ?? ""); if (!message) setConfirm(true); }
   async function persistDecision() {
     if (!detail?.latest_assessment || !detail.latest_recommendation || !detail.latest_policy_evaluation) return;

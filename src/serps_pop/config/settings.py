@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     access_token_minutes: int = Field(default=10, ge=1, le=20)
     refresh_token_days: int = 7
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    frontend_build_id: str = "serps-web-1.0-rc1-s4c"
+    backend_build_id: str = "serps-api-1.0-rc1-s4c"
 
 
 @lru_cache

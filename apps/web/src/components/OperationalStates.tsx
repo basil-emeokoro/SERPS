@@ -31,7 +31,7 @@ export function CameraPanel({ camera, title }: { camera: CameraStatus; title: st
   const tone = camera.connection_status === "connected" ? "success" : camera.connection_status === "disconnected" ? "danger" : "warning";
   return <article className="camera-panel" aria-label={`${title} status`}>
     <div className="camera-placeholder" role="img" aria-label={`${title}: remote video streaming unavailable in this prototype`}><span>{title}</span><small>Metadata-only reviewer view — no fabricated video</small></div>
-    <div className="camera-meta"><StatusBadge label={camera.connection_status.replaceAll("_", " ")} tone={tone} /><strong>{camera.label ?? "No privacy-safe label available"}</strong><span>{cameraStatusText(camera)}</span><span>Last seen: {camera.last_seen_at ? new Date(camera.last_seen_at).toLocaleString() : "No event observed"}</span>{camera.failure_reason && <span className="danger-text">{camera.failure_reason}</span>}</div>
+    <div className="camera-meta"><StatusBadge label={camera.connection_status.replaceAll("_", " ")} tone={tone} /><strong>{camera.label ?? "No privacy-safe label available"}</strong><span>{cameraStatusText(camera)}</span><span>{camera.freshness_seconds == null ? "No candidate heartbeat observed" : `Last candidate update: ${camera.freshness_seconds} seconds ago`}</span><span>Last seen: {camera.last_seen_at ? new Date(camera.last_seen_at).toLocaleString() : "No event observed"}</span>{camera.failure_reason && <span className="danger-text">{camera.failure_reason}</span>}</div>
   </article>;
 }
 

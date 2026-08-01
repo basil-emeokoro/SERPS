@@ -11,7 +11,9 @@
 - Reviewer decisions require a supported action and rationale; administrator oversight is read-only.
 - Identity audit, consent/readiness, and governance models use supported ORM update/delete guards to enforce application-level append-only records.
 - IPIME remains advisory and explicitly prohibits automatic examination termination.
-- Raw video, authentication tokens, passwords, and biometric templates are not persisted in audit/report payloads.
+- Raw images and video are not transmitted or persisted by the biometric workflow. The backend stores a compact numeric luminance descriptor and its hash; reviewer and administrator responses expose only enrolment/authentication status, confidence, liveness result, and timestamps.
+- Password and facial authentication are separate stages for normal candidates. One-time enrolment/authentication challenge tokens are generated with cryptographic randomness, stored only as SHA-256 hashes, expire after ten minutes, and cannot be reused after completion.
+- Reviewer and administrator registration requests require a System Administrator approval decision and rationale before role assignment.
 - `.env` is ignored; Compose requires externally supplied database and JWT secrets.
 
 ## Needs improvement
@@ -20,6 +22,8 @@
 - Refresh-token revocation does not immediately invalidate an already issued access token; sensitive deployments should add access-token revocation/versioning or reduce the already short lifetime further.
 - Add security headers, TLS policy, rate limiting, account lockout/monitoring, key rotation, and central secret management.
 - Browser device/permission data is an operational attestation, not tamper-proof hardware evidence.
+- Browser Face Detection and spatial pose proxies are not presentation-attack resistant, independently trusted, or certified liveness detection. Production requires a reviewed biometric algorithm, anti-spoofing, calibrated thresholds, fairness evaluation, encryption, revocation/re-enrolment, and subject-rights controls.
+- The derived facial descriptor is sensitive biometric-adjacent data and is not application-layer encrypted in RC1. Production must use envelope encryption, strict retention/deletion controls, access monitoring, and a DPIA/ethics-approved lawful basis.
 - Add PostgreSQL-backed tenancy/security tests, dependency scanning in CI, SAST/DAST, and penetration testing.
 - Establish formal retention, subject-rights, encryption, backup, incident, DPIA, and ethics processes.
 

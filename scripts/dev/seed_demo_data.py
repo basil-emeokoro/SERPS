@@ -20,6 +20,8 @@ from serps_pop.identity.services import (
     create_user,
     ensure_roles,
 )
+from serps_pop.identity_assurance import models as identity_assurance_models  # noqa: F401
+from serps_pop.identity_assurance.services import create_demo_profile
 from serps_pop.infrastructure.database import Base, SessionLocal, engine
 
 
@@ -37,6 +39,44 @@ def first_or_none(session, model, *conditions):
     for condition in conditions:
         stmt = stmt.where(condition)
     return session.scalars(stmt).first()
+
+
+def registration_configuration(code: str) -> dict:
+    common = [
+        {"name": "full_name", "label": "Full name", "type": "text", "required": True, "placeholder": "Enter your full name", "help_text": "Use the name held by the institution.", "order": 20, "active": True, "applies_to": ["candidate", "reviewer", "administrator"]},
+        {"name": "contact_email", "label": "Email or approved contact address", "type": "email", "required": True, "placeholder": "name@example.org", "help_text": "Used for account access; it need not be an institutional domain.", "order": 30, "active": True, "applies_to": ["candidate", "reviewer", "administrator"]},
+    ]
+    if code == "MIVA":
+        specific = [
+            {"name": "matriculation_number", "label": "Matriculation number", "type": "text", "required": True, "placeholder": "MIVA/2026/0001", "pattern": r"[A-Za-z0-9/\-]{4,40}", "help_text": "Your Miva candidate identifier.", "order": 10, "active": True, "applies_to": ["candidate"]},
+            {"name": "programme", "label": "Programme or cohort", "type": "text", "required": False, "placeholder": "BSc Computer Science", "help_text": "Optional where configured by the institution.", "order": 40, "active": True, "applies_to": ["candidate"]},
+        ]
+        identifier = "matriculation_number"
+    elif code == "WAEC":
+        specific = [
+            {"name": "candidate_number", "label": "Candidate number", "type": "text", "required": True, "placeholder": "1234567890", "pattern": r"[A-Za-z0-9\-]{6,20}", "help_text": "The number on the examination registration.", "order": 10, "active": True, "applies_to": ["candidate"]},
+            {"name": "examination_type", "label": "Examination type", "type": "select", "required": True, "options": ["WASSCE School Candidate", "WASSCE Private Candidate"], "placeholder": "Select examination type", "help_text": "Choose the registered examination route.", "order": 12, "active": True, "applies_to": ["candidate"]},
+            {"name": "examination_year", "label": "Examination year", "type": "number", "required": True, "placeholder": "2026", "pattern": r"20[0-9]{2}", "help_text": "Four-digit examination year.", "order": 14, "active": True, "applies_to": ["candidate"]},
+            {"name": "centre_number", "label": "Centre number", "type": "text", "required": True, "placeholder": "1234567", "pattern": r"[A-Za-z0-9\-]{5,20}", "help_text": "Registered examination centre.", "order": 16, "active": True, "applies_to": ["candidate"]},
+        ]
+        identifier = "candidate_number"
+    else:
+        specific = [
+            {"name": "candidate_identifier", "label": "Candidate identifier", "type": "text", "required": True, "placeholder": "Institution-issued identifier", "pattern": r"[A-Za-z0-9._/\-]{3,80}", "help_text": "The identifier supplied by your assessment institution.", "order": 10, "active": True, "applies_to": ["candidate"]},
+            {"name": "cohort", "label": "Programme or cohort", "type": "text", "required": False, "placeholder": "Optional", "help_text": "Configured descriptive registration field.", "order": 40, "active": True, "applies_to": ["candidate"]},
+        ]
+        identifier = "candidate_identifier"
+    return {"version": "1.0", "enabled": True, "candidate_identifier_field": identifier, "fields": specific + common}
+
+
+def ensure_registration_institutions(db) -> None:
+    definitions = [("MIVA", "Miva Open University", "university"), ("WAEC", "West African Examinations Council", "examination_body"), ("GENERIC", "Generic Institution", "generic")]
+    for code, name, institution_type in definitions:
+        institution = first_or_none(db, Institution, Institution.code == code)
+        if institution is None:
+            institution = Institution(code=code, name=name, institution_type=institution_type, metadata_json={}, is_active=True)
+            db.add(institution)
+        institution.metadata_json = {**(institution.metadata_json or {}), "registration_configuration": registration_configuration(code)}
 
 
 def seed() -> None:
@@ -58,6 +98,7 @@ def seed() -> None:
                 ),
                 actor_user_id=None,
             )
+        ensure_registration_institutions(db)
 
         sysadmin = first_or_none(db, User, User.email == "sysadmin@serps.local")
         if sysadmin is None:
@@ -89,7 +130,7 @@ def seed() -> None:
 
         reviewer = first_or_none(db, User, User.email == "reviewer@miva.edu.ng")
         if reviewer is None:
-            create_user(
+            reviewer = create_user(
                 db,
                 UserCreate(
                     institution_id=institution.institution_id,
@@ -140,6 +181,11 @@ def seed() -> None:
             )
         if candidate.user_id is None:
             candidate.user_id = candidate_user.user_id
+        candidate.status = "active"
+        candidate.profile_metadata = {**candidate.profile_metadata, "demonstration_account": True}
+
+        for demo_user in (sysadmin, admin, reviewer, candidate_user):
+            create_demo_profile(db, demo_user.user_id)
 
         exam = first_or_none(db, Examination, Examination.exam_code == "SERPS-DEMO-001")
         if exam is None:

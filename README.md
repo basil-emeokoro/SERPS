@@ -6,13 +6,15 @@ SERPS is not a complete assessment platform, production secure browser, or enter
 
 ## Implemented workflow
 
-Candidate registration -> authentication -> immutable consent -> device readiness -> distinct primary and secondary cameras -> demonstration workspace -> EvidenceEvents -> Contextual Intelligence Engine -> bounded agent recommendation -> institutional policy evaluation -> reviewer decision -> administrator oversight -> immutable audit and structured reports.
+Candidate registration -> bounded prototype verification -> six-direction facial enrolment -> password authentication -> dynamic facial/liveness authentication -> immutable consent -> device readiness -> distinct primary and secondary cameras -> identity-gated demonstration workspace -> EvidenceEvents -> Contextual Intelligence Engine -> bounded agent recommendation -> institutional policy evaluation -> reviewer decision -> administrator oversight -> immutable audit and structured reports.
 
-The backend remains authoritative for JWT authentication, RBAC, candidate ownership, institution isolation, readiness, governance records, and decisions. Detection events are evidence; final operational actions remain human-controlled.
+Reviewer and administrator registrations enter a System Administrator approval queue. The four seeded defence identities are explicitly marked demonstration accounts and bypass registration and facial enrolment; normal candidate registrations do not bypass the lifecycle.
+
+The backend remains authoritative for JWT authentication, RBAC, candidate ownership, institution isolation, registration status, identity readiness, governance records, and decisions. Browser face and liveness results are bounded research-prototype attestations, not certified biometric proof; final operational actions remain human-controlled.
 
 ## Stack
 
-- Next.js, React, and TypeScript web application
+- Next.js, React, TypeScript, and locally bundled MediaPipe Tasks Vision web application
 - FastAPI and Pydantic API
 - SQLAlchemy and Alembic persistence
 - PostgreSQL deployment target
@@ -75,4 +77,4 @@ See `docs/installation_guide.md`, `docs/user_manual.md`, `docs/demo_script.md`, 
 
 ## Dissertation boundary
 
-The validated implementation supports the dissertation methodology, governance, explainability, dual-camera, reviewer, administrator, and reporting claims at research-prototype scale. PostgreSQL execution, hardware-backed two-camera browser E2E, enterprise media transport, secure-browser controls, and institutional production integration must be described according to the limitations documents; unsupported capabilities are not claimed.
+The implementation supports the dissertation identity-lifecycle, governance, explainability, dual-camera, reviewer, administrator, and reporting claims at research-prototype scale. The facial representation is a derived 8-by-8 luminance descriptor and pose/liveness validation uses local MediaPipe landmarks plus bounded geometric movement proxies. It is not production face recognition, certified liveness, or presentation-attack resistance. Hardware-backed browser evidence and production deployment claims must follow the limitations documents.

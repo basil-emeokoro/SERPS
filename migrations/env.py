@@ -7,6 +7,7 @@ from serps_pop.candidate_workflow import models as candidate_workflow_models  # 
 from serps_pop.evidence import models  # noqa: F401
 from serps_pop.governance import models as governance_models  # noqa: F401
 from serps_pop.identity import models as identity_models  # noqa: F401
+from serps_pop.identity_assurance import models as identity_assurance_models  # noqa: F401
 from serps_pop.infrastructure.database import Base
 
 config = context.config

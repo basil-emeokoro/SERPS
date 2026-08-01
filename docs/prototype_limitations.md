@@ -14,15 +14,15 @@ The candidate browser can enumerate and preview two distinct local video-input d
 
 ## Browser capability differences
 
-`getUserMedia`, device labels, track events, and device-change behavior differ by browser, operating system, permissions, and secure-context policy. FaceDetector is not universally available. When absent, SERPS states that limitation and does not create a fabricated face result. A two-camera demonstration requires hardware and a browser that exposes both devices.
+`getUserMedia`, device labels, track events, and device-change behavior differ by browser, operating system, permissions, and secure-context policy. SERPS bundles MediaPipe Tasks Vision and its model locally, but WebAssembly, camera permission, and suitable browser support remain required. When the detector cannot initialise, SERPS states that limitation and does not create a fabricated face result. A two-camera demonstration requires hardware and a browser that exposes both devices.
 
 ## Validation environment
 
-The integrated workflow used SQLite and simulated browser/device attestations through the real API contracts. PostgreSQL was not verified because Docker Desktop did not expose a responsive engine. The prior browser walkthrough verified route guards and responsive rendering, but the current environment did not provide a complete hardware-backed two-camera browser run.
+The automated identity lifecycle and complete workflow use SQLite and real API contracts with deterministic descriptor fixtures. Docker PostgreSQL is healthy, but the application remains configured for SQLite because the existing PostgreSQL volume credentials do not match the local application configuration. Physical two-camera and human movement validation remains a manual demonstration step and must not be inferred from deterministic tests.
 
 ## Identity and biometric boundary
 
-RC1 provides account authentication, candidate ownership, consent, device readiness, and bounded browser face-status events. It does not implement production facial enrolment, biometric templates, liveness certification, fairness evaluation, presentation-attack resistance, or an external identity provider.
+The candidate lifecycle includes automatic prototype email verification, a one-time enrolment challenge, six ordered face observations, randomized movement prompts, a stored derived numeric representation, password-then-face sign-in, recent-identity session gating, periodic identity prompts, registration approval, and privacy-safe reviewer status. The implementation uses locally bundled MediaPipe face landmarks and bounded geometric movement proxies. Its 8-by-8 luminance descriptor is an experimental similarity representation, not a biometric-grade face embedding. The system is not production facial recognition, certified liveness detection, blink analysis, depth sensing, presentation-attack resistance, identity-registry verification, fairness validation, or a substitute for human identity proofing. Raw images/video are not stored, but the derived descriptor is sensitive and still requires production encryption and retention governance.
 
 ## Governance boundary
 

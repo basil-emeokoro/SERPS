@@ -10,12 +10,14 @@ from apps.api.app.api.v1.routes.examinations import router as examinations_route
 from apps.api.app.api.v1.routes.health import router as health_router
 from apps.api.app.api.v1.routes.governance import router as governance_router
 from apps.api.app.api.v1.routes.institutions import router as institutions_router
+from apps.api.app.api.v1.routes.identity_assurance import router as identity_assurance_router
 from apps.api.app.api.v1.routes.roles import router as roles_router
 from apps.api.app.api.v1.routes.users import router as users_router
 
 api_v1_router = APIRouter()
 api_v1_router.include_router(health_router, tags=["health"])
 api_v1_router.include_router(auth_router, prefix="/auth", tags=["auth"])
+api_v1_router.include_router(identity_assurance_router, prefix="/identity-assurance", tags=["identity-assurance"])
 api_v1_router.include_router(institutions_router, prefix="/institutions", tags=["institutions"])
 api_v1_router.include_router(users_router, prefix="/users", tags=["users"])
 api_v1_router.include_router(roles_router, prefix="/roles", tags=["roles"])

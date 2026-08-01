@@ -166,11 +166,13 @@ class OperationalCameraStatus(BaseModel):
     label: str | None
     stream_mode: str = "metadata_only"
     failure_reason: str | None = None
+    freshness_seconds: int | None = None
 
 
 class OperationalSessionDetail(BaseModel):
     session: dict[str, Any]
     candidate: dict[str, Any]
+    identity_assurance: dict[str, Any]
     institution: dict[str, Any]
     examination: dict[str, Any]
     primary_camera: OperationalCameraStatus
@@ -194,6 +196,7 @@ class AdministratorMetricsRead(BaseModel):
     connected_secondary_cameras: int
     camera_failure_count: int
     recent_audit_activity: list[dict[str, Any]]
+    last_updated_at: datetime
 
 
 class InstitutionalPolicyRead(BaseModel):

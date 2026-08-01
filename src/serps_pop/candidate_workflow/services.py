@@ -37,6 +37,7 @@ from serps_pop.identity.services import (
     create_user,
     utc_now,
 )
+from serps_pop.identity_assurance.services import identity_ready
 
 CURRENT_CONSENT_VERSION = "CONSENT-1.0"
 
@@ -358,6 +359,7 @@ def latest_readiness(db: Session, candidate: Candidate) -> dict[str, Any]:
     )
     readiness = {
         "authenticated": True,
+        "identity_verified": bool(candidate.user_id and identity_ready(db, candidate.user_id)),
         "consent_valid": consent_valid,
         "device_check_passed": bool(device and device.passed),
         "primary_camera_selected": primary_selection is not None,
