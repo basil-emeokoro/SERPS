@@ -40,7 +40,7 @@ The existing candidate-authorised, institution-scoped EvidenceEvent API persists
 - PostgreSQL controlled fixtures: four events persisted/retrieved; reviewer/report inclusion passed; CIE Critical; `ESCALATE_INCIDENT`; `continue_examination=true`; session active; governance audit persisted.
 - Physical browser: local model/WASM HTTP 200, graph started, no failed/external inference requests, integrated camera 640×480/30 fps, genuine person detections persisted, Realtek microphone acquired and live RMS displayed.
 - Physical limitation: the active session referenced a stale/disconnected USB-camera identifier; normal acquisition was denied and did not switch cameras silently. Physical multi-person, phone and above-threshold sound cases remain pending.
-- Dependency audit: three high-severity advisory groups remain; no forced framework-major update was made.
+- Dependency audit: three high-severity advisory groups remain; no forced out-of-range dependency update was made.
 
 ## Dissertation wording
 

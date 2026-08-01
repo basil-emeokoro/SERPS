@@ -91,4 +91,4 @@ The Edge runtime returned HTTP 200 for local model/WASM assets, started the grap
 - Frontend: 35 tests passed; TypeScript, ESLint and production build passed.
 - SQLite and PostgreSQL 16.14: both migrated to `0008_core_multimodal_evidence`; persistence, governance, reviewer visibility, audit and report inclusion passed.
 - Docker Engine 29.6.2 and WSL2 were operational; the PostgreSQL container was healthy.
-- `npm audit` reported three high-severity advisory groups. A forced framework-major update was not included in this bounded checkpoint.
+- `npm audit` reported three high-severity advisory groups. The proposed forced out-of-range dependency update was not included in this bounded checkpoint.
