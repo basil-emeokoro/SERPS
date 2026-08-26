@@ -16,6 +16,8 @@ CANDIDATE_EVENT_TYPES = {
     "camera_reconnected",
     "face_detected",
     "face_not_detected",
+    "sustained_face_absence",
+    "face_detector_unavailable",
     "tab_focus_lost",
     "person_detected",
     "multiple_persons_detected",

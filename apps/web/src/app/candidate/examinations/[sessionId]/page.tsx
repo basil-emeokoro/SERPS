@@ -7,7 +7,8 @@ import { PortalShell } from "../../../../components/PortalShell";
 import { beginPeriodicVerification, completeCandidateSession, fetchCandidateWorkspace, fetchIdentityStatus, submitEvidenceEvent } from "../../../../lib/api";
 import { AUDIO_MONITOR_NAME, AUDIO_MONITOR_VERSION, AUDIO_SAMPLE_INTERVAL_MS, AudioActivityTracker, LocalAudioMonitor } from "../../../../lib/audioMonitoring";
 import type { CandidateWorkspace } from "../../../../lib/contracts";
-import { audioEvidence, detectorUnavailableEvidence, DuplicateEventGate, objectEvidence, objectRolesForMode, type CameraRole, type EvidenceDraft } from "../../../../lib/multimodalEvents";
+import { audioEvidence, detectorUnavailableEvidence, DuplicateEventGate, faceDetectorUnavailableEvidence, facePresenceEvidence, objectEvidence, objectRolesForMode, type CameraRole, type EvidenceDraft } from "../../../../lib/multimodalEvents";
+import { FACE_SAMPLE_INTERVAL_MS, FacePresenceTracker, LocalFacePerceptionService } from "../../../../lib/faceDetection";
 import { LocalObjectDetector, OBJECT_MODEL_NAME, OBJECT_MODEL_VERSION, OBJECT_SAMPLE_INTERVAL_MS } from "../../../../lib/objectDetection";
 import { formatElapsed } from "../../../../lib/operational";
 
@@ -34,7 +35,7 @@ function DemonstrationWorkspacePageContent() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [finishOpen, setFinishOpen] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [faceCapability, setFaceCapability] = useState("Checking browser FaceDetector support...");
+  const [faceCapability, setFaceCapability] = useState("Face monitoring: Loading local MediaPipe detector...");
   const [primaryState, setPrimaryState] = useState("connecting");
   const [secondaryState, setSecondaryState] = useState("connecting");
   const [objectStates, setObjectStates] = useState<Record<CameraRole, string>>({ primary: "loading", secondary: "loading" });
@@ -49,7 +50,9 @@ function DemonstrationWorkspacePageContent() {
   const streams = useRef<MediaStream[]>([]);
   const streamByRole = useRef<Partial<Record<CameraRole, MediaStream>>>({});
   const disconnectReported = useRef(new Set<string>());
+  const connectionInFlight = useRef(new Set<CameraRole>());
   const objectDetectors = useRef<Partial<Record<CameraRole, LocalObjectDetector>>>({});
+  const faceDetector = useRef<LocalFacePerceptionService | null>(null);
   const audioMonitor = useRef<LocalAudioMonitor | null>(null);
 
   const stopMedia = useCallback(async () => {
@@ -58,6 +61,8 @@ function DemonstrationWorkspacePageContent() {
     streamByRole.current = {};
     Object.values(objectDetectors.current).forEach((detector) => detector?.close());
     objectDetectors.current = {};
+    faceDetector.current?.close();
+    faceDetector.current = null;
     await audioMonitor.current?.close();
     audioMonitor.current = null;
   }, []);
@@ -92,7 +97,13 @@ function DemonstrationWorkspacePageContent() {
     fetchCandidateWorkspace(sessionId, controller.signal)
       .then((result) => {
         setWorkspace(result);
-        setStatus("Demonstration workspace active. This is not a secure browser or complete CBT platform.");
+        if (result.session.status === "completed") {
+          setFinished(true);
+          setElapsed(formatElapsed(result.session.started_at, result.session.ended_at ?? Date.now()));
+          setStatus("Demonstration completed. Evidence and governance records were preserved for review.");
+        } else {
+          setStatus("Demonstration workspace active. This is not a secure browser or complete CBT platform.");
+        }
       })
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Workspace could not load."))
       .finally(() => setLoading(false));
@@ -100,21 +111,21 @@ function DemonstrationWorkspacePageContent() {
   }, [sessionId]);
 
   useEffect(() => {
-    if (!workspace) return;
+    if (!workspace || finished) return;
     const tick = () => setElapsed(formatElapsed(workspace.session.started_at, Date.now()));
     tick();
     const interval = window.setInterval(tick, 1000);
     return () => window.clearInterval(interval);
-  }, [workspace]);
+  }, [workspace, finished]);
 
   useEffect(() => {
-    if (!workspace) return;
+    if (!workspace || finished) return;
     let timer = 0;
     void fetchIdentityStatus().then((identity) => {
       if (identity.biometric_required && !identity.demo_bypass) timer = window.setTimeout(() => setPeriodicDue(true), 120000);
     }).catch(() => undefined);
     return () => window.clearTimeout(timer);
-  }, [workspace]);
+  }, [workspace, finished]);
 
   useEffect(() => {
     if (!workspace || finished) return;
@@ -125,6 +136,8 @@ function DemonstrationWorkspacePageContent() {
     let audioDisconnectReported = false;
 
     async function connect(role: CameraRole, deviceId: string, video: RefObject<HTMLVideoElement | null>, reconnected = false) {
+      if (connectionInFlight.current.has(role)) return;
+      connectionInFlight.current.add(role);
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } }, audio: false });
         if (disposed) { stream.getTracks().forEach((track) => track.stop()); return; }
@@ -137,7 +150,13 @@ function DemonstrationWorkspacePageContent() {
           await video.current.play().catch(() => undefined);
         }
         role === "primary" ? setPrimaryState("connected") : setSecondaryState("connected");
-        await emit(reconnected ? "camera_reconnected" : "camera_connected", `${role} camera stream ${reconnected ? "reconnected and revalidated" : "connected"} in the demonstration workspace.`, role);
+        await emit(
+          reconnected ? "camera_reconnected" : "camera_connected",
+          `${role} camera stream ${reconnected ? "reconnected and revalidated" : "connected"} in the demonstration workspace.`,
+          role,
+          1,
+          0,
+        );
         stream.getVideoTracks().forEach((track) => {
           const disconnected = (reason: string) => {
             if (disconnectReported.current.has(role)) return;
@@ -153,6 +172,8 @@ function DemonstrationWorkspacePageContent() {
       } catch (reason) {
         role === "primary" ? setPrimaryState("permission denied") : setSecondaryState("permission denied");
         await emit("camera_disconnected", `${role} camera could not connect: ${reason instanceof Error ? reason.message : "permission denied"}.`, role);
+      } finally {
+        connectionInFlight.current.delete(role);
       }
     }
 
@@ -246,6 +267,38 @@ function DemonstrationWorkspacePageContent() {
       }
     }
 
+    async function startFaceMonitor() {
+      const tracker = new FacePresenceTracker();
+      try {
+        const detector = new LocalFacePerceptionService();
+        await detector.initialise();
+        if (disposed) { detector.close(); return; }
+        faceDetector.current = detector;
+        setFaceCapability("Face monitoring: Active — Local MediaPipe detector");
+        const timer = window.setInterval(() => {
+          const stream = streamByRole.current.primary;
+          const cameraConnected = !!stream?.active && stream.getVideoTracks().some((track) => track.readyState === "live" && !track.muted);
+          if (disposed || !cameraConnected || !primaryVideo.current || primaryVideo.current.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+            tracker.update(0, performance.now(), false);
+            return;
+          }
+          try {
+            const snapshot = detector.detect(primaryVideo.current);
+            for (const signal of tracker.update(snapshot.faceCount, performance.now(), true)) void emitDraft(facePresenceEvidence(signal, snapshot));
+          } catch (reason) {
+            const message = reason instanceof Error ? reason.message : "face inference failed";
+            setFaceCapability(`Face monitoring: Degraded — Local MediaPipe detector unavailable (${message}). Other evidence sources remain active.`);
+            if (objectGate.allow("face_detector_unavailable:primary", Date.now())) void emitDraft(faceDetectorUnavailableEvidence(message));
+          }
+        }, FACE_SAMPLE_INTERVAL_MS);
+        timers.push(timer);
+      } catch (reason) {
+        const message = reason instanceof Error ? reason.message : "model or WASM loading failed";
+        setFaceCapability(`Face monitoring: Degraded — Local MediaPipe detector unavailable (${message}). Other evidence sources remain active.`);
+        if (objectGate.allow("face_detector_unavailable:primary", Date.now())) await emitDraft(faceDetectorUnavailableEvidence(message));
+      }
+    }
+
     const activeObjectRoles = objectRolesForMode(workspace.session.deployment_mode);
     const secondaryUsed = activeObjectRoles.includes("secondary");
     const cameraStarts = [connect("primary", workspace.primary_camera.device_id, primaryVideo)];
@@ -254,14 +307,7 @@ function DemonstrationWorkspacePageContent() {
       if (disposed) return;
       await startObjectDetector("primary", primaryVideo);
       if (secondaryUsed) await startObjectDetector("secondary", secondaryVideo);
-      const DetectorConstructor = (window as unknown as { FaceDetector?: new () => { detect(source: HTMLVideoElement): Promise<unknown[]> } }).FaceDetector;
-      if (!DetectorConstructor) {
-        setFaceCapability("Browser FaceDetector unavailable. Identity assurance remains available through the separate locally bundled MediaPipe enrolment/authentication workflow; no face result is fabricated here.");
-      } else if (primaryVideo.current) {
-        setFaceCapability("Browser FaceDetector available for bounded session-state evidence.");
-        const faces = await new DetectorConstructor().detect(primaryVideo.current).catch(() => []);
-        await emit(faces.length ? "face_detected" : "face_not_detected", faces.length ? "Browser FaceDetector detected a face in the primary view." : "Browser FaceDetector did not detect a face in the primary view.", "primary", 0.8);
-      }
+      await startFaceMonitor();
     });
     void startAudioMonitor();
 
@@ -277,7 +323,9 @@ function DemonstrationWorkspacePageContent() {
           streamByRole.current.primary = undefined;
           void emit("camera_disconnected", "Primary camera device was removed.", "primary");
         }
-      } else if (!streamByRole.current.primary?.active) void connect("primary", workspace.primary_camera.device_id, primaryVideo, true);
+      } else if (disconnectReported.current.has("primary") || !streamByRole.current.primary?.active) {
+        void connect("primary", workspace.primary_camera.device_id, primaryVideo, true);
+      }
       if (secondaryUsed) {
         if (!ids.has(workspace.secondary_camera.device_id)) {
           if (!disconnectReported.current.has("secondary")) {
@@ -287,7 +335,9 @@ function DemonstrationWorkspacePageContent() {
             streamByRole.current.secondary = undefined;
             void emit("camera_disconnected", "Secondary camera device was removed.", "secondary");
           }
-        } else if (!streamByRole.current.secondary?.active) void connect("secondary", workspace.secondary_camera.device_id, secondaryVideo, true);
+        } else if (disconnectReported.current.has("secondary") || !streamByRole.current.secondary?.active) {
+          void connect("secondary", workspace.secondary_camera.device_id, secondaryVideo, true);
+        }
       }
     };
     document.addEventListener("visibilitychange", visibility);
@@ -347,20 +397,20 @@ function DemonstrationWorkspacePageContent() {
     </header>
     <aside className="monitoring-notice" role="note"><strong>Monitoring notice:</strong> SERPS performs bounded local object and sound-activity analysis. Raw audio and raw video are not stored by default. Evidence informs human review and never determines misconduct or terminates an examination.</aside>
     <p className="workflow-status" role="status" aria-live="polite">{status}</p>
-    <p className="freshness-note">Candidate device heartbeat: {lastHeartbeat ? new Date(lastHeartbeat).toLocaleTimeString() : "awaiting first update"}</p>
+    <p className="freshness-note">Candidate device heartbeat: {finished ? "monitoring stopped" : lastHeartbeat ? new Date(lastHeartbeat).toLocaleTimeString() : "awaiting first update"}</p>
     <p className="mode-disclosure"><strong>Proctoring mode:</strong> {modeDescription[workspace.session.deployment_mode]}</p>
     {periodicDue && <aside className="identity-prompt" role="alert"><div><strong>Periodic identity verification due</strong><p>Pause the demonstration and complete a bounded facial/liveness check before continuing.</p></div><button className="primary-action" onClick={() => void beginPeriodic()}>Verify identity</button></aside>}
 
     <section className="dual-camera-grid workspace-cameras">
-      <article className="camera-panel"><div className="camera-title"><h2>Primary camera</h2><StatusBadge label={primaryState} tone={primaryState === "connected" ? "success" : "danger"} /></div><video ref={primaryVideo} autoPlay muted playsInline aria-label="Primary candidate-facing live local preview" /><p>Candidate-facing face and upper-body view.</p><div className="detector-readout"><strong>Object detector: {objectStates.primary}</strong><span>{objectSummary.primary}</span></div></article>
-      <article className="camera-panel"><div className="camera-title"><h2>Secondary camera</h2><StatusBadge label={workspace.session.deployment_mode === "B" ? secondaryState : `not used in Mode ${workspace.session.deployment_mode}`} tone={secondaryState === "connected" && workspace.session.deployment_mode === "B" ? "success" : "warning"} /></div><video ref={secondaryVideo} autoPlay muted playsInline aria-label="Secondary room or side-angle live local preview" /><p>Room, desk or side-angle environmental view.</p><div className="detector-readout"><strong>Object detector: {workspace.session.deployment_mode === "B" ? objectStates.secondary : "not used"}</strong><span>{workspace.session.deployment_mode === "B" ? objectSummary.secondary : "No independent secondary evidence expected"}</span></div></article>
+      <article className="camera-panel"><div className="camera-title"><h2>Primary camera</h2><StatusBadge label={finished ? "stopped" : primaryState} tone={finished ? "neutral" : primaryState === "connected" ? "success" : "danger"} /></div><video ref={primaryVideo} autoPlay muted playsInline aria-label="Primary candidate-facing live local preview" /><p>Candidate-facing face and upper-body view.</p><div className="detector-readout"><strong>Object detector: {finished ? "stopped" : objectStates.primary}</strong><span>{finished ? "Monitoring completed" : objectSummary.primary}</span></div></article>
+      <article className="camera-panel"><div className="camera-title"><h2>Secondary camera</h2><StatusBadge label={finished ? "stopped" : workspace.session.deployment_mode === "B" ? secondaryState : `not used in Mode ${workspace.session.deployment_mode}`} tone={finished ? "neutral" : secondaryState === "connected" && workspace.session.deployment_mode === "B" ? "success" : "warning"} /></div><video ref={secondaryVideo} autoPlay muted playsInline aria-label="Secondary room or side-angle live local preview" /><p>Room, desk or side-angle environmental view.</p><div className="detector-readout"><strong>Object detector: {finished ? "stopped" : workspace.session.deployment_mode === "B" ? objectStates.secondary : "not used"}</strong><span>{finished ? "Monitoring completed" : workspace.session.deployment_mode === "B" ? objectSummary.secondary : "No independent secondary evidence expected"}</span></div></article>
     </section>
 
     <section className="multimodal-status-grid" aria-label="Multimodal detector status">
       <article className="card"><span className="badge">Local object intelligence</span><h2>{OBJECT_MODEL_NAME}</h2><p>Model version {OBJECT_MODEL_VERSION}; sampled every {OBJECT_SAMPLE_INTERVAL_MS / 1000} seconds for person and mobile-phone classes only.</p></article>
-      <article className="card"><span className="badge">Privacy-safe audio activity</span><h2>Microphone: {audioState}</h2><p>{AUDIO_MONITOR_NAME} {AUDIO_MONITOR_VERSION}; current normalised RMS level {audioLevel.toFixed(4)}. No recording or transcription is performed.</p></article>
+      <article className="card"><span className="badge">Privacy-safe audio activity</span><h2>Microphone: {finished ? "stopped" : audioState}</h2><p>{AUDIO_MONITOR_NAME} {AUDIO_MONITOR_VERSION}; current normalised RMS level {audioLevel.toFixed(4)}. No recording or transcription is performed.</p></article>
     </section>
-    <div className="capability-disclosure"><strong>Face detection capability:</strong> {faceCapability}</div>
+    <div className="capability-disclosure"><strong>{finished ? "Face monitoring: Stopped when the demonstration completed." : faceCapability}</strong></div>
     <aside className="metadata-only-notice"><strong>Reviewer boundary:</strong> reviewer and administrator portals receive structured event metadata, CIE explanations and policy outcomes—not remote live media feeds.</aside>
 
     <section className="question-workspace" aria-labelledby="question-title">

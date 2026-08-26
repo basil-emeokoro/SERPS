@@ -13,6 +13,8 @@ SUPPORTED_EVENT_TYPES = {
     "camera_reconnected",
     "face_detected",
     "face_not_detected",
+    "sustained_face_absence",
+    "face_detector_unavailable",
     "tab_focus_lost",
     "person_detected",
     "multiple_persons_detected",
@@ -57,6 +59,8 @@ def risk_level_for_score(score: float) -> str:
 def _contribution(event_type: str, count: int) -> float:
     if event_type == "face_not_detected":
         return 0.60 if count >= 3 else 0.35 if count == 2 else 0.15 if count == 1 else 0.0
+    if event_type == "sustained_face_absence":
+        return 0.50 if count >= 2 else 0.35 if count == 1 else 0.0
     if event_type == "camera_disconnected":
         return 0.65 if count >= 2 else 0.35 if count == 1 else 0.0
     if event_type == "tab_focus_lost":
@@ -99,6 +103,7 @@ def assess_events(events: list[EvidenceEvent], window_seconds: int = DEFAULT_WIN
     window_events = [event for event in supported if window_start <= event.timestamp <= window_end]
     relevant_types = (
         "face_not_detected",
+        "sustained_face_absence",
         "camera_disconnected",
         "tab_focus_lost",
         "multiple_persons_detected",
@@ -110,10 +115,9 @@ def assess_events(events: list[EvidenceEvent], window_seconds: int = DEFAULT_WIN
     counts = {event_type: sum(event.event_type == event_type for event in window_events) for event_type in relevant_types}
     score = sum(_contribution(event_type, count) for event_type, count in counts.items())
     correlations: list[str] = []
-    combined = counts["camera_disconnected"] > 0 and counts["face_not_detected"] > 0
-    if combined:
-        score += 0.15
-        correlations.append("camera disconnection corroborated face absence")
+    # A disconnected camera is a distinct operational condition; it does not
+    # corroborate a face-absence observation because no valid frame exists.
+    combined = False
     phone_camera_roles = {
         event.camera_id
         for event in window_events
@@ -122,12 +126,20 @@ def assess_events(events: list[EvidenceEvent], window_seconds: int = DEFAULT_WIN
     if len(phone_camera_roles) >= 2:
         score += 0.15
         correlations.append("mobile-phone detection was corroborated across camera roles")
-    if counts["face_not_detected"] >= 2 and counts["sustained_audio_activity"] > 0:
+    if (counts["face_not_detected"] >= 2 or counts["sustained_face_absence"] > 0) and counts["sustained_audio_activity"] > 0:
         score += 0.15
-        correlations.append("repeated face absence coincided with sustained audio activity")
+        correlations.append("face absence coincided with sustained audio activity")
     if counts["multiple_persons_detected"] > 0 and counts["sustained_audio_activity"] > 0:
         score += 0.20
         correlations.append("multiple persons coincided with sustained audio activity")
+    last_face_absence = next(
+        (event for event in reversed(window_events) if event.event_type in ("face_not_detected", "sustained_face_absence")),
+        None,
+    )
+    face_recovered = bool(
+        last_face_absence
+        and any(event.event_type == "face_detected" and event.timestamp > last_face_absence.timestamp for event in window_events)
+    )
     score = round(min(score, 1.0), 4)
     contributing = [
         event
@@ -142,6 +154,7 @@ def assess_events(events: list[EvidenceEvent], window_seconds: int = DEFAULT_WIN
     phrases: list[str] = []
     labels = {
         "face_not_detected": "FACE_NOT_DETECTED",
+        "sustained_face_absence": "SUSTAINED_FACE_ABSENCE",
         "camera_disconnected": "CAMERA_DISCONNECTED",
         "tab_focus_lost": "TAB_FOCUS_LOST",
         "multiple_persons_detected": "MULTIPLE_PERSONS_DETECTED",
@@ -166,12 +179,14 @@ def assess_events(events: list[EvidenceEvent], window_seconds: int = DEFAULT_WIN
         repeated = [labels[event_type] for event_type, count in counts.items() if count > 1]
         if repeated:
             explanation += f" Repeated evidence: {', '.join(repeated)}."
+        if face_recovered:
+            explanation += " A later FACE_DETECTED event records recovery of face presence; prior evidence remains available for human review."
         explanation += f" Deterministic rule {RULE_VERSION} produced a {risk_level_for_score(score)} risk score of {score:.2f}."
     else:
         explanation = "Only non-adverse supported EvidenceEvents occurred in the window; contextual risk remains low."
     unavailable_counts = {
         event_type: sum(event.event_type == event_type for event in window_events)
-        for event_type in ("object_detector_unavailable", "audio_monitor_unavailable")
+        for event_type in ("object_detector_unavailable", "audio_monitor_unavailable", "face_detector_unavailable")
     }
     if any(unavailable_counts.values()):
         explanation += " Detector-unavailable states were recorded as operational limitations and did not contribute to misconduct risk."
@@ -190,6 +205,7 @@ def assess_events(events: list[EvidenceEvent], window_seconds: int = DEFAULT_WIN
             "event_counts": counts,
             "combined_pattern": combined,
             "correlations": correlations,
+            "face_presence_recovered": face_recovered,
             "repeated_event_types": [event_type for event_type, count in counts.items() if count > 1],
             "detector_unavailable_counts": unavailable_counts,
         },

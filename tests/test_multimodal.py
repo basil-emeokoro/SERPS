@@ -116,11 +116,52 @@ def test_detector_unavailable_is_a_limitation_not_misconduct_evidence():
     result = assess_events([
         event("OBJECT-OFF", "object_detector_unavailable", 0),
         event("AUDIO-OFF", "audio_monitor_unavailable", 1),
+        event("FACE-OFF", "face_detector_unavailable", 2),
     ])
     assert result.risk_score == 0
     assert result.risk_level == "Low"
     assert result.evidence_event_ids == []
     assert "did not contribute to misconduct risk" in result.explanation
+
+
+def test_sustained_face_absence_and_sustained_audio_are_contextually_correlated():
+    result = assess_events([
+        event("FACE-ABSENT", "sustained_face_absence", 0),
+        event("AUDIO", "sustained_audio_activity", 5),
+    ])
+    assert result.risk_level == "High"
+    assert "face absence coincided with sustained audio activity" in result.explanation
+
+
+def test_camera_disconnect_is_distinct_from_face_absence():
+    result = assess_events([
+        event("FACE", "face_not_detected", 0),
+        event("CAMERA", "camera_disconnected", 5),
+    ])
+    assert result.metadata["combined_pattern"] is False
+    assert "camera disconnection corroborated face absence" not in result.metadata["correlations"]
+
+
+def test_face_return_is_recorded_as_cie_recovery_without_erasing_prior_evidence():
+    result = assess_events([
+        event("ABSENT", "sustained_face_absence", 0),
+        event("RETURNED", "face_detected", 8),
+    ])
+    assert result.metadata["face_presence_recovered"] is True
+    assert "recovery of face presence" in result.explanation
+    assert result.evidence_event_ids == ["ABSENT"]
+
+
+def test_face_monitoring_event_types_are_accepted_and_persisted():
+    with multimodal_db() as db:
+        seed_active_session(db)
+        api = client(db)
+        for event_type in ("face_detected", "face_not_detected", "sustained_face_absence", "face_detector_unavailable"):
+            response = api.post("/api/v1/evidence-events/", json=payload(event_type, camera_id="primary"))
+            assert response.status_code == 201, response.text
+        assert {record.event_type for record in db.scalars(select(EvidenceEventRecord)).all()} == {
+            "face_detected", "face_not_detected", "sustained_face_absence", "face_detector_unavailable"
+        }
 
 
 def test_multimodal_event_persists_metadata_and_runs_the_full_governance_chain():

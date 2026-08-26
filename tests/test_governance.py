@@ -108,10 +108,10 @@ def test_temporal_window_combined_weight_and_explanation():
                       event_type="camera_disconnected", risk_weight=0.2, confidence=1.0, description="camera"),
     ]
     result = assess_events(events, window_seconds=60)
-    assert result.risk_score == 0.65
-    assert result.risk_level == "High"
+    assert result.risk_score == 0.50
+    assert result.risk_level == "Moderate"
     assert result.evidence_event_ids == ["FACE", "CAM"]
-    assert "combined camera-disconnection and face-absence pattern" in result.explanation
+    assert "combined camera-disconnection and face-absence pattern" not in result.explanation
 
 
 def run_chain(client: TestClient, db: Session) -> tuple[dict, dict, dict]:

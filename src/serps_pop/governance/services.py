@@ -388,14 +388,14 @@ def _queue_camera_status(db: Session, session_id: str, role: str) -> str:
         select(EvidenceEventRecord)
         .where(
             EvidenceEventRecord.session_id == session_id,
-            EvidenceEventRecord.event_type.in_(("camera_connected", "camera_disconnected")),
+            EvidenceEventRecord.event_type.in_(("camera_connected", "camera_disconnected", "camera_reconnected")),
         )
         .order_by(EvidenceEventRecord.timestamp.desc(), EvidenceEventRecord.event_id.desc())
     ).all()
     for event in events:
         event_role = event.camera_id or "primary"
         if event_role == role:
-            return "connected" if event.event_type == "camera_connected" else "disconnected"
+            return "connected" if event.event_type in {"camera_connected", "camera_reconnected"} else "disconnected"
     return "not_seen"
 
 

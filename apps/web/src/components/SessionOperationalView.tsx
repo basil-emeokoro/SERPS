@@ -5,7 +5,7 @@ function text(value: unknown): string { return value == null ? "Unavailable" : S
 
 const timelineLabels: Record<string, string> = {
   camera_connected: "camera connected", camera_disconnected: "camera disconnected", camera_reconnected: "camera reconnected",
-  camera_heartbeat: "camera heartbeat received", face_not_detected: "face not detected", face_detected: "face detected",
+  camera_heartbeat: "camera heartbeat received", face_not_detected: "face not detected", face_detected: "face detected", sustained_face_absence: "sustained face absence", face_detector_unavailable: "face detector unavailable",
   person_detected: "person detected", multiple_persons_detected: "multiple persons detected",
   mobile_phone_detected: "mobile phone detected", object_detector_unavailable: "object detector unavailable",
   microphone_connected: "microphone connected", microphone_disconnected: "microphone disconnected",
