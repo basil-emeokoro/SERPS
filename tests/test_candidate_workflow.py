@@ -428,6 +428,38 @@ def test_reviewer_and_admin_operational_views_are_scoped_and_dual_camera_aware(c
     assert queue.status_code == 200
     assert queue.json()[0]["primary_camera_status"] == "connected"
     assert queue.json()[0]["secondary_camera_status"] == "connected"
+
+    app.dependency_overrides.pop(get_current_user, None)
+    disconnect = client.post(
+        "/api/v1/evidence-events/", headers=auth(token),
+        json={
+            "session_id": session["session_id"], "candidate_id": candidate["candidate_id"],
+            "source_module": "candidate_browser", "event_type": "CAMERA_DISCONNECTED",
+            "camera_id": "secondary", "risk_weight": 0.7, "confidence": 1.0,
+            "description": "secondary camera disconnected",
+        },
+    )
+    assert disconnect.status_code == 201, disconnect.text
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        user_id="REVIEWER", institution_id=institution_id, roles=(ROLE_REVIEWER,)
+    )
+    assert client.get("/api/v1/reviewer/sessions").json()[0]["secondary_camera_status"] == "disconnected"
+
+    app.dependency_overrides.pop(get_current_user, None)
+    reconnect = client.post(
+        "/api/v1/evidence-events/", headers=auth(token),
+        json={
+            "session_id": session["session_id"], "candidate_id": candidate["candidate_id"],
+            "source_module": "candidate_browser", "event_type": "CAMERA_RECONNECTED",
+            "camera_id": "secondary", "risk_weight": 0.0, "confidence": 1.0,
+            "description": "secondary camera reconnected and revalidated",
+        },
+    )
+    assert reconnect.status_code == 201, reconnect.text
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        user_id="REVIEWER", institution_id=institution_id, roles=(ROLE_REVIEWER,)
+    )
+    assert client.get("/api/v1/reviewer/sessions").json()[0]["secondary_camera_status"] == "connected"
     detail = client.get(f"/api/v1/reviewer/sessions/{session['session_id']}")
     assert detail.status_code == 200, detail.text
     assert detail.json()["primary_camera"]["stream_mode"] == "metadata_only"

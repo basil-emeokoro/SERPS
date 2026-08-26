@@ -177,6 +177,7 @@ class CandidateSessionRead(BaseModel):
     device_check_status: str
     monitoring_status: str
     started_at: datetime
+    ended_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

@@ -32,7 +32,7 @@ export function PortalShell({ allowedRoles, title, badge, summary, children }: P
       }
       if (!token) { setLoaded(true); return; }
       try {
-        const current = await fetchCurrentUser(token, controller.signal);
+        const current = await fetchCurrentUser(undefined, controller.signal);
         setUser(current);
         sessionStorage.setItem("serps_current_user", JSON.stringify(current));
       } catch (error) {

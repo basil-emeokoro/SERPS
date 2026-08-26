@@ -12,6 +12,27 @@ export class ApiError extends Error { constructor(message: string, public readon
 export class SessionExpiredError extends ApiError {}
 export function getApiBaseUrl(): string { return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"; }
 export function storedAccessToken(): string { return typeof window === "undefined" ? "" : sessionStorage.getItem("serps_access_token") ?? ""; }
+let refreshInFlight: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  if (typeof window === "undefined") throw new SessionExpiredError("Your session expired. Sign in again.", 401);
+  if (refreshInFlight) return refreshInFlight;
+  const refreshToken = sessionStorage.getItem("serps_refresh_token");
+  if (!refreshToken) throw new SessionExpiredError("Your session expired. Sign in again.", 401);
+  refreshInFlight = fetch(`${getApiBaseUrl()}/api/v1/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+    cache: "no-store",
+  }).then(async (response) => {
+    if (!response.ok) throw new SessionExpiredError("Your session expired. Sign in again.", response.status);
+    const tokens = await response.json() as TokenResponse;
+    sessionStorage.setItem("serps_access_token", tokens.access_token);
+    sessionStorage.setItem("serps_refresh_token", tokens.refresh_token);
+    return tokens.access_token;
+  }).finally(() => { refreshInFlight = null; });
+  return refreshInFlight;
+}
 function detailMessage(body: unknown, fallback: string): string {
   if (typeof body === "object" && body !== null && "detail" in body) {
     const detail = (body as { detail: unknown }).detail;
@@ -21,10 +42,18 @@ function detailMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 export async function apiRequest<T>(path: string, options: RequestInit & { token?: string; retry?: boolean } = {}): Promise<T> {
+  const hasExplicitToken = Object.prototype.hasOwnProperty.call(options, "token");
   const { token = storedAccessToken(), retry = false, ...init } = options;
-  const execute = () => fetch(`${getApiBaseUrl()}${path}`, { ...init, headers: { ...(init.body ? { "Content-Type": "application/json" } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.headers ?? {}) }, cache: "no-store" });
+  const execute = (requestToken = token) => fetch(`${getApiBaseUrl()}${path}`, { ...init, headers: { ...(init.body ? { "Content-Type": "application/json" } : {}), ...(requestToken ? { Authorization: `Bearer ${requestToken}` } : {}), ...(init.headers ?? {}) }, cache: "no-store" });
   let response: Response;
   try { response = await execute(); } catch (error) { if (!retry || (init.method && init.method !== "GET")) throw error; response = await execute(); }
+  if (response.status === 401 && !hasExplicitToken) {
+    try { response = await execute(await refreshAccessToken()); }
+    catch (error) {
+      if (typeof window !== "undefined") ["serps_access_token", "serps_refresh_token", "serps_current_user"].forEach((key) => sessionStorage.removeItem(key));
+      throw error;
+    }
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const message = detailMessage(body, `SERPS request failed with ${response.status}.`);
@@ -39,7 +68,11 @@ export async function apiRequest<T>(path: string, options: RequestInit & { token
 }
 export function fetchApiHealth(): Promise<ApiHealth> { return apiRequest("/api/v1/health", { retry: true }); }
 export function login(payload: LoginPayload): Promise<LoginResponse> { return apiRequest("/api/v1/auth/login", { method: "POST", token: "", body: JSON.stringify(payload) }); }
-export function fetchCurrentUser(accessToken: string, signal?: AbortSignal): Promise<MeResponse> { return apiRequest("/api/v1/auth/me", { token: accessToken, signal }); }
+export function fetchCurrentUser(accessToken?: string, signal?: AbortSignal): Promise<MeResponse> {
+  return accessToken
+    ? apiRequest("/api/v1/auth/me", { token: accessToken, signal })
+    : apiRequest("/api/v1/auth/me", { signal });
+}
 export function registerCandidate(payload: Record<string, string>): Promise<Record<string, string>> { return apiRequest("/api/v1/candidate/register", { method: "POST", token: "", body: JSON.stringify(payload) }); }
 export function registerIdentity(payload: Record<string, unknown>): Promise<RegistrationRequest> { return apiRequest("/api/v1/identity-assurance/registrations", { method: "POST", token: "", body: JSON.stringify(payload) }); }
 export function fetchRegistrationInstitutions(signal?: AbortSignal): Promise<InstitutionRegistration[]> { return apiRequest("/api/v1/identity-assurance/institutions", { token: "", signal, retry: true }); }
