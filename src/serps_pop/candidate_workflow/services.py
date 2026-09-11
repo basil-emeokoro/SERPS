@@ -330,7 +330,9 @@ def record_camera_permission(
     return record
 
 
-def latest_readiness(db: Session, candidate: Candidate) -> dict[str, Any]:
+def latest_readiness(db: Session, candidate: Candidate, deployment_mode: str = "B") -> dict[str, Any]:
+    if deployment_mode not in {"A", "B", "C"}:
+        raise CandidatePrerequisiteMissing("Unsupported monitoring mode.")
     consent = _latest(db, CandidateConsent, candidate.candidate_id, CandidateConsent.accepted_at)
     device = _latest(db, DeviceCheckRecord, candidate.candidate_id, DeviceCheckRecord.checked_at)
     primary_selection = _latest(
@@ -357,19 +359,33 @@ def latest_readiness(db: Session, candidate: Candidate) -> dict[str, Any]:
         and consent.privacy_notice_accepted
         and consent.institutional_policy_accepted
     )
-    readiness = {
+    common_readiness = {
         "authenticated": True,
         "identity_verified": bool(candidate.user_id and identity_ready(db, candidate.user_id)),
         "consent_valid": consent_valid,
         "device_check_passed": bool(device and device.passed),
         "primary_camera_selected": primary_selection is not None,
         "primary_camera_permission_granted": bool(primary_permission and primary_permission.granted),
-        "secondary_camera_selected": secondary_selection is not None,
-        "secondary_camera_permission_granted": bool(secondary_permission and secondary_permission.granted),
-        "distinct_cameras": bool(
-            primary_selection and secondary_selection and primary_selection.device_id != secondary_selection.device_id
+        "primary_preview_live_confirmed": bool(
+            primary_selection and primary_selection.metadata_json.get("preview_live_confirmed") is True
         ),
     }
+    readiness = dict(common_readiness)
+    if deployment_mode == "B":
+        readiness.update({
+            "secondary_camera_selected": secondary_selection is not None,
+            "secondary_camera_permission_granted": bool(secondary_permission and secondary_permission.granted),
+            "secondary_preview_live_confirmed": bool(
+                secondary_selection and secondary_selection.metadata_json.get("preview_live_confirmed") is True
+            ),
+            "distinct_cameras": bool(
+                primary_selection and secondary_selection and primary_selection.device_id != secondary_selection.device_id
+            ),
+        })
+    elif deployment_mode == "C":
+        readiness["mirror_assistance_confirmed"] = bool(
+            primary_selection and primary_selection.metadata_json.get("mirror_assistance_confirmed") is True
+        )
     readiness["ready_to_start"] = all(readiness.values())
     return {
         "consent": consent,
@@ -388,7 +404,7 @@ def start_examination_session(
     candidate: Candidate,
     examination_id: str,
     user_id: str,
-    deployment_mode: str,
+    deployment_mode: str | None,
 ) -> ExaminationSession:
     assignment = db.scalar(
         select(CandidateExaminationAssignment).where(
@@ -408,7 +424,11 @@ def start_examination_session(
     )
     if active is not None:
         raise DomainConflict("An active examination session already exists for this assignment.")
-    state = latest_readiness(db, candidate)
+    configured_mode = assignment.examination.monitoring_mode
+    if deployment_mode is not None and deployment_mode != configured_mode:
+        raise CandidatePrerequisiteMissing("Requested monitoring mode does not match the assigned examination.")
+    deployment_mode = configured_mode
+    state = latest_readiness(db, candidate, deployment_mode)
     missing = [name for name, passed in state["readiness"].items() if name != "ready_to_start" and not passed]
     if missing:
         raise CandidatePrerequisiteMissing(f"Examination start prerequisites are incomplete: {', '.join(missing)}.")
@@ -422,8 +442,12 @@ def start_examination_session(
         device_check_id=state["device_check"].device_check_id,
         camera_selection_id=state["primary_camera_selection"].camera_selection_id,
         camera_permission_id=state["primary_camera_permission"].camera_permission_id,
-        secondary_camera_selection_id=state["secondary_camera_selection"].camera_selection_id,
-        secondary_camera_permission_id=state["secondary_camera_permission"].camera_permission_id,
+        secondary_camera_selection_id=(
+            state["secondary_camera_selection"].camera_selection_id if deployment_mode == "B" else None
+        ),
+        secondary_camera_permission_id=(
+            state["secondary_camera_permission"].camera_permission_id if deployment_mode == "B" else None
+        ),
         status="active",
         deployment_mode=deployment_mode,
         authentication_gate_status="passed",
@@ -455,7 +479,8 @@ def start_examination_session(
 
 
 def candidate_dashboard(db: Session, candidate: Candidate) -> dict[str, Any]:
-    state = latest_readiness(db, candidate)
+    state = latest_readiness(db, candidate, "B")
+    readiness_by_mode = {mode: latest_readiness(db, candidate, mode)["readiness"] for mode in ("A", "B", "C")}
     active_session = db.scalar(
         select(ExaminationSession)
         .where(
@@ -483,6 +508,7 @@ def candidate_dashboard(db: Session, candidate: Candidate) -> dict[str, Any]:
         "secondary_camera_permission": state["secondary_camera_permission"],
         "active_session": active_session,
         "readiness": state["readiness"],
+        "readiness_by_mode": readiness_by_mode,
     }
 
 
@@ -498,9 +524,16 @@ def candidate_workspace(db: Session, candidate: Candidate, session_id: str) -> d
     device = db.get(DeviceCheckRecord, session.device_check_id)
     primary = db.get(CameraSelectionRecord, session.camera_selection_id)
     primary_permission = db.get(CameraPermissionRecord, session.camera_permission_id)
-    secondary = db.get(CameraSelectionRecord, session.secondary_camera_selection_id)
-    secondary_permission = db.get(CameraPermissionRecord, session.secondary_camera_permission_id)
-    if not all((institution, examination, consent, device, primary, primary_permission, secondary, secondary_permission)):
+    secondary = (
+        db.get(CameraSelectionRecord, session.secondary_camera_selection_id)
+        if session.secondary_camera_selection_id else None
+    )
+    secondary_permission = (
+        db.get(CameraPermissionRecord, session.secondary_camera_permission_id)
+        if session.secondary_camera_permission_id else None
+    )
+    required_records = (institution, examination, consent, device, primary, primary_permission)
+    if not all(required_records) or (session.deployment_mode == "B" and not all((secondary, secondary_permission))):
         raise CandidatePrerequisiteMissing("Session pre-examination records are incomplete.")
     return {
         "candidate": {

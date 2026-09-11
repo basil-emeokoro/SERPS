@@ -301,8 +301,13 @@ function DemonstrationWorkspacePageContent() {
 
     const activeObjectRoles = objectRolesForMode(workspace.session.deployment_mode);
     const secondaryUsed = activeObjectRoles.includes("secondary");
+    const secondaryCamera = workspace.secondary_camera;
+    if (secondaryUsed && !secondaryCamera) {
+      const invalidModeTimer = window.setTimeout(() => setStatus("Mode B requires a configured secondary camera. Monitoring did not start."), 0);
+      return () => { disposed = true; window.clearTimeout(invalidModeTimer); };
+    }
     const cameraStarts = [connect("primary", workspace.primary_camera.device_id, primaryVideo)];
-    if (secondaryUsed) cameraStarts.push(connect("secondary", workspace.secondary_camera.device_id, secondaryVideo));
+    if (secondaryUsed && secondaryCamera) cameraStarts.push(connect("secondary", secondaryCamera.device_id, secondaryVideo));
     void Promise.all(cameraStarts).then(async () => {
       if (disposed) return;
       await startObjectDetector("primary", primaryVideo);
@@ -326,8 +331,8 @@ function DemonstrationWorkspacePageContent() {
       } else if (disconnectReported.current.has("primary") || !streamByRole.current.primary?.active) {
         void connect("primary", workspace.primary_camera.device_id, primaryVideo, true);
       }
-      if (secondaryUsed) {
-        if (!ids.has(workspace.secondary_camera.device_id)) {
+      if (secondaryUsed && secondaryCamera) {
+        if (!ids.has(secondaryCamera.device_id)) {
           if (!disconnectReported.current.has("secondary")) {
             disconnectReported.current.add("secondary");
             setSecondaryState("device removed");
@@ -336,7 +341,7 @@ function DemonstrationWorkspacePageContent() {
             void emit("camera_disconnected", "Secondary camera device was removed.", "secondary");
           }
         } else if (disconnectReported.current.has("secondary") || !streamByRole.current.secondary?.active) {
-          void connect("secondary", workspace.secondary_camera.device_id, secondaryVideo, true);
+          void connect("secondary", secondaryCamera.device_id, secondaryVideo, true);
         }
       }
     };
@@ -389,6 +394,12 @@ function DemonstrationWorkspacePageContent() {
 
   if (loading) return <section className="workspace-shell"><LoadingState label="Loading authorised demonstration workspace..." /></section>;
   if (error || !workspace) return <section className="workspace-shell"><ErrorState message={error || "Workspace unavailable."} /></section>;
+  const requiredMonitoringUnavailable = !finished && (
+    primaryState !== "connected"
+    || (workspace.session.deployment_mode === "B" && secondaryState !== "connected")
+    || audioState !== "active"
+    || !faceCapability.startsWith("Face monitoring: Active")
+  );
 
   return <section className="workspace-shell">
     <header className="workspace-header">
@@ -400,6 +411,7 @@ function DemonstrationWorkspacePageContent() {
     <p className="freshness-note">Candidate device heartbeat: {finished ? "monitoring stopped" : lastHeartbeat ? new Date(lastHeartbeat).toLocaleTimeString() : "awaiting first update"}</p>
     <p className="mode-disclosure"><strong>Proctoring mode:</strong> {modeDescription[workspace.session.deployment_mode]}</p>
     {periodicDue && <aside className="identity-prompt" role="alert"><div><strong>Periodic identity verification due</strong><p>Pause the demonstration and complete a bounded facial/liveness check before continuing.</p></div><button className="primary-action" onClick={() => void beginPeriodic()}>Verify identity</button></aside>}
+    {requiredMonitoringUnavailable && <aside className="inline-warning" role="alert"><strong>Assessment interaction paused:</strong> required monitoring is unavailable. Restore the indicated camera, microphone or face-monitoring component to continue. The session remains active for human-governed review.</aside>}
 
     <section className="dual-camera-grid workspace-cameras">
       <article className="camera-panel"><div className="camera-title"><h2>Primary camera</h2><StatusBadge label={finished ? "stopped" : primaryState} tone={finished ? "neutral" : primaryState === "connected" ? "success" : "danger"} /></div><video ref={primaryVideo} autoPlay muted playsInline aria-label="Primary candidate-facing live local preview" /><p>Candidate-facing face and upper-body view.</p><div className="detector-readout"><strong>Object detector: {finished ? "stopped" : objectStates.primary}</strong><span>{finished ? "Monitoring completed" : objectSummary.primary}</span></div></article>
@@ -416,8 +428,8 @@ function DemonstrationWorkspacePageContent() {
     <section className="question-workspace" aria-labelledby="question-title">
       <div className="question-progress">Question {question + 1} of {questions.length}</div>
       <h2 id="question-title">{questions[question].prompt}</h2>
-      <fieldset><legend className="sr-only">Choose one answer</legend>{questions[question].options.map((option, index) => <label className="answer-option" key={option}><input type="radio" name={`question-${question}`} checked={answers[question] === index} onChange={() => setAnswers((current) => ({ ...current, [question]: index }))} />{option}</label>)}</fieldset>
-      <div className="question-actions"><button disabled={question === 0} onClick={() => setQuestion((value) => Math.max(0, value - 1))}>Previous</button><button disabled={question === questions.length - 1} onClick={() => setQuestion((value) => Math.min(questions.length - 1, value + 1))}>Next</button><button className="danger-action" disabled={finished} onClick={() => setFinishOpen(true)}>Finish demonstration</button></div>
+      <fieldset disabled={requiredMonitoringUnavailable || finished}><legend className="sr-only">Choose one answer</legend>{questions[question].options.map((option, index) => <label className="answer-option" key={option}><input type="radio" name={`question-${question}`} checked={answers[question] === index} onChange={() => setAnswers((current) => ({ ...current, [question]: index }))} />{option}</label>)}</fieldset>
+      <div className="question-actions"><button disabled={requiredMonitoringUnavailable || question === 0} onClick={() => setQuestion((value) => Math.max(0, value - 1))}>Previous</button><button disabled={requiredMonitoringUnavailable || question === questions.length - 1} onClick={() => setQuestion((value) => Math.min(questions.length - 1, value + 1))}>Next</button><button className="danger-action" disabled={finished} onClick={() => setFinishOpen(true)}>Finish demonstration</button></div>
     </section>
     {finished && <section className="state-card" role="status"><StatusBadge label="Completed" tone="success" /><h2>Demonstration finished</h2><p>The session is now available in reviewer and administrator operational views.</p></section>}
     <ConfirmationDialog open={finishOpen} title="Finish this demonstration?" detail="This completes the session and stops camera, object-detector and microphone resources. Evidence and governance records remain append-only." confirmLabel="Finish demonstration" onConfirm={() => void finish()} onCancel={() => setFinishOpen(false)} />

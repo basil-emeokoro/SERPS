@@ -27,6 +27,7 @@ export default function CandidatePortalPage() {
   const [primaryId, setPrimaryId] = useState("");
   const [secondaryId, setSecondaryId] = useState("");
   const [rolesConfirmed, setRolesConfirmed] = useState(false);
+  const [mirrorConfirmed, setMirrorConfirmed] = useState(false);
   const [roleReason, setRoleReason] = useState("Discover cameras to assign semantic roles.");
   const primaryStream = useRef<MediaStream | null>(null);
   const secondaryStream = useRef<MediaStream | null>(null);
@@ -66,7 +67,7 @@ export default function CandidatePortalPage() {
       setSecondaryId(recommendation.secondaryId);
       setRolesConfirmed(false);
       setRoleReason(recommendation.reason);
-      setStatus(videoDevices.length >= 2 ? `${videoDevices.length} cameras discovered. Review and confirm both assignments.` : "Only one camera was discovered. Dual-camera readiness cannot be achieved on this device.");
+      setStatus(videoDevices.length >= 2 ? `${videoDevices.length} cameras discovered. Review the assignments for Mode B, or preview the primary camera for Mode A/C.` : "One camera was discovered. Mode A/C can proceed; Mode B requires a second camera.");
       if (!result.passed) setStatus("One or more browser-reported device checks failed.");
       await refresh();
     } catch (reason) {
@@ -76,10 +77,12 @@ export default function CandidatePortalPage() {
   }
 
   async function previewCamera(role: "primary" | "secondary") {
-    if (!rolesConfirmed) { setStatus("Confirm the primary and secondary assignments before starting either preview."); return; }
+    if (role === "secondary" && !rolesConfirmed) { setStatus("Confirm the primary and secondary assignments before starting the secondary preview."); return; }
     const deviceId = role === "primary" ? primaryId : secondaryId;
-    const pairError = validateCameraPair(primaryId, secondaryId);
-    if (pairError) { setStatus(pairError); return; }
+    if (role === "secondary") {
+      const pairError = validateCameraPair(primaryId, secondaryId);
+      if (pairError) { setStatus(pairError); return; }
+    }
     const device = cameras.find((item) => item.deviceId === deviceId);
     setBusy(true);
     try {
@@ -89,7 +92,7 @@ export default function CandidatePortalPage() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
-      await submitCameraSelection({ camera_role: role, device_id: deviceId, label: device?.label || `${role} camera`, group_id: device?.groupId || null, camera_count: cameras.length });
+      await submitCameraSelection({ camera_role: role, device_id: deviceId, label: device?.label || `${role} camera`, group_id: device?.groupId || null, camera_count: cameras.length, metadata: role === "primary" ? { preview_live_confirmed: true, mirror_assistance_confirmed: mirrorConfirmed } : { preview_live_confirmed: true } });
       await submitCameraPermission(role, "granted");
       setStatus(`${role === "primary" ? "Primary" : "Secondary"} camera preview is live.`);
       await refresh();
@@ -126,16 +129,24 @@ export default function CandidatePortalPage() {
     secondaryStream.current?.getTracks().forEach((track) => track.stop());
   }
 
-  async function startExam(examinationId: string) {
-    if (!rolesConfirmed) { setStatus("Confirm the displayed camera roles before starting the session."); return; }
-    const pairError = validateCameraPair(primaryId, secondaryId);
-    if (pairError) { setStatus(pairError); return; }
-    if (!primaryStream.current?.active || !secondaryStream.current?.active) { setStatus("Both live camera previews are required before session start."); return; }
+  async function startExam(examinationId: string, mode: "A" | "B" | "C") {
+    if (!primaryStream.current?.active) { setStatus("A live primary-camera preview is required before session start."); return; }
+    if (mode === "B") {
+      if (!rolesConfirmed) { setStatus("Confirm the displayed camera roles before starting a Mode B session."); return; }
+      const pairError = validateCameraPair(primaryId, secondaryId);
+      if (pairError) { setStatus(pairError); return; }
+      if (!secondaryStream.current?.active) { setStatus("A live secondary-camera preview is required before a Mode B session starts."); return; }
+    }
+    if (mode === "C" && !mirrorConfirmed) { setStatus("Confirm the Mode C mirror-assisted arrangement before session start."); return; }
     setBusy(true);
     try {
-      const session = await startCandidateSession(examinationId);
+      if (mode === "C") {
+        const device = cameras.find((item) => item.deviceId === primaryId);
+        await submitCameraSelection({ camera_role: "primary", device_id: primaryId, label: device?.label || "primary camera", group_id: device?.groupId || null, camera_count: cameras.length, metadata: { preview_live_confirmed: true, mirror_assistance_confirmed: true } });
+      }
+      const session = await startCandidateSession(examinationId, mode);
       primaryStream.current.getTracks().forEach((track) => track.stop());
-      secondaryStream.current.getTracks().forEach((track) => track.stop());
+      secondaryStream.current?.getTracks().forEach((track) => track.stop());
       router.push(`/candidate/examinations/${session.session_id}`);
     } catch (reason) { setStatus(reason instanceof Error ? reason.message : "Examination could not start."); setBusy(false); }
   }
@@ -143,14 +154,14 @@ export default function CandidatePortalPage() {
   if (loading) return <PortalShell allowedRoles={["Candidate"]} title="Candidate Portal" badge="Candidate" summary="Preparing the candidate workflow."><LoadingState /></PortalShell>;
   if (error) return <PortalShell allowedRoles={["Candidate"]} title="Candidate Portal" badge="Candidate" summary="Candidate workflow unavailable."><ErrorState message={error} onRetry={() => { setLoading(true); void refresh(); }} /></PortalShell>;
 
-  return <PortalShell allowedRoles={["Candidate"]} title="Candidate Portal" badge="Candidate" summary="Complete consent and browser-attested dual-camera setup before entering the bounded demonstration examination workspace.">
+  return <PortalShell allowedRoles={["Candidate"]} title="Candidate Portal" badge="Candidate" summary="Complete consent and the camera setup required by the assigned monitoring mode before entering the bounded demonstration examination workspace.">
     <p className="workflow-status" role="status" aria-live="polite">{status}</p>
     {dashboard?.active_session && <section className="card active-session"><StatusBadge label="Active demonstration" tone="success" /><h2>Resume monitored workspace</h2><Link className="button-link" href={`/candidate/examinations/${dashboard.active_session.session_id}`}>Open demonstration workspace</Link></section>}
     <section className="status-grid">
-      <article className="card"><span className="badge">Assigned examinations</span><h2>Available demonstrations</h2>{dashboard?.assigned_examinations.length ? dashboard.assigned_examinations.map((exam) => <div className="assignment" key={exam.assignment_id}><strong>{exam.title}</strong><span>{exam.exam_code} · {exam.duration_minutes} minutes</span><button disabled={busy || !dashboard.readiness.ready_to_start} onClick={() => void startExam(exam.examination_id)}>Start demonstration</button></div>) : <p>No assigned examinations are available.</p>}</article>
+      <article className="card"><span className="badge">Assigned examinations</span><h2>Available demonstrations</h2>{dashboard?.assigned_examinations.length ? dashboard.assigned_examinations.map((exam) => { const mode = exam.monitoring_mode as "A" | "B" | "C"; const readiness = dashboard.readiness_by_mode[mode] ?? {}; return <div className="assignment" key={exam.assignment_id}><strong>{exam.title}</strong><span>{exam.exam_code} · {exam.duration_minutes} minutes · Mode {mode}</span><button disabled={busy || !readiness.ready_to_start} onClick={() => void startExam(exam.examination_id, mode)}>Start demonstration</button></div>; }) : <p>No assigned examinations are available.</p>}</article>
       <article className="card"><span className="badge">Consent</span><h2>Required agreements</h2><label className="check-row"><input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} />I accept monitoring, the privacy notice, and institutional examination policy.</label><button disabled={busy || !consentChecked} onClick={() => void acceptConsent()}>Accept consent</button><p>{dashboard?.consent?.accepted ? `Accepted (${dashboard.consent.consent_version})` : "Valid consent required"}</p></article>
     </section>
-    <section className="card camera-setup"><div className="section-heading"><div><span className="badge">Mandatory dual-camera setup</span><h2>Candidate-facing and environmental views</h2></div><button disabled={busy} onClick={() => void discoverDevices()}>Discover cameras and check device</button></div>{cameras.length < 2 && <div className="inline-warning" role="alert">Dual-camera readiness unavailable: connect a second video-input device, then retry discovery.</div>}<p className="camera-role-reason" role="status">{roleReason}</p><div className="camera-assignment-summary"><strong>Primary: {cameraLabel(cameras.find((camera) => camera.deviceId === primaryId))}</strong><strong>Secondary: {cameraLabel(cameras.find((camera) => camera.deviceId === secondaryId))}</strong><span>{rolesConfirmed ? "Assignments confirmed" : "Confirmation required"}</span></div><div className="camera-role-actions"><button type="button" disabled={!primaryId || !secondaryId} onClick={swapRoles}>Swap roles intentionally</button><button type="button" className="primary-action" disabled={!primaryId || !secondaryId || rolesConfirmed} onClick={confirmRoles}>{rolesConfirmed ? "Roles confirmed" : "Confirm camera roles"}</button></div><div className="dual-camera-grid">{(["primary", "secondary"] as const).map((role) => { const selected = role === "primary" ? primaryId : secondaryId; return <article className="camera-panel setup-panel" key={role}><h3>{role === "primary" ? "Primary camera" : "Secondary camera"}</h3><p>{role === "primary" ? "Candidate-facing view: face and upper body" : "Room, desk, side-angle or wider environmental view"}</p><select aria-label={`${role} camera device`} value={selected} onChange={(event) => { setRolesConfirmed(false); role === "primary" ? setPrimaryId(event.target.value) : setSecondaryId(event.target.value); }}><option value="">Select {role} camera</option>{cameras.map((camera) => <option value={camera.deviceId} key={camera.deviceId}>{camera.label || `Camera ${cameras.indexOf(camera) + 1}`}</option>)}</select><button disabled={busy || !selected || !rolesConfirmed} onClick={() => void previewCamera(role)}>Confirm and preview {role} camera</button><video ref={role === "primary" ? primaryVideo : secondaryVideo} autoPlay muted playsInline aria-label={`${role} camera local preview`} /></article>; })}</div><p className="privacy-note">Camera previews are local to this browser. SERPS persists operational metadata and EvidenceEvents, not raw video.</p></section>
-    <section className="card readiness-card"><h2>Session readiness</h2><p>Device and permission values are client-reported browser attestations received by the server; they are evidence inputs, not independent hardware proof.</p><ReadinessSummary readiness={dashboard?.readiness ?? {}} /></section>
+    <section className="card camera-setup"><div className="section-heading"><div><span className="badge">Mode-aware camera setup</span><h2>Candidate-facing and environmental views</h2></div><button disabled={busy} onClick={() => void discoverDevices()}>Discover cameras and check device</button></div>{cameras.length === 1 && <div className="inline-warning" role="status">One camera supports Mode A and Mode C. Mode B requires a distinct second video-input device.</div>}<p className="camera-role-reason" role="status">{roleReason}</p><div className="camera-assignment-summary"><strong>Primary: {cameraLabel(cameras.find((camera) => camera.deviceId === primaryId))}</strong><strong>Secondary: {cameraLabel(cameras.find((camera) => camera.deviceId === secondaryId))}</strong><span>{rolesConfirmed ? "Assignments confirmed" : "Confirmation required"}</span></div><div className="camera-role-actions"><button type="button" disabled={!primaryId || !secondaryId} onClick={swapRoles}>Swap roles intentionally</button><button type="button" className="primary-action" disabled={!primaryId || !secondaryId || rolesConfirmed} onClick={confirmRoles}>{rolesConfirmed ? "Roles confirmed" : "Confirm camera roles"}</button></div><div className="dual-camera-grid">{(["primary", "secondary"] as const).map((role) => { const selected = role === "primary" ? primaryId : secondaryId; return <article className="camera-panel setup-panel" key={role}><h3>{role === "primary" ? "Primary camera" : "Secondary camera"}</h3><p>{role === "primary" ? "Candidate-facing view: face and upper body" : "Room, desk, side-angle or wider environmental view"}</p><select aria-label={`${role} camera device`} value={selected} onChange={(event) => { setRolesConfirmed(false); role === "primary" ? setPrimaryId(event.target.value) : setSecondaryId(event.target.value); }}><option value="">Select {role} camera</option>{cameras.map((camera) => <option value={camera.deviceId} key={camera.deviceId}>{camera.label || `Camera ${cameras.indexOf(camera) + 1}`}</option>)}</select><button disabled={busy || !selected || (role === "secondary" && !rolesConfirmed)} onClick={() => void previewCamera(role)}>Confirm and preview {role} camera</button><video ref={role === "primary" ? primaryVideo : secondaryVideo} autoPlay muted playsInline aria-label={`${role} camera local preview`} /></article>; })}</div><label className="check-row"><input type="checkbox" checked={mirrorConfirmed} onChange={(event) => setMirrorConfirmed(event.target.checked)} />For Mode C only, I confirm that the physical mirror-assisted arrangement is in place and the primary preview covers the intended view. SERPS records this attestation; it does not detect mirrors.</label><p className="privacy-note">Camera previews are local to this browser. SERPS persists operational metadata and EvidenceEvents, not raw video.</p></section>
+    <section className="card readiness-card"><h2>Session readiness</h2><p>Device and permission values are client-reported browser attestations received by the server; they are evidence inputs, not independent hardware proof.</p><ReadinessSummary readiness={dashboard?.assigned_examinations[0] ? dashboard.readiness_by_mode[dashboard.assigned_examinations[0].monitoring_mode as "A" | "B" | "C"] ?? {} : {}} /></section>
   </PortalShell>;
 }

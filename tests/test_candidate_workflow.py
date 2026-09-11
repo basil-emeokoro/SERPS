@@ -82,13 +82,14 @@ def auth(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def assign_exam(db: Session, candidate: dict, code: str = "CSC101") -> Examination:
+def assign_exam(db: Session, candidate: dict, code: str = "CSC101", monitoring_mode: str = "B") -> Examination:
     exam = Examination(
         institution_id=candidate["institution_id"],
         exam_code=code,
         title="Operational Examination",
         status="published",
         duration_minutes=60,
+        monitoring_mode=monitoring_mode,
     )
     db.add(exam)
     db.flush()
@@ -135,7 +136,7 @@ def complete_preflight(client: TestClient, token: str) -> None:
     camera = client.post(
         "/api/v1/candidate/cameras",
         headers=headers,
-        json={"camera_role": "primary", "device_id": "primary-browser-device", "label": "Integrated Camera", "camera_count": 2},
+        json={"camera_role": "primary", "device_id": "primary-browser-device", "label": "Integrated Camera", "camera_count": 2, "metadata": {"preview_live_confirmed": True}},
     )
     assert camera.status_code == 201, camera.text
     permission = client.post(
@@ -147,7 +148,7 @@ def complete_preflight(client: TestClient, token: str) -> None:
     secondary = client.post(
         "/api/v1/candidate/cameras",
         headers=headers,
-        json={"camera_role": "secondary", "device_id": "secondary-browser-device", "label": "Room Camera", "camera_count": 2},
+        json={"camera_role": "secondary", "device_id": "secondary-browser-device", "label": "Room Camera", "camera_count": 2, "metadata": {"preview_live_confirmed": True}},
     )
     assert secondary.status_code == 201, secondary.text
     secondary_permission = client.post(
@@ -311,6 +312,107 @@ def test_session_creation_links_preflight_and_dashboard(client: TestClient, db: 
     body = started.json()
     assert body["status"] == "active"
     assert all(body[field] for field in ("consent_id", "device_check_id", "camera_selection_id", "camera_permission_id", "secondary_camera_selection_id", "secondary_camera_permission_id"))
+
+
+def test_mode_specific_readiness_uses_examination_configuration(client: TestClient, db: Session):
+    seed_institution(db)
+    candidate, token = register_and_login(client)
+    mode_a = assign_exam(db, candidate, code="MODE-A", monitoring_mode="A")
+    headers = auth(token)
+    client.post(
+        "/api/v1/candidate/consents",
+        headers=headers,
+        json={"monitoring_consent": True, "privacy_notice_accepted": True, "institutional_policy_accepted": True},
+    )
+    client.post(
+        "/api/v1/candidate/device-checks",
+        headers=headers,
+        json={
+            "supported_browser": True,
+            "secure_context": True,
+            "camera_available": True,
+            "microphone_available": True,
+            "browser_name": "Chrome",
+        },
+    )
+    client.post(
+        "/api/v1/candidate/cameras",
+        headers=headers,
+        json={
+            "camera_role": "primary",
+            "device_id": "only-camera",
+            "camera_count": 1,
+            "metadata": {"preview_live_confirmed": True},
+        },
+    )
+    client.post(
+        "/api/v1/candidate/camera-permissions",
+        headers=headers,
+        json={"camera_role": "primary", "status": "granted"},
+    )
+
+    dashboard = client.get("/api/v1/candidate/dashboard", headers=headers).json()
+    assert dashboard["readiness_by_mode"]["A"]["ready_to_start"] is True
+    assert dashboard["readiness_by_mode"]["B"]["ready_to_start"] is False
+    assert dashboard["readiness_by_mode"]["C"]["ready_to_start"] is False
+
+    mismatched = client.post(
+        f"/api/v1/candidate/examinations/{mode_a.examination_id}/start",
+        headers=headers,
+        json={"deployment_mode": "B"},
+    )
+    assert mismatched.status_code == 409
+    assert "does not match" in mismatched.json()["detail"]
+    started = client.post(
+        f"/api/v1/candidate/examinations/{mode_a.examination_id}/start",
+        headers=headers,
+        json={"deployment_mode": "A"},
+    )
+    assert started.status_code == 201, started.text
+    assert started.json()["deployment_mode"] == "A"
+    assert started.json()["secondary_camera_selection_id"] is None
+    assert started.json()["secondary_camera_permission_id"] is None
+    workspace = client.get(
+        f"/api/v1/candidate/sessions/{started.json()['session_id']}", headers=headers
+    )
+    assert workspace.status_code == 200
+    assert workspace.json()["secondary_camera"] is None
+    assert workspace.json()["secondary_permission"] is None
+
+
+def test_mode_c_requires_explicit_mirror_attestation_not_detection(client: TestClient, db: Session):
+    seed_institution(db)
+    candidate, token = register_and_login(client)
+    mode_c = assign_exam(db, candidate, code="MODE-C", monitoring_mode="C")
+    complete_preflight(client, token)
+    headers = auth(token)
+    blocked = client.post(
+        f"/api/v1/candidate/examinations/{mode_c.examination_id}/start",
+        headers=headers,
+        json={"deployment_mode": "C"},
+    )
+    assert blocked.status_code == 409
+    assert "mirror_assistance_confirmed" in blocked.json()["detail"]
+
+    attested = client.post(
+        "/api/v1/candidate/cameras",
+        headers=headers,
+        json={
+            "camera_role": "primary",
+            "device_id": "primary-browser-device",
+            "camera_count": 2,
+            "metadata": {"preview_live_confirmed": True, "mirror_assistance_confirmed": True},
+        },
+    )
+    assert attested.status_code == 201
+    assert attested.json()["metadata_json"]["mirror_assistance_confirmed"] is True
+    started = client.post(
+        f"/api/v1/candidate/examinations/{mode_c.examination_id}/start",
+        headers=headers,
+        json={"deployment_mode": "C"},
+    )
+    assert started.status_code == 201, started.text
+    assert started.json()["secondary_camera_selection_id"] is None
 
 
 def test_duplicate_dual_camera_selection_is_rejected(client: TestClient, db: Session):

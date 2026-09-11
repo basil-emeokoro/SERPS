@@ -156,7 +156,7 @@ class CameraPermissionRead(BaseModel):
 
 
 class CandidateSessionStart(BaseModel):
-    deployment_mode: str = Field(default="A", pattern="^[ABC]$")
+    deployment_mode: str | None = Field(default=None, pattern="^[ABC]$")
 
 
 class CandidateSessionRead(BaseModel):
@@ -169,8 +169,8 @@ class CandidateSessionRead(BaseModel):
     device_check_id: str
     camera_selection_id: str
     camera_permission_id: str
-    secondary_camera_selection_id: str
-    secondary_camera_permission_id: str
+    secondary_camera_selection_id: str | None
+    secondary_camera_permission_id: str | None
     status: str
     deployment_mode: str
     authentication_gate_status: str
@@ -193,6 +193,7 @@ class CandidateDashboardRead(BaseModel):
     secondary_camera_permission: CameraPermissionRead | None
     active_session: CandidateSessionRead | None
     readiness: dict[str, bool]
+    readiness_by_mode: dict[str, dict[str, bool]]
 
 
 class CandidateWorkspaceRead(BaseModel):
@@ -204,5 +205,5 @@ class CandidateWorkspaceRead(BaseModel):
     device_check: DeviceCheckRead
     primary_camera: CameraSelectionRead
     primary_permission: CameraPermissionRead
-    secondary_camera: CameraSelectionRead
-    secondary_permission: CameraPermissionRead
+    secondary_camera: CameraSelectionRead | None
+    secondary_permission: CameraPermissionRead | None
