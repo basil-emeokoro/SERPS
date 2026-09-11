@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { fetchRegistrationInstitutions, registerIdentity } from "../../lib/api";
+import { fetchRegistrationInstitutions, registerIdentity, resumeEnrollment } from "../../lib/api";
 import type { InstitutionRegistration, RegistrationField } from "../../lib/contracts";
 
 type AccountType = "candidate" | "reviewer" | "administrator";
@@ -23,6 +23,8 @@ export default function RegistrationPage() {
   const [institutionCode, setInstitutionCode] = useState("");
   const [status, setStatus] = useState("Loading active institution registration configurations...");
   const [busy, setBusy] = useState(false);
+  const [resumeEmail, setResumeEmail] = useState("");
+  const [resumePassword, setResumePassword] = useState("");
   const selected = institutions.find((item) => item.code === institutionCode);
   const fields = useMemo(() => (selected?.fields ?? []).filter((field) => field.active && field.applies_to.includes(accountType)).sort((a, b) => a.order - b.order), [selected, accountType]);
 
@@ -49,6 +51,22 @@ export default function RegistrationPage() {
     } catch (error) { setStatus(error instanceof Error ? error.message : "Registration failed."); } finally { setBusy(false); }
   }
 
+  async function resume(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!institutionCode || !resumeEmail.trim() || resumePassword.length < 12) {
+      setStatus("Select the institution and enter the credentials used for the incomplete registration.");
+      return;
+    }
+    setBusy(true); setStatus("Recovering the pending facial-enrolment session...");
+    try {
+      const result = await resumeEnrollment({ institution_code: institutionCode, email: resumeEmail.trim(), password: resumePassword });
+      sessionStorage.setItem("serps_enrollment_token", result.challenge_token);
+      sessionStorage.setItem("serps_enrollment_actions", JSON.stringify(result.required_actions));
+      window.location.href = "/enrolment";
+    } catch (error) { setStatus(error instanceof Error ? error.message : "Pending enrolment could not be resumed."); }
+    finally { setBusy(false); }
+  }
+
   return <main className="page-shell compact-shell"><section className="auth-layout">
     <div className="hero auth-hero"><p className="eyebrow">Controlled identity lifecycle</p><h1>Request a SERPS account</h1><p>Registration requirements are supplied by the selected institution and validated again by Application Services.</p><Link className="hero-link" href="/login">Already registered? Sign in</Link></div>
     <form className="card auth-card" onSubmit={submit}><span className="badge">Registration</span>
@@ -60,5 +78,6 @@ export default function RegistrationPage() {
       {selected && accountType === "candidate" && <label className="consent-check"><input name="biometric_consent" type="checkbox" required /><span>I consent to processing a derived facial representation for this research-prototype identity workflow. Raw images and video will not be stored.</span></label>}
       <button type="submit" disabled={busy || !selected}>{busy ? "Submitting..." : accountType === "candidate" ? "Verify and continue" : "Submit approval request"}</button><p className="form-note" role="status">{status}</p>
     </form>
+    <form className="card auth-card" onSubmit={resume}><span className="badge">Resume enrolment</span><h2>Continue an incomplete candidate registration</h2><p>Use the same institution, email and password. A fresh short-lived facial-enrolment challenge replaces any unfinished challenge.</p><label>Email<input type="email" autoComplete="email" value={resumeEmail} onChange={(event) => setResumeEmail(event.target.value)} required /></label><label>Password<input type="password" autoComplete="current-password" minLength={12} value={resumePassword} onChange={(event) => setResumePassword(event.target.value)} required /></label><button type="submit" disabled={busy || !institutionCode}>Resume facial enrolment</button></form>
   </section></main>;
 }

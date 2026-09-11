@@ -25,7 +25,7 @@ from serps_pop.identity.services import (
     user_roles,
     validate_email,
 )
-from serps_pop.security.passwords import hash_password
+from serps_pop.security.passwords import hash_password, verify_password
 
 from .models import BiometricEnrollment, IdentityAssuranceProfile, IdentityChallenge, RegistrationRequest, utc_now
 from .schemas import EnrollmentSubmit, FaceAuthenticationSubmit, RegistrationCreate, RegistrationDecision
@@ -227,6 +227,35 @@ def register_account(db: Session, payload: RegistrationCreate) -> tuple[Registra
         metadata={"account_type": payload.account_type, "status": registration.status},
     )
     return registration, enrollment_token, required_actions
+
+
+def resume_candidate_enrollment(db: Session, institution_code: str, email: str, password: str) -> tuple[IdentityChallenge, str]:
+    institution = db.scalar(select(Institution).where(
+        Institution.code == institution_code.strip().upper(), Institution.is_active.is_(True)
+    ))
+    if institution is None:
+        raise DomainNotFound("Pending candidate enrolment not found.")
+    user = db.scalar(select(User).where(
+        User.institution_id == institution.institution_id, User.email == validate_email(email)
+    ))
+    if user is None or user.status != "pending_facial_enrolment" or not verify_password(password, user.password_hash):
+        raise DomainNotFound("Pending candidate enrolment not found or credentials are invalid.")
+    profile = db.scalar(select(IdentityAssuranceProfile).where(IdentityAssuranceProfile.user_id == user.user_id))
+    if profile is None or profile.enrolment_status != "pending":
+        raise DomainConflict("Candidate facial enrolment is not resumable.")
+    pending = db.scalars(select(IdentityChallenge).where(
+        IdentityChallenge.user_id == user.user_id,
+        IdentityChallenge.purpose == "enrollment",
+        IdentityChallenge.status == "pending",
+    )).all()
+    for item in pending:
+        item.status = "superseded"
+    actions = random.sample(LIVENESS_ACTIONS[:-1], 2) + ["return_to_centre"]
+    challenge, token = _new_challenge(db, user.user_id, "enrollment", actions)
+    audit(db, action="identity.enrollment.resume", result="success", institution_id=institution.institution_id,
+          actor_user_id=user.user_id, target_type="identity_challenge", target_id=challenge.challenge_id,
+          metadata={"prior_pending_challenges_superseded": len(pending)})
+    return challenge, token
 
 
 def decide_registration(

@@ -10,6 +10,7 @@ from serps_pop.identity.models import User, UserRole
 from serps_pop.identity.services import DomainConflict, DomainNotFound, ROLE_ADMIN, ROLE_CANDIDATE, ROLE_SYSADMIN, issue_tokens
 from serps_pop.identity_assurance.schemas import (
     ChallengeRead,
+    EnrollmentResumeCreate,
     EnrollmentSubmit,
     FaceAuthenticationSubmit,
     IdentityStatusRead,
@@ -25,6 +26,7 @@ from serps_pop.identity_assurance.services import (
     list_registrations,
     profile_for_user,
     register_account,
+    resume_candidate_enrollment,
     verify_facial_authentication,
 )
 
@@ -134,6 +136,18 @@ def enroll(payload: EnrollmentSubmit, db: Session = Depends(get_db)) -> dict:
             "raw_media_stored": False,
         }
     except (DomainConflict, DomainNotFound) as exc:
+        db.rollback()
+        _error(exc)
+
+
+@router.post("/enrollments/resume", response_model=ChallengeRead)
+def resume_enrollment(payload: EnrollmentResumeCreate, db: Session = Depends(get_db)) -> ChallengeRead:
+    try:
+        challenge, token = resume_candidate_enrollment(db, payload.institution_code, payload.email, payload.password)
+        db.commit()
+        return ChallengeRead(challenge_id=challenge.challenge_id, challenge_token=token, purpose=challenge.purpose,
+                             required_actions=challenge.required_actions, expires_at=challenge.expires_at)
+    except (DomainConflict, DomainNotFound, ValueError) as exc:
         db.rollback()
         _error(exc)
 

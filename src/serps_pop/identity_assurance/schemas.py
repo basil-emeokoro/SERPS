@@ -47,6 +47,12 @@ class RegistrationRead(BaseModel):
     verification_status: str = "pending_verification"
 
 
+class EnrollmentResumeCreate(BaseModel):
+    institution_code: str = Field(min_length=2, max_length=32)
+    email: str
+    password: str = Field(min_length=12, max_length=128)
+
+
 class RegistrationFieldRead(BaseModel):
     name: str
     label: str

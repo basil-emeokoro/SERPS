@@ -39,10 +39,16 @@ export default function LoginPage() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedInstitution = institutionCode.trim().toUpperCase();
+    if (!normalizedInstitution || !normalizedEmail || !normalizedEmail.includes("@") || !password) {
+      setStatus("Enter a valid institution code, email address and password.");
+      return;
+    }
     setBusy(true);
     setStatus("Securely validating your account...");
     try {
-      const tokens = await login({ email, password, institution_code: institutionCode || undefined });
+      const tokens = await login({ email: normalizedEmail, password, institution_code: normalizedInstitution });
       if (tokens.authentication_stage === "facial_required") {
         sessionStorage.setItem("serps_face_challenge", tokens.challenge_token);
         sessionStorage.setItem("serps_face_actions", JSON.stringify(tokens.required_actions));
@@ -79,11 +85,11 @@ export default function LoginPage() {
           <h2>Account sign in</h2>
           <label>
             Institution code
-            <input value={institutionCode} onChange={(event) => setInstitutionCode(event.target.value)} />
+            <input value={institutionCode} onChange={(event) => setInstitutionCode(event.target.value)} autoComplete="organization" required />
           </label>
           <label>
             Email
-            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
           </label>
           {mounted && demonstrationAccounts.has(email.trim().toLowerCase()) && <span className="demo-indicator">Demonstration Account</span>}
           <label>
