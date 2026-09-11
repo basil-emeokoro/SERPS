@@ -38,6 +38,7 @@ from serps_pop.identity.services import (
     utc_now,
 )
 from serps_pop.identity_assurance.services import identity_ready
+from serps_pop.governance.models import PolicyEvaluation, ReviewerDecision
 
 CURRENT_CONSENT_VERSION = "CONSENT-1.0"
 
@@ -555,6 +556,31 @@ def candidate_workspace(db: Session, candidate: Candidate, session_id: str) -> d
         "primary_permission": primary_permission,
         "secondary_camera": secondary,
         "secondary_permission": secondary_permission,
+    }
+
+
+def candidate_protection_state(db: Session, candidate: Candidate, session_id: str) -> dict[str, Any]:
+    session = db.get(ExaminationSession, session_id)
+    if session is None:
+        raise DomainNotFound("Examination session not found.")
+    if session.candidate_id != candidate.candidate_id or session.institution_id != candidate.institution_id:
+        raise CandidateAccessDenied("Candidate cannot access another candidate's session.")
+    evaluation = db.scalar(select(PolicyEvaluation).where(
+        PolicyEvaluation.session_id == session_id,
+        PolicyEvaluation.approved_action == "PROTECT_AND_PAUSE",
+    ).order_by(PolicyEvaluation.evaluated_at.desc()).limit(1))
+    recovery = None if evaluation is None else db.scalar(select(ReviewerDecision).where(
+        ReviewerDecision.policy_evaluation_id == evaluation.evaluation_id,
+        ReviewerDecision.decision.in_(("CONTINUE", "ACKNOWLEDGE")),
+    ).order_by(ReviewerDecision.created_at.desc()).limit(1))
+    protected = bool(evaluation and recovery is None)
+    return {
+        "state": "PROTECTED" if protected else "NORMAL",
+        "reason_category": "policy_review_required" if protected else None,
+        "policy_action": evaluation.approved_action if evaluation else None,
+        "requires_reviewer": bool(evaluation and evaluation.requires_reviewer),
+        "misconduct_determination": False,
+        "evaluated_at": evaluation.evaluated_at if evaluation else None,
     }
 
 

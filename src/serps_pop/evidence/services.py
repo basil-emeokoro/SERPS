@@ -28,6 +28,10 @@ CANDIDATE_EVENT_TYPES = {
     "audio_activity_detected",
     "sustained_audio_activity",
     "audio_monitor_unavailable",
+    "protection_entered",
+    "protection_cleared",
+    "connectivity_interrupted",
+    "connectivity_restored",
 }
 CANDIDATE_SOURCE_MODULES = {"candidate_browser"}
 

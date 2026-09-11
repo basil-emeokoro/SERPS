@@ -4,13 +4,14 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { ConfirmationDialog, ErrorState, LoadingState, StatusBadge } from "../../../../components/OperationalStates";
 import { PortalShell } from "../../../../components/PortalShell";
-import { beginPeriodicVerification, completeCandidateSession, fetchCandidateWorkspace, fetchIdentityStatus, submitEvidenceEvent } from "../../../../lib/api";
+import { beginPeriodicVerification, completeCandidateSession, fetchCandidateProtection, fetchCandidateWorkspace, fetchIdentityStatus, submitEvidenceEvent } from "../../../../lib/api";
 import { AUDIO_MONITOR_NAME, AUDIO_MONITOR_VERSION, AUDIO_SAMPLE_INTERVAL_MS, AudioActivityTracker, LocalAudioMonitor } from "../../../../lib/audioMonitoring";
 import type { CandidateWorkspace } from "../../../../lib/contracts";
 import { audioEvidence, detectorUnavailableEvidence, DuplicateEventGate, faceDetectorUnavailableEvidence, facePresenceEvidence, objectEvidence, objectRolesForMode, type CameraRole, type EvidenceDraft } from "../../../../lib/multimodalEvents";
 import { FACE_SAMPLE_INTERVAL_MS, FacePresenceTracker, LocalFacePerceptionService } from "../../../../lib/faceDetection";
 import { LocalObjectDetector, OBJECT_MODEL_NAME, OBJECT_MODEL_VERSION, OBJECT_SAMPLE_INTERVAL_MS } from "../../../../lib/objectDetection";
 import { formatElapsed } from "../../../../lib/operational";
+import { activeElapsedMs, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, normalProtectionState, type ProtectionReason, type ProtectionState } from "../../../../lib/protectionState";
 
 const questions = [
   { prompt: "Which principle best describes SERPS decision authority?", options: ["Fully autonomous discipline", "Human-governed advisory support", "Automatic examination termination", "Unreviewed biometric scoring"] },
@@ -44,6 +45,7 @@ function DemonstrationWorkspacePageContent() {
   const [audioLevel, setAudioLevel] = useState(0);
   const [periodicDue, setPeriodicDue] = useState(false);
   const [lastHeartbeat, setLastHeartbeat] = useState<string | null>(null);
+  const [protection, setProtection] = useState<ProtectionState>(() => normalProtectionState());
 
   const primaryVideo = useRef<HTMLVideoElement | null>(null);
   const secondaryVideo = useRef<HTMLVideoElement | null>(null);
@@ -54,6 +56,18 @@ function DemonstrationWorkspacePageContent() {
   const objectDetectors = useRef<Partial<Record<CameraRole, LocalObjectDetector>>>({});
   const faceDetector = useRef<LocalFacePerceptionService | null>(null);
   const audioMonitor = useRef<LocalAudioMonitor | null>(null);
+  const protectionRef = useRef(protection);
+  const interruptionStartedAt = useRef<number | null>(null);
+  const lastServerAckAt = useRef<number | null>(null);
+  const connectivityFailures = useRef(0);
+  const requiredMonitoringUnavailable = !!workspace && !finished && (
+    primaryState !== "connected"
+    || (workspace.session.deployment_mode === "B" && secondaryState !== "connected")
+    || audioState !== "active"
+    || !faceCapability.startsWith("Face monitoring: Active")
+  );
+
+  useEffect(() => { protectionRef.current = protection; }, [protection]);
 
   const stopMedia = useCallback(async () => {
     streams.current.flatMap((stream) => stream.getTracks()).forEach((track) => track.stop());
@@ -112,11 +126,32 @@ function DemonstrationWorkspacePageContent() {
 
   useEffect(() => {
     if (!workspace || finished) return;
-    const tick = () => setElapsed(formatElapsed(workspace.session.started_at, Date.now()));
+    const tick = () => setElapsed(formatActiveElapsed(activeElapsedMs(workspace.session.started_at, Date.now(), protectionRef.current)));
     tick();
     const interval = window.setInterval(tick, 1000);
     return () => window.clearInterval(interval);
   }, [workspace, finished]);
+
+  const enterProtectedState = useCallback((reason: ProtectionReason, metadata: Record<string, unknown> = {}) => {
+    const previous = protectionRef.current;
+    const next = enterProtection(previous, reason, Date.now());
+    if (next === previous) return;
+    protectionRef.current = next;
+    setProtection(next);
+    void emit("protection_entered", "Examination content entered a governed protective pause.", undefined, 1, 0,
+      { trigger_category: reason, protection_state: "PROTECTED", misconduct_determination: false, ...metadata });
+  }, [emit]);
+
+  const clearProtectedState = useCallback((expectedReason: ProtectionReason, metadata: Record<string, unknown> = {}, policyRecoveryConfirmed = false) => {
+    const previous = protectionRef.current;
+    if (previous.reason !== expectedReason) return;
+    const next = clearProtection(previous, Date.now(), policyRecoveryConfirmed);
+    if (next === previous) return;
+    protectionRef.current = next;
+    setProtection(next);
+    void emit("protection_cleared", "Examination content protection cleared after readiness revalidation.", undefined, 1, 0,
+      { trigger_category: expectedReason, protection_state: "NORMAL", misconduct_determination: false, ...metadata });
+  }, [emit]);
 
   useEffect(() => {
     if (!workspace || finished) return;
@@ -366,6 +401,64 @@ function DemonstrationWorkspacePageContent() {
     };
   }, [workspace, finished, emit, emitDraft, stopMedia]);
 
+  useEffect(() => {
+    if (!workspace || finished) return;
+    if (!requiredMonitoringUnavailable) {
+      clearProtectedState("monitoring_verification", { readiness_revalidated: true });
+      return;
+    }
+    const grace = window.setTimeout(() => enterProtectedState("monitoring_verification", {
+      operational_integrity_condition: true,
+      grace_period_ms: 5000,
+      configured_mode: workspace.session.deployment_mode,
+    }), 5000);
+    return () => window.clearTimeout(grace);
+  }, [workspace, finished, requiredMonitoringUnavailable, enterProtectedState, clearProtectedState]);
+
+  useEffect(() => {
+    if (!workspace || finished) return;
+    let disposed = false;
+    const checkServer = async () => {
+      try {
+        const policy = await fetchCandidateProtection(workspace.session.session_id);
+        if (disposed) return;
+        const now = Date.now();
+        const priorInterruption = interruptionStartedAt.current;
+        const priorAck = lastServerAckAt.current;
+        connectivityFailures.current = 0;
+        lastServerAckAt.current = now;
+        setLastHeartbeat(new Date(now).toISOString());
+        if (policy.state === "PROTECTED" && policy.policy_action === "PROTECT_AND_PAUSE") {
+          enterProtectedState("policy_review", { policy_action: policy.policy_action, requires_reviewer: policy.requires_reviewer });
+        } else if (protectionRef.current.reason === "policy_review") {
+          clearProtectedState("policy_review", { reviewer_recovery_confirmed: true }, true);
+        }
+        if (priorInterruption != null) {
+          const duration = interruptionDurationMs(priorInterruption, now);
+          interruptionStartedAt.current = null;
+          await emit("connectivity_interrupted", "Candidate browser could not reach the SERPS server.", undefined, 1, 0,
+            { interruption_started_at: new Date(priorInterruption).toISOString(), last_successful_acknowledgement: priorAck ? new Date(priorAck).toISOString() : null });
+          await emit("connectivity_restored", "Candidate session reconnected to the SERPS server.", undefined, 1, 0,
+            { interruption_ended_at: new Date(now).toISOString(), interruption_duration_ms: duration, readiness_revalidated: !requiredMonitoringUnavailable });
+          if (!requiredMonitoringUnavailable) clearProtectedState("connectivity_interrupted", { interruption_duration_ms: duration, readiness_revalidated: true });
+        }
+      } catch {
+        if (disposed) return;
+        connectivityFailures.current += 1;
+        if (connectivityFailures.current >= 2 && interruptionStartedAt.current == null) {
+          interruptionStartedAt.current = Date.now();
+          enterProtectedState("connectivity_interrupted", {
+            established_after_failed_checks: connectivityFailures.current,
+            last_successful_acknowledgement: lastServerAckAt.current ? new Date(lastServerAckAt.current).toISOString() : null,
+          });
+        }
+      }
+    };
+    void checkServer();
+    const interval = window.setInterval(() => void checkServer(), 10000);
+    return () => { disposed = true; window.clearInterval(interval); };
+  }, [workspace, finished, emit, enterProtectedState, clearProtectedState, requiredMonitoringUnavailable]);
+
   async function finish() {
     setFinishOpen(false);
     try {
@@ -394,13 +487,9 @@ function DemonstrationWorkspacePageContent() {
 
   if (loading) return <section className="workspace-shell"><LoadingState label="Loading authorised demonstration workspace..." /></section>;
   if (error || !workspace) return <section className="workspace-shell"><ErrorState message={error || "Workspace unavailable."} /></section>;
-  const requiredMonitoringUnavailable = !finished && (
-    primaryState !== "connected"
-    || (workspace.session.deployment_mode === "B" && secondaryState !== "connected")
-    || audioState !== "active"
-    || !faceCapability.startsWith("Face monitoring: Active")
-  );
-
+  const protectionStatus = protection.reason === "connectivity_interrupted" ? "Connectivity interrupted"
+    : protection.reason === "policy_review" ? "Policy review required" : "Monitoring verification required";
+  const controlsDisabled = interactionDisabled(protection, requiredMonitoringUnavailable, finished);
   return <section className="workspace-shell">
     <header className="workspace-header">
       <div><p className="eyebrow dark">Assessment Demonstration Harness</p><h1>{workspace.examination.title}</h1><p>{workspace.candidate.full_name} · {workspace.institution.name} · Session {workspace.session.session_id}</p></div>
@@ -428,11 +517,12 @@ function DemonstrationWorkspacePageContent() {
     <section className="question-workspace" aria-labelledby="question-title">
       <div className="question-progress">Question {question + 1} of {questions.length}</div>
       <h2 id="question-title">{questions[question].prompt}</h2>
-      <fieldset disabled={requiredMonitoringUnavailable || finished}><legend className="sr-only">Choose one answer</legend>{questions[question].options.map((option, index) => <label className="answer-option" key={option}><input type="radio" name={`question-${question}`} checked={answers[question] === index} onChange={() => setAnswers((current) => ({ ...current, [question]: index }))} />{option}</label>)}</fieldset>
-      <div className="question-actions"><button disabled={requiredMonitoringUnavailable || question === 0} onClick={() => setQuestion((value) => Math.max(0, value - 1))}>Previous</button><button disabled={requiredMonitoringUnavailable || question === questions.length - 1} onClick={() => setQuestion((value) => Math.min(questions.length - 1, value + 1))}>Next</button><button className="danger-action" disabled={finished} onClick={() => setFinishOpen(true)}>Finish demonstration</button></div>
+      <fieldset disabled={controlsDisabled}><legend className="sr-only">Choose one answer</legend>{questions[question].options.map((option, index) => <label className="answer-option" key={option}><input type="radio" name={`question-${question}`} checked={answers[question] === index} onChange={() => setAnswers((current) => ({ ...current, [question]: index }))} />{option}</label>)}</fieldset>
+      <div className="question-actions"><button disabled={controlsDisabled || question === 0} onClick={() => setQuestion((value) => Math.max(0, value - 1))}>Previous</button><button disabled={controlsDisabled || question === questions.length - 1} onClick={() => setQuestion((value) => Math.min(questions.length - 1, value + 1))}>Next</button><button className="danger-action" disabled={controlsDisabled} onClick={() => setFinishOpen(true)}>Finish demonstration</button></div>
     </section>
     {finished && <section className="state-card" role="status"><StatusBadge label="Completed" tone="success" /><h2>Demonstration finished</h2><p>The session is now available in reviewer and administrator operational views.</p></section>}
     <ConfirmationDialog open={finishOpen} title="Finish this demonstration?" detail="This completes the session and stops camera, object-detector and microphone resources. Evidence and governance records remain append-only." confirmLabel="Finish demonstration" onConfirm={() => void finish()} onCancel={() => setFinishOpen(false)} />
+    {protection.mode === "PROTECTED" && <div className="examination-protection-overlay" role="alertdialog" aria-live="assertive" aria-modal="true" aria-labelledby="protection-title"><div className="protection-panel"><span className="protection-shield" aria-hidden="true">◆</span><p className="eyebrow">{protectionStatus}</p><h2 id="protection-title">EXAMINATION CONTENT TEMPORARILY PROTECTED</h2><p>SERPS has detected a monitoring or policy condition requiring verification. Examination content has been temporarily concealed and the assessment timer paused. The session will resume when the applicable monitoring or governance condition is restored.</p><strong>Timer paused at {elapsed}</strong><p className="protection-boundary">This operational response is not a misconduct determination. Human review authority is preserved.</p></div></div>}
   </section>;
 }
 

@@ -207,3 +207,12 @@ class CandidateWorkspaceRead(BaseModel):
     primary_permission: CameraPermissionRead
     secondary_camera: CameraSelectionRead | None
     secondary_permission: CameraPermissionRead | None
+
+
+class CandidateProtectionRead(BaseModel):
+    state: str
+    reason_category: str | None = None
+    policy_action: str | None = None
+    requires_reviewer: bool = False
+    misconduct_determination: bool = False
+    evaluated_at: datetime | None = None

@@ -19,6 +19,7 @@ from serps_pop.candidate_workflow.schemas import (
     CandidateSessionRead,
     CandidateSessionStart,
     CandidateWorkspaceRead,
+    CandidateProtectionRead,
     ConsentCreate,
     ConsentRead,
     DeviceCheckCreate,
@@ -31,6 +32,7 @@ from serps_pop.candidate_workflow.services import (
     candidate_dashboard,
     candidate_for_user,
     candidate_workspace,
+    candidate_protection_state,
     complete_candidate_session,
     record_camera_permission,
     record_camera_selection,
@@ -223,6 +225,20 @@ def get_workspace(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
     except CandidatePrerequisiteMissing as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+
+@router.get("/sessions/{session_id}/protection", response_model=CandidateProtectionRead)
+def get_protection_state(
+    session_id: str,
+    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE)),
+    db: Session = Depends(get_db),
+) -> dict:
+    try:
+        return candidate_protection_state(db, _candidate(db, current_user), session_id)
+    except DomainNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except CandidateAccessDenied as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
 
 
 @router.post("/sessions/{session_id}/complete", response_model=CandidateSessionRead)

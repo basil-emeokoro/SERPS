@@ -481,6 +481,40 @@ def test_real_event_ingestion_triggers_governance_chain(client: TestClient, db: 
     assert {"CONTEXTUAL_ASSESSMENT_CREATED", "AGENT_RECOMMENDATION_CREATED", "POLICY_EVALUATION_CREATED"} <= actions
 
 
+def test_persistent_phone_evidence_uses_policy_protection_without_misconduct_finding(client: TestClient, db: Session):
+    seed_institution(db)
+    candidate, token = register_and_login(client)
+    exam = assign_exam(db, candidate)
+    complete_preflight(client, token)
+    headers = auth(token)
+    session = client.post(f"/api/v1/candidate/examinations/{exam.examination_id}/start", headers=headers, json={}).json()
+    for index in range(2):
+        response = client.post("/api/v1/evidence-events/", headers=headers, json={
+            "session_id": session["session_id"], "candidate_id": candidate["candidate_id"],
+            "source_module": "candidate_browser", "event_type": "mobile_phone_detected",
+            "camera_id": "primary", "risk_weight": 0.65, "confidence": 0.95,
+            "description": f"High-confidence phone evidence {index + 1}.",
+        })
+        assert response.status_code == 201
+    state = client.get(f"/api/v1/candidate/sessions/{session['session_id']}/protection", headers=headers)
+    assert state.status_code == 200
+    assert state.json() == {
+        "state": "PROTECTED",
+        "reason_category": "policy_review_required",
+        "policy_action": "PROTECT_AND_PAUSE",
+        "requires_reviewer": True,
+        "misconduct_determination": False,
+        "evaluated_at": state.json()["evaluated_at"],
+    }
+    evaluation = db.scalar(select(PolicyEvaluation).where(
+        PolicyEvaluation.session_id == session["session_id"],
+        PolicyEvaluation.approved_action == "PROTECT_AND_PAUSE",
+    ))
+    assert evaluation is not None
+    assert evaluation.continue_examination is True
+    assert evaluation.metadata_json["misconduct_determination"] is False
+
+
 def test_candidate_cannot_spoof_another_session(client: TestClient, db: Session):
     seed_institution(db)
     first, first_token = register_and_login(client, suffix="1")

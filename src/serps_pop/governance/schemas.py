@@ -11,6 +11,7 @@ AdvisoryAction = Literal[
     "NOTIFY_REVIEWER",
     "REQUEST_CANDIDATE_ACKNOWLEDGEMENT",
     "ESCALATE_INCIDENT",
+    "PROTECT_AND_PAUSE",
 ]
 ReviewerDecisionValue = Literal[
     "CONTINUE",

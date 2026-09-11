@@ -283,6 +283,10 @@ def create_policy_evaluation(
         approved_action = policy.high_risk_action
     elif assessment.risk_level == "Critical":
         approved_action = policy.critical_risk_action
+    phone_count = int(assessment.metadata_json.get("event_counts", {}).get("mobile_phone_detected", 0))
+    phone_protection_enabled = policy.metadata_json.get("protect_on_persistent_mobile_phone", True) is True
+    if phone_protection_enabled and phone_count >= 2 and assessment.risk_level in {"High", "Critical"}:
+        approved_action = "PROTECT_AND_PAUSE"
     requires_reviewer = recommendation.requires_reviewer or level_rank >= notification_rank
     requires_ack = policy.candidate_acknowledgement_required and level_rank >= RISK_LEVEL_ORDER["Moderate"]
     reauthentication_expected = level_rank >= reauth_rank
@@ -290,7 +294,8 @@ def create_policy_evaluation(
         f"Policy {policy.policy_version} evaluated {recommendation.recommended_action} at "
         f"{assessment.risk_level} risk and approved {approved_action}. "
         f"Reviewer required: {str(requires_reviewer).lower()}; candidate acknowledgement required: "
-        f"{str(requires_ack).lower()}; the examination continues. Automatic termination is prohibited."
+        f"{str(requires_ack).lower()}; the session is not terminated. A policy-controlled protective pause may apply. "
+        "Automatic termination and misconduct determination are prohibited."
     )
     evaluation = PolicyEvaluation(
         institution_id=recommendation.institution_id,
@@ -304,7 +309,12 @@ def create_policy_evaluation(
         continue_examination=True,
         explanation=explanation,
         policy_version=policy.policy_version,
-        metadata_json={"reauthentication_expected": reauthentication_expected},
+        metadata_json={
+            "reauthentication_expected": reauthentication_expected,
+            "protection_required": approved_action == "PROTECT_AND_PAUSE",
+            "protection_trigger": "persistent_mobile_phone_evidence" if approved_action == "PROTECT_AND_PAUSE" else None,
+            "misconduct_determination": False,
+        },
     )
     db.add(evaluation)
     db.flush()

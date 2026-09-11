@@ -206,6 +206,16 @@ def test_audio_event_metadata_is_privacy_safe_and_reported_without_raw_audio():
         assert report_event["metadata_json"]["raw_audio_stored"] is False
 
 
+def test_protection_and_connectivity_events_are_operational_not_governance_verdicts():
+    with multimodal_db() as db:
+        seed_active_session(db)
+        api = client(db)
+        for event_type in ("protection_entered", "protection_cleared", "connectivity_interrupted", "connectivity_restored"):
+            response = api.post("/api/v1/evidence-events/", json=payload(event_type))
+            assert response.status_code == 201, response.text
+        assert len(db.scalars(select(EvidenceEventRecord)).all()) == 4
+
+
 def test_raw_audio_metadata_is_rejected():
     with multimodal_db() as db:
         seed_active_session(db)
