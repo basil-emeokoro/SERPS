@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { fetchRegistrationInstitutions, registerIdentity, resumeEnrollment } from "../../lib/api";
 import type { InstitutionRegistration, RegistrationField } from "../../lib/contracts";
+import { defaultRecoveryInstitution, recoveryCredentialsReady } from "../../lib/enrolmentRecovery";
 
 type AccountType = "candidate" | "reviewer" | "administrator";
 
@@ -26,6 +27,7 @@ export default function RegistrationPage() {
   const [showResume, setShowResume] = useState(false);
   const [resumeEmail, setResumeEmail] = useState("");
   const [resumePassword, setResumePassword] = useState("");
+  const [resumeInstitutionCode, setResumeInstitutionCode] = useState("");
   const [resumeStatus, setResumeStatus] = useState("");
   const selected = institutions.find((item) => item.code === institutionCode);
   const fields = useMemo(() => (selected?.fields ?? []).filter((field) => field.active && field.applies_to.includes(accountType)).sort((a, b) => a.order - b.order), [selected, accountType]);
@@ -38,7 +40,11 @@ export default function RegistrationPage() {
       if (resumeRequested) setShowResume(true);
     }, 0);
     const controller = new AbortController();
-    fetchRegistrationInstitutions(controller.signal).then((items) => { setInstitutions(items); setStatus("Select an institution to load its current registration requirements."); }).catch((error) => setStatus(error instanceof Error ? error.message : "Institution configuration is unavailable."));
+    fetchRegistrationInstitutions(controller.signal).then((items) => {
+      setInstitutions(items);
+      setResumeInstitutionCode(defaultRecoveryInstitution(items.map((item) => item.code)));
+      setStatus("Select an institution to load its current registration requirements.");
+    }).catch((error) => setStatus(error instanceof Error ? error.message : "Institution configuration is unavailable."));
     return () => { window.clearTimeout(initialise); controller.abort(); };
   }, []);
 
@@ -59,13 +65,13 @@ export default function RegistrationPage() {
 
   async function resume(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!institutionCode || !resumeEmail.trim() || resumePassword.length < 12) {
-      setResumeStatus("Select the institution and enter the credentials used for the incomplete registration.");
+    if (!recoveryCredentialsReady(resumeInstitutionCode, resumeEmail, resumePassword)) {
+      setResumeStatus("Select your institution and enter the email and password used for the incomplete registration.");
       return;
     }
     setBusy(true); setResumeStatus("Recovering the pending facial-enrolment session...");
     try {
-      const result = await resumeEnrollment({ institution_code: institutionCode, email: resumeEmail.trim(), password: resumePassword });
+      const result = await resumeEnrollment({ institution_code: resumeInstitutionCode, email: resumeEmail.trim(), password: resumePassword });
       sessionStorage.setItem("serps_enrollment_token", result.challenge_token);
       sessionStorage.setItem("serps_enrollment_actions", JSON.stringify(result.required_actions));
       window.location.href = "/enrolment";
@@ -86,7 +92,7 @@ export default function RegistrationPage() {
     </form>
     <section className="card auth-card resume-enrolment-entry" aria-label="Incomplete enrolment recovery">
       <button type="button" className="secondary-action" aria-expanded={showResume} aria-controls="resume-enrolment-form" onClick={() => setShowResume((value) => !value)}>{showResume ? "Hide enrolment recovery" : "Resume enrolment"}</button>
-      {showResume && <form id="resume-enrolment-form" onSubmit={resume}><span className="badge">Incomplete registration</span><h2>Continue an incomplete candidate registration</h2><p>Use the institution selected above and the same email and password. Ordinary sign-in also detects valid incomplete enrolment credentials automatically.</p><label>Email<input type="email" autoComplete="email" value={resumeEmail} onChange={(event) => setResumeEmail(event.target.value)} required /></label><label>Password<input type="password" autoComplete="current-password" minLength={12} value={resumePassword} onChange={(event) => setResumePassword(event.target.value)} required /></label><button type="submit" disabled={busy || !institutionCode}>{busy ? "Recovering enrolment..." : "Resume facial enrolment"}</button>{resumeStatus && <p className="form-note" role="status">{resumeStatus}</p>}</form>}
+      {showResume && <form id="resume-enrolment-form" onSubmit={resume}><span className="badge">Incomplete registration</span><h2>Continue an incomplete candidate registration</h2><p>Use the same email and password. Ordinary sign-in also detects valid incomplete enrolment credentials automatically.</p>{institutions.length === 1 ? <p className="field-help">Institution: {institutions[0].name} · {institutions[0].code}</p> : <label>Institution<select aria-label="Recovery institution" value={resumeInstitutionCode} onChange={(event) => setResumeInstitutionCode(event.target.value)} required><option value="" disabled>Select institution</option>{institutions.map((item) => <option value={item.code} key={item.code}>{item.name}</option>)}</select></label>}<label>Email<input type="email" autoComplete="email" value={resumeEmail} onChange={(event) => setResumeEmail(event.target.value)} required /></label><label>Password<input type="password" autoComplete="current-password" minLength={12} value={resumePassword} onChange={(event) => setResumePassword(event.target.value)} required /></label><button type="submit" disabled={busy || !recoveryCredentialsReady(resumeInstitutionCode, resumeEmail, resumePassword)}>{busy ? "Recovering enrolment..." : "Resume facial enrolment"}</button>{resumeStatus && <p className="form-note" role="status">{resumeStatus}</p>}</form>}
     </section>
   </section></main>;
 }
