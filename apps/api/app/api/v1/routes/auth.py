@@ -15,7 +15,7 @@ from serps_pop.identity.services import (
     rotate_refresh_token,
     user_roles,
 )
-from serps_pop.identity_assurance.services import begin_facial_authentication
+from serps_pop.identity_assurance.services import begin_facial_authentication, resume_candidate_enrollment
 
 router = APIRouter()
 
@@ -24,6 +24,22 @@ router = APIRouter()
 def login(payload: LoginRequest, db: Session = Depends(get_db)) -> dict:
     user = authenticate_user(db, email=payload.email, password=payload.password, institution_code=payload.institution_code)
     if user is None:
+        if payload.institution_code:
+            try:
+                challenge, challenge_token = resume_candidate_enrollment(
+                    db, payload.institution_code, payload.email, payload.password
+                )
+                db.commit()
+                return {
+                    "authentication_stage": "enrollment_required",
+                    "challenge_id": challenge.challenge_id,
+                    "challenge_token": challenge_token,
+                    "required_actions": challenge.required_actions,
+                    "expires_at": challenge.expires_at,
+                    "capture_restart_required": True,
+                }
+            except (DomainConflict, DomainNotFound, ValueError):
+                db.rollback()
         db.commit()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
     if ROLE_CANDIDATE in user_roles(user):

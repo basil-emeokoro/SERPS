@@ -148,7 +148,10 @@ def test_candidate_registration_enrollment_password_face_and_periodic_flow(clien
         "/api/v1/auth/login",
         json={"institution_code": "MIVA", "email": "biometric@example.test", "password": "Password123!"},
     )
-    assert missing_enrolment.status_code == 401
+    assert missing_enrolment.status_code == 200
+    assert missing_enrolment.json()["authentication_stage"] == "enrollment_required"
+    assert missing_enrolment.json()["capture_restart_required"] is True
+    assert len(missing_enrolment.json()["required_actions"]) == 3
 
     resumed = client.post(
         "/api/v1/identity-assurance/enrollments/resume",
