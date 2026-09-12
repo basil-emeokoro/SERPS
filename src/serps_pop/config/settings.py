@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     frontend_build_id: str = "serps-web-1.0-rc1-s4c"
     backend_build_id: str = "serps-api-1.0-rc1-s4c"
+    demo_policy_controls: bool = False
 
 
 @lru_cache

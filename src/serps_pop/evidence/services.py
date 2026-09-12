@@ -32,6 +32,7 @@ CANDIDATE_EVENT_TYPES = {
     "protection_cleared",
     "connectivity_interrupted",
     "connectivity_restored",
+    "demo_protection_recovered",
 }
 CANDIDATE_SOURCE_MODULES = {"candidate_browser"}
 

@@ -560,6 +560,8 @@ def candidate_workspace(db: Session, candidate: Candidate, session_id: str) -> d
 
 
 def candidate_protection_state(db: Session, candidate: Candidate, session_id: str) -> dict[str, Any]:
+    from serps_pop.config.settings import get_settings
+    from serps_pop.governance.demo_policy import phone_protection_is_armed
     session = db.get(ExaminationSession, session_id)
     if session is None:
         raise DomainNotFound("Examination session not found.")
@@ -573,7 +575,9 @@ def candidate_protection_state(db: Session, candidate: Candidate, session_id: st
         ReviewerDecision.policy_evaluation_id == evaluation.evaluation_id,
         ReviewerDecision.decision.in_(("CONTINUE", "ACKNOWLEDGE")),
     ).order_by(ReviewerDecision.created_at.desc()).limit(1))
-    protected = bool(evaluation and recovery is None)
+    demo_enabled = get_settings().demo_policy_controls
+    demo_armed = demo_enabled and phone_protection_is_armed(session_id)
+    protected = bool(evaluation and recovery is None and demo_armed)
     return {
         "state": "PROTECTED" if protected else "NORMAL",
         "reason_category": "policy_review_required" if protected else None,
@@ -581,6 +585,8 @@ def candidate_protection_state(db: Session, candidate: Candidate, session_id: st
         "requires_reviewer": bool(evaluation and evaluation.requires_reviewer),
         "misconduct_determination": False,
         "evaluated_at": evaluation.evaluated_at if evaluation else None,
+        "demo_controls_enabled": demo_enabled,
+        "demo_phone_policy_armed": demo_armed,
     }
 
 

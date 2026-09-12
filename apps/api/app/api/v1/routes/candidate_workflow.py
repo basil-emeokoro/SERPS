@@ -20,6 +20,7 @@ from serps_pop.candidate_workflow.schemas import (
     CandidateSessionStart,
     CandidateWorkspaceRead,
     CandidateProtectionRead,
+    DemoPhonePolicyUpdate,
     ConsentCreate,
     ConsentRead,
     DeviceCheckCreate,
@@ -42,6 +43,8 @@ from serps_pop.candidate_workflow.services import (
     start_examination_session,
 )
 from serps_pop.identity.services import DomainConflict, DomainNotFound, ROLE_CANDIDATE
+from serps_pop.config.settings import get_settings
+from serps_pop.governance.demo_policy import set_phone_protection_armed
 
 router = APIRouter()
 
@@ -239,6 +242,21 @@ def get_protection_state(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except CandidateAccessDenied as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+
+
+@router.post("/sessions/{session_id}/demo-phone-policy", response_model=CandidateProtectionRead)
+def update_demo_phone_policy(
+    session_id: str,
+    payload: DemoPhonePolicyUpdate,
+    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE)),
+    db: Session = Depends(get_db),
+) -> dict:
+    if not get_settings().demo_policy_controls:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Prototype demonstration controls are disabled.")
+    candidate = _candidate(db, current_user)
+    candidate_workspace(db, candidate, session_id)
+    set_phone_protection_armed(session_id, payload.armed)
+    return candidate_protection_state(db, candidate, session_id)
 
 
 @router.post("/sessions/{session_id}/complete", response_model=CandidateSessionRead)

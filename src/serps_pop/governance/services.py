@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from serps_pop.evidence.repository import EvidenceEventRepository
 from serps_pop.evidence.models import EvidenceEventRecord
 from serps_pop.governance.engine import DEFAULT_WINDOW_SECONDS, RISK_LEVEL_ORDER, assess_events
+from serps_pop.governance.demo_policy import phone_protection_armed_at
 from serps_pop.governance.models import (
     AgentRecommendation,
     ContextualAssessment,
@@ -283,8 +284,23 @@ def create_policy_evaluation(
         approved_action = policy.high_risk_action
     elif assessment.risk_level == "Critical":
         approved_action = policy.critical_risk_action
-    phone_count = int(assessment.metadata_json.get("event_counts", {}).get("mobile_phone_detected", 0))
-    phone_protection_enabled = policy.metadata_json.get("protect_on_persistent_mobile_phone", True) is True
+    armed_at = phone_protection_armed_at(assessment.session_id)
+    phone_protection_enabled = armed_at is not None
+    phone_count = 0
+    if armed_at is not None:
+        window_start = assessment.evidence_window_start
+        if window_start.tzinfo is None:
+            window_start = window_start.replace(tzinfo=armed_at.tzinfo)
+        window_end = assessment.evidence_window_end
+        if window_end.tzinfo is None:
+            window_end = window_end.replace(tzinfo=armed_at.tzinfo)
+        effective_start = max(window_start, armed_at)
+        phone_count = len(db.scalars(select(EvidenceEventRecord).where(
+            EvidenceEventRecord.session_id == assessment.session_id,
+            EvidenceEventRecord.event_type == "mobile_phone_detected",
+            EvidenceEventRecord.timestamp >= effective_start,
+            EvidenceEventRecord.timestamp <= window_end,
+        )).all())
     if phone_protection_enabled and phone_count >= 2 and assessment.risk_level in {"High", "Critical"}:
         approved_action = "PROTECT_AND_PAUSE"
     requires_reviewer = recommendation.requires_reviewer or level_rank >= notification_rank
@@ -314,6 +330,8 @@ def create_policy_evaluation(
             "protection_required": approved_action == "PROTECT_AND_PAUSE",
             "protection_trigger": "persistent_mobile_phone_evidence" if approved_action == "PROTECT_AND_PAUSE" else None,
             "misconduct_determination": False,
+            "prototype_demo_phone_policy_armed": phone_protection_enabled,
+            "phone_persistence_rule": "at_least_2_mobile_phone_detected_events_in_contextual_window" if phone_protection_enabled else None,
         },
     )
     db.add(evaluation)

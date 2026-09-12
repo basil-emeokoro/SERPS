@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeElapsedMs, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, normalProtectionState } from "./protectionState";
+import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, normalProtectionState } from "./protectionState";
 
 describe("examination protection state", () => {
   it("protects, pauses elapsed time, and resumes", () => {
@@ -21,5 +21,11 @@ describe("examination protection state", () => {
     expect(interactionDisabled(normalProtectionState(), false)).toBe(false);
     expect(interactionDisabled(normalProtectionState(), true)).toBe(true);
     expect(interactionDisabled(enterProtection(normalProtectionState(), "connectivity_interrupted", 1000), false)).toBe(true);
+  });
+  it("permits demo recovery only for configured, armed policy protection", () => {
+    expect(canDemoRestore(true, true, "policy_review")).toBe(true);
+    expect(canDemoRestore(false, true, "policy_review")).toBe(false);
+    expect(canDemoRestore(true, false, "policy_review")).toBe(false);
+    expect(canDemoRestore(true, true, "monitoring_verification")).toBe(false);
   });
 });

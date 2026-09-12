@@ -25,6 +25,10 @@ export function interactionDisabled(state: ProtectionState, monitoringUnavailabl
   return finished || monitoringUnavailable || state.mode === "PROTECTED";
 }
 
+export function canDemoRestore(enabled: boolean, phonePolicyArmed: boolean, reason: ProtectionReason | null): boolean {
+  return enabled && phonePolicyArmed && reason === "policy_review";
+}
+
 export function formatActiveElapsed(milliseconds: number): string {
   const total = Math.floor(Math.max(0, milliseconds) / 1000);
   const hours = Math.floor(total / 3600).toString().padStart(2, "0");

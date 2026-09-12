@@ -482,12 +482,30 @@ def test_real_event_ingestion_triggers_governance_chain(client: TestClient, db: 
 
 
 def test_persistent_phone_evidence_uses_policy_protection_without_misconduct_finding(client: TestClient, db: Session):
+    from serps_pop.config.settings import get_settings
+    from serps_pop.governance.demo_policy import set_phone_protection_armed
+
     seed_institution(db)
     candidate, token = register_and_login(client)
     exam = assign_exam(db, candidate)
     complete_preflight(client, token)
     headers = auth(token)
     session = client.post(f"/api/v1/candidate/examinations/{exam.examination_id}/start", headers=headers, json={}).json()
+    get_settings().demo_policy_controls = True
+    set_phone_protection_armed(session["session_id"], False)
+    for index in range(2):
+        transient = client.post("/api/v1/evidence-events/", headers=headers, json={
+            "session_id": session["session_id"], "candidate_id": candidate["candidate_id"],
+            "source_module": "candidate_browser", "event_type": "mobile_phone_detected",
+            "camera_id": "primary", "risk_weight": 0.65, "confidence": 0.95,
+            "description": f"Phone evidence logged while demo policy is disarmed {index + 1}.",
+        })
+        assert transient.status_code == 201
+    disarmed = client.get(f"/api/v1/candidate/sessions/{session['session_id']}/protection", headers=headers).json()
+    assert disarmed["state"] == "NORMAL"
+    armed = client.post(f"/api/v1/candidate/sessions/{session['session_id']}/demo-phone-policy", headers=headers, json={"armed": True})
+    assert armed.status_code == 200
+    assert armed.json()["demo_phone_policy_armed"] is True
     for index in range(2):
         response = client.post("/api/v1/evidence-events/", headers=headers, json={
             "session_id": session["session_id"], "candidate_id": candidate["candidate_id"],
@@ -496,6 +514,9 @@ def test_persistent_phone_evidence_uses_policy_protection_without_misconduct_fin
             "description": f"High-confidence phone evidence {index + 1}.",
         })
         assert response.status_code == 201
+        if index == 0:
+            still_normal = client.get(f"/api/v1/candidate/sessions/{session['session_id']}/protection", headers=headers).json()
+            assert still_normal["state"] == "NORMAL"
     state = client.get(f"/api/v1/candidate/sessions/{session['session_id']}/protection", headers=headers)
     assert state.status_code == 200
     assert state.json() == {
@@ -505,6 +526,8 @@ def test_persistent_phone_evidence_uses_policy_protection_without_misconduct_fin
         "requires_reviewer": True,
         "misconduct_determination": False,
         "evaluated_at": state.json()["evaluated_at"],
+        "demo_controls_enabled": True,
+        "demo_phone_policy_armed": True,
     }
     evaluation = db.scalar(select(PolicyEvaluation).where(
         PolicyEvaluation.session_id == session["session_id"],
@@ -513,6 +536,10 @@ def test_persistent_phone_evidence_uses_policy_protection_without_misconduct_fin
     assert evaluation is not None
     assert evaluation.continue_examination is True
     assert evaluation.metadata_json["misconduct_determination"] is False
+    assert evaluation.metadata_json["phone_persistence_rule"] == "at_least_2_mobile_phone_detected_events_in_contextual_window"
+    recovered = client.post(f"/api/v1/candidate/sessions/{session['session_id']}/demo-phone-policy", headers=headers, json={"armed": False})
+    assert recovered.json()["state"] == "NORMAL"
+    get_settings().demo_policy_controls = False
 
 
 def test_candidate_cannot_spoof_another_session(client: TestClient, db: Session):

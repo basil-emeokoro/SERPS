@@ -216,3 +216,9 @@ class CandidateProtectionRead(BaseModel):
     requires_reviewer: bool = False
     misconduct_determination: bool = False
     evaluated_at: datetime | None = None
+    demo_controls_enabled: bool = False
+    demo_phone_policy_armed: bool = False
+
+
+class DemoPhonePolicyUpdate(BaseModel):
+    armed: bool

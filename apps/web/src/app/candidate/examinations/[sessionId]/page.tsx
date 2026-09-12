@@ -4,14 +4,14 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { ConfirmationDialog, ErrorState, LoadingState, StatusBadge } from "../../../../components/OperationalStates";
 import { PortalShell } from "../../../../components/PortalShell";
-import { beginPeriodicVerification, completeCandidateSession, fetchCandidateProtection, fetchCandidateWorkspace, fetchIdentityStatus, submitEvidenceEvent } from "../../../../lib/api";
+import { beginPeriodicVerification, completeCandidateSession, fetchCandidateProtection, fetchCandidateWorkspace, fetchIdentityStatus, submitEvidenceEvent, updateDemoPhonePolicy } from "../../../../lib/api";
 import { AUDIO_MONITOR_NAME, AUDIO_MONITOR_VERSION, AUDIO_SAMPLE_INTERVAL_MS, AudioActivityTracker, LocalAudioMonitor } from "../../../../lib/audioMonitoring";
 import type { CandidateWorkspace } from "../../../../lib/contracts";
 import { audioEvidence, detectorUnavailableEvidence, DuplicateEventGate, faceDetectorUnavailableEvidence, facePresenceEvidence, objectEvidence, objectRolesForMode, type CameraRole, type EvidenceDraft } from "../../../../lib/multimodalEvents";
 import { FACE_SAMPLE_INTERVAL_MS, FacePresenceTracker, LocalFacePerceptionService } from "../../../../lib/faceDetection";
 import { LocalObjectDetector, OBJECT_MODEL_NAME, OBJECT_MODEL_VERSION, OBJECT_SAMPLE_INTERVAL_MS } from "../../../../lib/objectDetection";
 import { formatElapsed } from "../../../../lib/operational";
-import { activeElapsedMs, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, normalProtectionState, type ProtectionReason, type ProtectionState } from "../../../../lib/protectionState";
+import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, normalProtectionState, type ProtectionReason, type ProtectionState } from "../../../../lib/protectionState";
 
 const questions = [
   { prompt: "Which principle best describes SERPS decision authority?", options: ["Fully autonomous discipline", "Human-governed advisory support", "Automatic examination termination", "Unreviewed biometric scoring"] },
@@ -46,6 +46,8 @@ function DemonstrationWorkspacePageContent() {
   const [periodicDue, setPeriodicDue] = useState(false);
   const [lastHeartbeat, setLastHeartbeat] = useState<string | null>(null);
   const [protection, setProtection] = useState<ProtectionState>(() => normalProtectionState());
+  const [demoControlsEnabled, setDemoControlsEnabled] = useState(false);
+  const [demoPhonePolicyArmed, setDemoPhonePolicyArmed] = useState(false);
 
   const primaryVideo = useRef<HTMLVideoElement | null>(null);
   const secondaryVideo = useRef<HTMLVideoElement | null>(null);
@@ -68,6 +70,12 @@ function DemonstrationWorkspacePageContent() {
   );
 
   useEffect(() => { protectionRef.current = protection; }, [protection]);
+  useEffect(() => {
+    if (protection.mode !== "PROTECTED") return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [protection.mode]);
 
   const stopMedia = useCallback(async () => {
     streams.current.flatMap((stream) => stream.getTracks()).forEach((track) => track.stop());
@@ -433,6 +441,8 @@ function DemonstrationWorkspacePageContent() {
         } else if (protectionRef.current.reason === "policy_review") {
           clearProtectedState("policy_review", { reviewer_recovery_confirmed: true }, true);
         }
+        setDemoControlsEnabled(policy.demo_controls_enabled);
+        setDemoPhonePolicyArmed(policy.demo_phone_policy_armed);
         if (priorInterruption != null) {
           const duration = interruptionDurationMs(priorInterruption, now);
           interruptionStartedAt.current = null;
@@ -471,6 +481,23 @@ function DemonstrationWorkspacePageContent() {
     }
   }
 
+  async function configureDemoPhonePolicy(armed: boolean) {
+    try {
+      const result = await updateDemoPhonePolicy(sessionId, armed);
+      setDemoPhonePolicyArmed(result.demo_phone_policy_armed);
+      if (!armed) {
+        await emit("demo_protection_recovered", "Prototype demonstration protection was manually ended.", undefined, 1, 0, {
+          demonstration_override: true,
+          misconduct_determination: false,
+        });
+        clearProtectedState("policy_review", { demonstration_override: true }, true);
+      }
+      setStatus(armed ? "Prototype demo phone-protection policy armed. Persistent contextual phone evidence is required." : "Prototype demo phone-protection policy disarmed.");
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : "Demo policy configuration could not be changed.");
+    }
+  }
+
   async function beginPeriodic() {
     try {
       const challenge = await beginPeriodicVerification();
@@ -499,6 +526,7 @@ function DemonstrationWorkspacePageContent() {
     <p className="workflow-status" role="status" aria-live="polite">{status}</p>
     <p className="freshness-note">Candidate device heartbeat: {finished ? "monitoring stopped" : lastHeartbeat ? new Date(lastHeartbeat).toLocaleTimeString() : "awaiting first update"}</p>
     <p className="mode-disclosure"><strong>Proctoring mode:</strong> {modeDescription[workspace.session.deployment_mode]}</p>
+    {demoControlsEnabled && protection.mode !== "PROTECTED" && <aside className="demo-policy-control" role="note"><div><strong>Prototype demonstration configuration</strong><p>Phone evidence remains logged. Policy protection is applied only when this demo control is armed and at least two phone-positive EvidenceEvents occur in the bounded contextual window.</p></div><button type="button" onClick={() => void configureDemoPhonePolicy(!demoPhonePolicyArmed)}>{demoPhonePolicyArmed ? "Disable phone-protection demonstration" : "Enable phone-protection demonstration"}</button></aside>}
     {periodicDue && <aside className="identity-prompt" role="alert"><div><strong>Periodic identity verification due</strong><p>Pause the demonstration and complete a bounded facial/liveness check before continuing.</p></div><button className="primary-action" onClick={() => void beginPeriodic()}>Verify identity</button></aside>}
     {requiredMonitoringUnavailable && <aside className="inline-warning" role="alert"><strong>Assessment interaction paused:</strong> required monitoring is unavailable. Restore the indicated camera, microphone or face-monitoring component to continue. The session remains active for human-governed review.</aside>}
 
@@ -522,7 +550,7 @@ function DemonstrationWorkspacePageContent() {
     </section>
     {finished && <section className="state-card" role="status"><StatusBadge label="Completed" tone="success" /><h2>Demonstration finished</h2><p>The session is now available in reviewer and administrator operational views.</p></section>}
     <ConfirmationDialog open={finishOpen} title="Finish this demonstration?" detail="This completes the session and stops camera, object-detector and microphone resources. Evidence and governance records remain append-only." confirmLabel="Finish demonstration" onConfirm={() => void finish()} onCancel={() => setFinishOpen(false)} />
-    {protection.mode === "PROTECTED" && <div className="examination-protection-overlay" role="alertdialog" aria-live="assertive" aria-modal="true" aria-labelledby="protection-title"><div className="protection-panel"><span className="protection-shield" aria-hidden="true">◆</span><p className="eyebrow">{protectionStatus}</p><h2 id="protection-title">EXAMINATION CONTENT TEMPORARILY PROTECTED</h2><p>SERPS has detected a monitoring or policy condition requiring verification. Examination content has been temporarily concealed and the assessment timer paused. The session will resume when the applicable monitoring or governance condition is restored.</p><strong>Timer paused at {elapsed}</strong><p className="protection-boundary">This operational response is not a misconduct determination. Human review authority is preserved.</p></div></div>}
+    {protection.mode === "PROTECTED" && <div className="examination-protection-overlay" role="alertdialog" aria-live="assertive" aria-modal="true" aria-labelledby="protection-title"><div className="protection-panel"><span className="protection-shield" aria-hidden="true">◆</span><p className="eyebrow">{protectionStatus}</p><h2 id="protection-title">EXAMINATION CONTENT TEMPORARILY PROTECTED</h2><p>SERPS has detected a monitoring or policy condition requiring verification. Examination content has been temporarily concealed and the assessment timer paused. The session will resume when the applicable monitoring or governance condition is restored.</p><strong>Timer paused at {elapsed}</strong><p className="protection-boundary">This operational response is not a misconduct determination. Human review authority is preserved.</p>{canDemoRestore(demoControlsEnabled, demoPhonePolicyArmed, protection.reason) && <button type="button" className="demo-restore-action" onClick={() => void configureDemoPhonePolicy(false)}>Demo: restore examination</button>}</div></div>}
   </section>;
 }
 
