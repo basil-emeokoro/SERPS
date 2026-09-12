@@ -113,6 +113,7 @@ export default function LoginPage() {
           <p className={hasError ? "auth-error" : "form-note"} role={hasError ? "alert" : "status"} aria-live="polite">{hasError && <span aria-hidden="true">⚠ </span>}{status}</p>
           <div className="auth-entry-links" aria-label="Registration options">
             <Link href="/register?type=candidate">Candidate registration</Link>
+            <Link href="/register?type=candidate&resume=1">Resume enrolment</Link>
             <Link href="/register?type=reviewer">Reviewer registration request</Link>
             <Link href="/register?type=administrator">Administrator registration request</Link>
           </div>

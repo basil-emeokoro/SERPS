@@ -177,6 +177,19 @@ export default function EnrolmentPage() {
     }
   }
 
+  async function refreshCameras() {
+    if (busy) return;
+    setBusy(true);
+    setStatus(permissionState === "granted" ? "Refreshing available cameras..." : "Requesting browser camera access...");
+    try {
+      await discoverCameras(permissionState !== "granted");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : cameraAccessMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function finish(finalCaptures: FaceCapture[], finalLiveness: LivenessAction[]) {
     const token = sessionStorage.getItem("serps_enrollment_token");
     if (!token) return;
@@ -264,7 +277,7 @@ export default function EnrolmentPage() {
         {cameras.map((camera, index) => <option key={camera.deviceId} value={camera.deviceId}>{cameraLabel(camera, `Camera ${index + 1}`)}</option>)}
       </select></label>
       <p className="field-help">Camera permission: {permissionState === "unsupported" ? "browser status unavailable" : permissionState}. Permission does not guarantee that a busy camera can be opened.</p>
-      <div className="camera-role-actions"><button type="button" onClick={() => void discoverCameras(permissionState !== "granted").catch((error) => setStatus(error instanceof Error ? error.message : cameraAccessMessage(error)))}>{permissionState === "granted" ? "Refresh available cameras" : "Grant camera access"}</button><button type="button" className="primary-action" disabled={!selectedCameraId || busy} onClick={() => void startEnrolmentCamera()}>{busy ? "Opening camera..." : "Confirm and start facial enrolment"}</button><button type="button" onClick={cancel}>Cancel and return</button></div>
+      <div className="camera-role-actions"><button type="button" disabled={busy} onClick={() => void refreshCameras()}>{busy ? "Checking cameras..." : permissionState === "granted" ? "Refresh available cameras" : "Grant camera access"}</button><button type="button" className="primary-action" disabled={!selectedCameraId || busy} onClick={() => void startEnrolmentCamera()}>{busy ? "Opening camera..." : "Confirm and start facial enrolment"}</button><button type="button" disabled={busy} onClick={cancel}>Cancel and return</button></div>
       <p className="form-note" role="status">{status}</p>
     </section>}
     <section className="biometric-layout" hidden={!cameraConfirmed}>
