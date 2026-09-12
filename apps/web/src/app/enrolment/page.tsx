@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { FaceCapture, LivenessAction } from "../../lib/contracts";
-import { detectedOrientation, directionSymbol, instructionFor, observeFace, openIdentityCamera, poseIsValid, supportsFaceDetection, type FaceObservation } from "../../lib/biometrics";
+import { cameraAccessMessage, detectedOrientation, directionSymbol, instructionFor, observeFace, openIdentityCamera, poseIsValid, readCameraPermission, supportsFaceDetection, type CameraPermissionState, type FaceObservation } from "../../lib/biometrics";
 import { cameraLabel, persistIdentityCamera, readIdentityCamera } from "../../lib/cameraRoles";
 import { LocalFaceLandmarker } from "../../lib/faceDetection";
 import { submitEnrollment } from "../../lib/api";
@@ -19,6 +19,7 @@ export default function EnrolmentPage() {
   const loopRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const runGenerationRef = useRef(0);
+  const cameraOpeningRef = useRef(false);
   const poseRef = useRef<string | undefined>(undefined);
   const stableSinceRef = useRef<number | null>(null);
   const lastActionAt = useRef(0);
@@ -33,6 +34,7 @@ export default function EnrolmentPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [busy, setBusy] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
+  const [permissionState, setPermissionState] = useState<CameraPermissionState>("unsupported");
   const [detectorStatus, setDetectorStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [modelLoadMs, setModelLoadMs] = useState<number | null>(null);
   const [processingTimes, setProcessingTimes] = useState<number[]>([]);
@@ -64,9 +66,15 @@ export default function EnrolmentPage() {
 
   const discoverCameras = useCallback(async (requestPermission: boolean) => {
     if (!navigator.mediaDevices?.enumerateDevices || !navigator.mediaDevices.getUserMedia) throw new Error("Camera APIs are unavailable.");
+    const before = await readCameraPermission();
+    setPermissionState(before);
+    if (before === "denied") throw new Error("Camera access was denied. Allow camera permission in your browser settings and try again.");
     if (requestPermission) {
-      const permission = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      permission.getTracks().forEach((track) => track.stop());
+      let permission: MediaStream | null = null;
+      try { permission = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); }
+      catch (error) { setPermissionState(await readCameraPermission()); throw new Error(cameraAccessMessage(error), { cause: error }); }
+      finally { permission?.getTracks().forEach((track) => track.stop()); }
+      setPermissionState("granted");
     }
     const devices = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === "videoinput");
     setCameras(devices);
@@ -87,22 +95,25 @@ export default function EnrolmentPage() {
   useEffect(() => {
     const token = sessionStorage.getItem("serps_enrollment_token");
     const required = JSON.parse(sessionStorage.getItem("serps_enrollment_actions") ?? "[]") as string[];
+    const recoveryNotice = sessionStorage.getItem("serps_enrollment_notice");
     const initialise = window.setTimeout(() => {
       setActions(required);
+      sessionStorage.removeItem("serps_enrollment_notice");
       if (!token || required.length < 3) {
         setStatus("The enrolment session is missing or expired. Return to registration.");
       } else if (!supportsFaceDetection()) {
         setDetectorStatus("error");
         setStatus("This browser cannot run the local WebAssembly camera detector.");
       } else {
-        void discoverCameras(false).catch(() => setStatus("Grant camera access to identify the candidate-facing camera."));
+        void discoverCameras(false).then(() => { if (recoveryNotice) setStatus(recoveryNotice); }).catch((error) => setStatus(error instanceof Error ? error.message : "Grant camera access to identify the candidate-facing camera."));
       }
     }, 0);
     return () => { window.clearTimeout(initialise); releaseResources(); };
   }, [discoverCameras, releaseResources]);
 
   async function startEnrolmentCamera() {
-    if (!selectedCamera || !videoRef.current) return;
+    if (!selectedCamera || !videoRef.current || cameraOpeningRef.current) return;
+    cameraOpeningRef.current = true;
     const runGeneration = ++runGenerationRef.current;
     setBusy(true);
     setCameraConfirmed(true);
@@ -161,6 +172,7 @@ export default function EnrolmentPage() {
       setDetectorStatus("error");
       setStatus(error instanceof Error ? error.message : "Camera or detector initialisation failed.");
     } finally {
+      cameraOpeningRef.current = false;
       setBusy(false);
     }
   }
@@ -251,7 +263,8 @@ export default function EnrolmentPage() {
         <option value="">Select the candidate-facing camera</option>
         {cameras.map((camera, index) => <option key={camera.deviceId} value={camera.deviceId}>{cameraLabel(camera, `Camera ${index + 1}`)}</option>)}
       </select></label>
-      <div className="camera-role-actions"><button type="button" onClick={() => void discoverCameras(true)}>Grant access and refresh cameras</button><button type="button" className="primary-action" disabled={!selectedCameraId || busy} onClick={() => void startEnrolmentCamera()}>{busy ? "Opening camera..." : "Confirm and start facial enrolment"}</button><button type="button" onClick={cancel}>Cancel and return</button></div>
+      <p className="field-help">Camera permission: {permissionState === "unsupported" ? "browser status unavailable" : permissionState}. Permission does not guarantee that a busy camera can be opened.</p>
+      <div className="camera-role-actions"><button type="button" onClick={() => void discoverCameras(permissionState !== "granted").catch((error) => setStatus(error instanceof Error ? error.message : cameraAccessMessage(error)))}>{permissionState === "granted" ? "Refresh available cameras" : "Grant camera access"}</button><button type="button" className="primary-action" disabled={!selectedCameraId || busy} onClick={() => void startEnrolmentCamera()}>{busy ? "Opening camera..." : "Confirm and start facial enrolment"}</button><button type="button" onClick={cancel}>Cancel and return</button></div>
       <p className="form-note" role="status">{status}</p>
     </section>}
     <section className="biometric-layout" hidden={!cameraConfirmed}>
@@ -263,7 +276,7 @@ export default function EnrolmentPage() {
         </div>
         <canvas ref={canvasRef} hidden />
         <p className="direction-note">Directions refer to your own left and right, not the screen.</p>
-        <div className="quality-row"><span className={cameraActive ? "quality-pass" : "quality-warn"}>Camera {cameraActive ? "active" : "inactive"}</span><span className={detectorStatus === "ready" ? "quality-pass" : "quality-warn"}>Detector {detectorStatus}</span><span>{observation?.faceCount === 1 ? "One face" : observation?.faceCount === 0 ? "No face" : observation ? `${observation.faceCount} faces` : "Checking face"}</span><span>Lighting {observation ? `${Math.round(observation.lightingScore * 100)}%` : "Not measured"}</span><span>Distance {observation ? `${Math.round(observation.distanceScore * 100)}%` : "Not measured"}</span></div>
+        <div className="quality-row"><span className={cameraActive ? "quality-pass" : "quality-warn"}>Camera {cameraActive ? "active" : "inactive"}</span><span className={detectorStatus === "ready" ? "quality-pass" : "quality-warn"}>Detector {detectorStatus}</span><span>{observation?.faceCount === 1 ? "One face" : observation?.faceCount === 0 ? "No face" : observation ? `${observation.faceCount} faces` : "Checking face"}</span><span>Face illumination {observation ? `${Math.round(observation.lightingScore * 100)}%` : "Not measured"}</span><span>Distance {observation ? `${Math.round(observation.distanceScore * 100)}%` : "Not measured"}</span></div>
         <div className="orientation-feedback"><span>Instruction: <strong>{pose ? `${directionSymbol(pose)} ${instructionFor(pose)}` : "Complete"}</strong></span><span>Detected: <strong>{detectedOrientation(observation)}</strong></span><span>Hold still: <strong>{(Math.min(HOLD_MS, stableMs) / 1000).toFixed(1)} / {(HOLD_MS / 1000).toFixed(1)} seconds</strong></span></div>
         <p className="live-guidance" role="status">{observation?.feedback ?? status}</p>
         <button className="primary-action" disabled={busy || !poseReady} title={disabledReason} onClick={captureCurrent}>{busy ? "Saving enrolment..." : captures.length < poses.length ? "Accept stable pose" : "Accept liveness movement"}</button>

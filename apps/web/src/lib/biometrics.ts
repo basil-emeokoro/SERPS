@@ -9,10 +9,41 @@ export type FaceObservation = {
 
 export function supportsFaceDetection(): boolean { return typeof window !== "undefined" && typeof WebAssembly !== "undefined" && !!navigator.mediaDevices?.getUserMedia; }
 
+export type CameraPermissionState = "granted" | "denied" | "prompt" | "unsupported";
+
+export async function readCameraPermission(): Promise<CameraPermissionState> {
+  if (!navigator.permissions?.query) return "unsupported";
+  try {
+    const result = await navigator.permissions.query({ name: "camera" as PermissionName });
+    return result.state;
+  } catch {
+    return "unsupported";
+  }
+}
+
+export function cameraAccessMessage(error: unknown): string {
+  const name = error instanceof DOMException ? error.name : error instanceof Error ? error.name : "";
+  if (name === "NotAllowedError" || name === "SecurityError") return "Camera access was denied. Allow camera permission in your browser settings and try again.";
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") return "No compatible camera was found. Connect a camera and refresh the device list.";
+  if (name === "NotReadableError" || name === "TrackStartError") return "The selected camera could not be opened. It may already be in use by another browser or application. Close other camera sessions and try again.";
+  if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") return "The selected camera does not satisfy the required video settings. Choose another camera or refresh the device list.";
+  if (name === "AbortError" || name === "InvalidStateError") return "The selected camera is no longer available. Refresh the camera list and select another device.";
+  return "Unable to access the selected camera. Check browser permission and whether another application is using the device, then try again.";
+}
+
 export async function openIdentityCamera(video: HTMLVideoElement, deviceId: string): Promise<MediaStream> {
   if (!deviceId) throw new Error("Choose and confirm the candidate-facing camera before continuing.");
-  const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId }, width: { ideal: 960 }, height: { ideal: 720 } }, audio: false });
-  video.srcObject = stream; await video.play(); return stream;
+  let stream: MediaStream | null = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId }, width: { ideal: 960 }, height: { ideal: 720 } }, audio: false });
+    video.srcObject = stream;
+    await video.play();
+    return stream;
+  } catch (error) {
+    stream?.getTracks().forEach((track) => track.stop());
+    video.srcObject = null;
+    throw new Error(cameraAccessMessage(error), { cause: error });
+  }
 }
 
 function clamp(value: number): number { return Math.max(0, Math.min(1, value)); }
@@ -30,10 +61,12 @@ export async function observeFace(video: HTMLVideoElement, canvas: HTMLCanvasEle
   context.drawImage(video, x, y, cropWidth, cropHeight, 0, 0, 8, 8);
   const pixels = context.getImageData(0, 0, 8, 8).data; const descriptor: number[] = []; let brightness = 0;
   for (let index = 0; index < pixels.length; index += 4) { const luminance = (0.2126 * pixels[index] + 0.7152 * pixels[index + 1] + 0.0722 * pixels[index + 2]) / 255; descriptor.push(Number(luminance.toFixed(5))); brightness += luminance; }
+  // Face-region luminance only: 0.55 is the neutral target and the existing
+  // 0.45 quality gate is intentionally conservative pending controlled calibration.
   brightness /= 64; const lightingScore = clamp(1 - Math.abs(brightness - 0.55) / 0.55); const distanceScore = clamp(1 - Math.abs(detected.faceSize - 0.24) / 0.24);
   const centred = Math.abs(detected.faceCentre.x - 0.5) < 0.16 && Math.abs(detected.faceCentre.y - 0.5) < 0.18;
   let feedback = "Hold still";
-  if (lightingScore < 0.45) feedback = "Improve the lighting"; else if (detected.faceSize < 0.12) feedback = "Move closer"; else if (detected.faceSize > 0.42) feedback = "Move farther away"; else if (detected.faceCentre.y > 0.59) feedback = "Raise your head slightly"; else if (detected.faceCentre.y < 0.41) feedback = "Lower your head slightly"; else if (!centred) feedback = "Centre your face";
+  if (lightingScore < 0.45) feedback = "Improve face illumination"; else if (detected.faceSize < 0.12) feedback = "Move closer"; else if (detected.faceSize > 0.42) feedback = "Move farther away"; else if (detected.faceCentre.y > 0.59) feedback = "Raise your head slightly"; else if (detected.faceCentre.y < 0.41) feedback = "Lower your head slightly"; else if (!centred) feedback = "Centre your face";
   return { descriptor, oneFace: true, faceCount: 1, centreX: detected.faceCentre.x, centreY: detected.faceCentre.y, lightingScore, distanceScore, confidence: Math.min(lightingScore, distanceScore), feedback, yawEstimate: detected.yawEstimate, pitchEstimate: detected.pitchEstimate, rollEstimate: detected.rollEstimate, processingTime: detected.processingTime, boundingBox: detected.boundingBox };
 }
 
