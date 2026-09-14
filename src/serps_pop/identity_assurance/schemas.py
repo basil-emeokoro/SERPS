@@ -48,7 +48,7 @@ class RegistrationRead(BaseModel):
 
 
 class EnrollmentResumeCreate(BaseModel):
-    institution_code: str = Field(min_length=2, max_length=32)
+    institution_code: str | None = Field(default=None, min_length=2, max_length=32)
     email: str
     password: str = Field(min_length=12, max_length=128)
 

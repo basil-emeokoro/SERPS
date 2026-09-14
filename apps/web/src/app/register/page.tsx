@@ -65,13 +65,13 @@ export default function RegistrationPage() {
 
   async function resume(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!recoveryCredentialsReady(resumeInstitutionCode, resumeEmail, resumePassword)) {
-      setResumeStatus("Select your institution and enter the email and password used for the incomplete registration.");
+    if (!recoveryCredentialsReady(resumeEmail, resumePassword)) {
+      setResumeStatus("Enter the email and password used for the incomplete registration.");
       return;
     }
     setBusy(true); setResumeStatus("Recovering the pending facial-enrolment session...");
     try {
-      const result = await resumeEnrollment({ institution_code: resumeInstitutionCode, email: resumeEmail.trim(), password: resumePassword });
+      const result = await resumeEnrollment({ ...(resumeInstitutionCode ? { institution_code: resumeInstitutionCode } : {}), email: resumeEmail.trim(), password: resumePassword });
       sessionStorage.setItem("serps_enrollment_token", result.challenge_token);
       sessionStorage.setItem("serps_enrollment_actions", JSON.stringify(result.required_actions));
       window.location.href = "/enrolment";
@@ -92,7 +92,7 @@ export default function RegistrationPage() {
     </form>
     <section className="card auth-card resume-enrolment-entry" aria-label="Incomplete enrolment recovery">
       <button type="button" className="secondary-action" aria-expanded={showResume} aria-controls="resume-enrolment-form" onClick={() => setShowResume((value) => !value)}>{showResume ? "Hide enrolment recovery" : "Resume enrolment"}</button>
-      {showResume && <form id="resume-enrolment-form" onSubmit={resume}><span className="badge">Incomplete registration</span><h2>Continue an incomplete candidate registration</h2><p>Use the same email and password. Ordinary sign-in also detects valid incomplete enrolment credentials automatically.</p>{institutions.length === 1 ? <p className="field-help">Institution: {institutions[0].name} · {institutions[0].code}</p> : <label>Institution<select aria-label="Recovery institution" value={resumeInstitutionCode} onChange={(event) => setResumeInstitutionCode(event.target.value)} required><option value="" disabled>Select institution</option>{institutions.map((item) => <option value={item.code} key={item.code}>{item.name}</option>)}</select></label>}<label>Email<input type="email" autoComplete="email" value={resumeEmail} onChange={(event) => setResumeEmail(event.target.value)} required /></label><label>Password<input type="password" autoComplete="current-password" minLength={12} value={resumePassword} onChange={(event) => setResumePassword(event.target.value)} required /></label><button type="submit" disabled={busy || !recoveryCredentialsReady(resumeInstitutionCode, resumeEmail, resumePassword)}>{busy ? "Recovering enrolment..." : "Resume facial enrolment"}</button>{resumeStatus && <p className="form-note" role="status">{resumeStatus}</p>}</form>}
+      {showResume && <form id="resume-enrolment-form" onSubmit={resume}><span className="badge">Incomplete registration</span><h2>Continue an incomplete candidate registration</h2><p>Use the same email and password. The identity service securely resolves the institution from the pending account; no registration form selection is required.</p><label>Email<input type="email" autoComplete="email" value={resumeEmail} onChange={(event) => setResumeEmail(event.target.value)} required /></label><label>Password<input type="password" autoComplete="current-password" minLength={12} value={resumePassword} onChange={(event) => setResumePassword(event.target.value)} required /></label><button type="submit" disabled={busy || !recoveryCredentialsReady(resumeEmail, resumePassword)}>{busy ? "Recovering enrolment..." : "Resume facial enrolment"}</button>{resumeStatus && <p className="form-note" role="status">{resumeStatus}</p>}</form>}
     </section>
   </section></main>;
 }

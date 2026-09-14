@@ -160,8 +160,14 @@ def test_candidate_registration_enrollment_password_face_and_periodic_flow(clien
     assert resumed.status_code == 200, resumed.text
     assert resumed.json()["purpose"] == "enrollment"
     assert len(resumed.json()["required_actions"]) == 3
-    registered["enrollment_token"] = resumed.json()["challenge_token"]
-    registered["required_actions"] = resumed.json()["required_actions"]
+    resumed_without_institution = client.post(
+        "/api/v1/identity-assurance/enrollments/resume",
+        json={"email": "biometric@example.test", "password": "Password123!"},
+    )
+    assert resumed_without_institution.status_code == 200, resumed_without_institution.text
+    assert resumed_without_institution.json()["purpose"] == "enrollment"
+    registered["enrollment_token"] = resumed_without_institution.json()["challenge_token"]
+    registered["required_actions"] = resumed_without_institution.json()["required_actions"]
 
     invalid_resume = client.post(
         "/api/v1/identity-assurance/enrollments/resume",

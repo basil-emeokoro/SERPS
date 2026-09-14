@@ -229,17 +229,23 @@ def register_account(db: Session, payload: RegistrationCreate) -> tuple[Registra
     return registration, enrollment_token, required_actions
 
 
-def resume_candidate_enrollment(db: Session, institution_code: str, email: str, password: str) -> tuple[IdentityChallenge, str]:
-    institution = db.scalar(select(Institution).where(
-        Institution.code == institution_code.strip().upper(), Institution.is_active.is_(True)
-    ))
-    if institution is None:
-        raise DomainNotFound("Pending candidate enrolment not found.")
-    user = db.scalar(select(User).where(
-        User.institution_id == institution.institution_id, User.email == validate_email(email)
-    ))
-    if user is None or user.status != "pending_facial_enrolment" or not verify_password(password, user.password_hash):
+def resume_candidate_enrollment(db: Session, institution_code: str | None, email: str, password: str) -> tuple[IdentityChallenge, str]:
+    normalised_email = validate_email(email)
+    query = select(User, Institution).join(Institution, Institution.institution_id == User.institution_id).where(
+        User.email == normalised_email,
+        Institution.is_active.is_(True),
+    )
+    if institution_code:
+        query = query.where(Institution.code == institution_code.strip().upper())
+    matches = db.execute(query).all()
+    valid_matches = [
+        (user, institution)
+        for user, institution in matches
+        if user.status == "pending_facial_enrolment" and verify_password(password, user.password_hash)
+    ]
+    if len(valid_matches) != 1:
         raise DomainNotFound("Pending candidate enrolment not found or credentials are invalid.")
+    user, institution = valid_matches[0]
     profile = db.scalar(select(IdentityAssuranceProfile).where(IdentityAssuranceProfile.user_id == user.user_id))
     if profile is None or profile.enrolment_status != "pending":
         raise DomainConflict("Candidate facial enrolment is not resumable.")

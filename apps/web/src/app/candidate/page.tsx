@@ -55,7 +55,7 @@ export default function CandidatePortalPage() {
     setBusy(true);
     try {
       if (!navigator.mediaDevices?.enumerateDevices || !navigator.mediaDevices.getUserMedia) throw new Error("This browser does not expose required media-device APIs.");
-      const permissionStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const permissionStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       permissionStream.getTracks().forEach((track) => track.stop());
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter((device) => device.kind === "videoinput");
@@ -71,8 +71,8 @@ export default function CandidatePortalPage() {
       if (!result.passed) setStatus("One or more browser-reported device checks failed.");
       await refresh();
     } catch (reason) {
-      await Promise.all([submitCameraPermission("primary", "denied").catch(() => undefined), submitCameraPermission("secondary", "denied").catch(() => undefined)]);
-      setStatus(reason instanceof Error ? reason.message : "Camera and microphone permission was denied.");
+      await submitCameraPermission("primary", "denied").catch(() => undefined);
+      setStatus(reason instanceof Error ? reason.message : "Candidate-facing camera permission was denied.");
     } finally { setBusy(false); }
   }
 

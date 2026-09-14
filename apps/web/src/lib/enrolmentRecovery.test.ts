@@ -7,8 +7,8 @@ describe("incomplete enrolment recovery", () => {
     expect(defaultRecoveryInstitution(["MIVA", "OTHER"])).toBe("");
   });
   it("enables recovery only for a tenant and complete credentials", () => {
-    expect(recoveryCredentialsReady("MIVA", "candidate@example.test", "Password123!")).toBe(true);
-    expect(recoveryCredentialsReady("", "candidate@example.test", "Password123!")).toBe(false);
-    expect(recoveryCredentialsReady("MIVA", "invalid", "Password123!")).toBe(false);
+    expect(recoveryCredentialsReady("candidate@example.test", "Password123!")).toBe(true);
+    expect(recoveryCredentialsReady("invalid", "Password123!")).toBe(false);
+    expect(recoveryCredentialsReady("candidate@example.test", "short")).toBe(false);
   });
 });

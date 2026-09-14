@@ -8,7 +8,14 @@ describe("protected presentation", () => {
     expect(rule).toContain("position: fixed");
     expect(rule).toContain("inset: 0");
     expect(rule).toContain("width: 100vw");
-    expect(rule).toContain("min-height: 100dvh");
+    expect(rule).toContain("height: 100dvh");
     expect(rule).toContain("z-index: 10000");
+  });
+
+  it("keeps the shield content bounded within the viewport", () => {
+    const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+    const panel = css.match(/\.protection-panel\s*\{([^}]+)\}/)?.[1] ?? "";
+    expect(panel).toContain("max-height: calc(100dvh - 48px)");
+    expect(panel).toContain("overflow: auto");
   });
 });
