@@ -32,7 +32,7 @@ from .schemas import EnrollmentSubmit, FaceAuthenticationSubmit, RegistrationCre
 
 POSE_SEQUENCE = ["forward", "left", "right", "up", "down", "centre_confirmation"]
 LIVENESS_ACTIONS = ["turn_left", "turn_right", "look_up", "look_down", "return_to_centre"]
-CHALLENGE_MINUTES = 10
+CHALLENGE_MINUTES = 30
 
 
 def _validated_configured_fields(institution: Institution, payload: RegistrationCreate) -> tuple[dict, str | None]:

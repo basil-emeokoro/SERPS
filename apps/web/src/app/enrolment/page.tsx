@@ -6,10 +6,11 @@ import { cameraAccessMessage, detectedOrientation, directionSymbol, instructionF
 import { cameraLabel, persistIdentityCamera, readIdentityCamera } from "../../lib/cameraRoles";
 import { LocalFaceLandmarker } from "../../lib/faceDetection";
 import { submitEnrollment } from "../../lib/api";
+import { ENROLMENT_PROGRESS_KEY, readEnrolmentProgress, writeEnrolmentProgress } from "../../lib/enrolmentProgress";
 
 const poses = ["forward", "left", "right", "up", "down", "centre_confirmation"];
-const HOLD_MS = 1500;
-const SESSION_TIMEOUT_MS = 10 * 60 * 1000;
+const HOLD_MS = 900;
+const CAMERA_SESSION_TIMEOUT_MS = 25 * 60 * 1000;
 
 export default function EnrolmentPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -23,6 +24,7 @@ export default function EnrolmentPage() {
   const poseRef = useRef<string | undefined>(undefined);
   const stableSinceRef = useRef<number | null>(null);
   const lastActionAt = useRef(0);
+  const checkpointLoadedRef = useRef(false);
   const [observation, setObservation] = useState<FaceObservation | null>(null);
   const [captures, setCaptures] = useState<FaceCapture[]>([]);
   const [liveness, setLiveness] = useState<LivenessAction[]>([]);
@@ -57,6 +59,10 @@ export default function EnrolmentPage() {
   }, []);
 
   useEffect(() => { poseRef.current = pose; }, [pose]);
+  useEffect(() => {
+    if (!checkpointLoadedRef.current) return;
+    writeEnrolmentProgress(sessionStorage, { captures, liveness, actions, retryCount });
+  }, [captures, liveness, actions, retryCount]);
   useEffect(() => {
     const onResize = () => setViewportWidth(window.innerWidth);
     onResize();
@@ -98,6 +104,13 @@ export default function EnrolmentPage() {
     const recoveryNotice = sessionStorage.getItem("serps_enrollment_notice");
     const initialise = window.setTimeout(() => {
       setActions(required);
+      const checkpoint = readEnrolmentProgress(sessionStorage, poses, required);
+      if (checkpoint) {
+        setCaptures(checkpoint.captures);
+        setLiveness(checkpoint.liveness);
+        setRetryCount(checkpoint.retryCount);
+      }
+      checkpointLoadedRef.current = true;
       sessionStorage.removeItem("serps_enrollment_notice");
       if (!token || required.length < 3) {
         setStatus("The enrolment session is missing or expired. Return to registration.");
@@ -105,7 +118,10 @@ export default function EnrolmentPage() {
         setDetectorStatus("error");
         setStatus("This browser cannot run the local WebAssembly camera detector.");
       } else {
-        void discoverCameras(false).then(() => { if (recoveryNotice) setStatus(recoveryNotice); }).catch((error) => setStatus(error instanceof Error ? error.message : "Grant camera access to identify the candidate-facing camera."));
+        void discoverCameras(false).then(() => {
+          if (checkpoint && checkpoint.captures.length + checkpoint.liveness.length > 0) setStatus(`Restored ${checkpoint.captures.length + checkpoint.liveness.length} validated observation(s). Confirm the camera to continue.`);
+          else if (recoveryNotice) setStatus(recoveryNotice);
+        }).catch((error) => setStatus(error instanceof Error ? error.message : "Grant camera access to identify the candidate-facing camera."));
       }
     }, 0);
     return () => { window.clearTimeout(initialise); releaseResources(); };
@@ -161,9 +177,9 @@ export default function EnrolmentPage() {
       timeoutRef.current = window.setTimeout(() => {
         releaseResources();
         setCameraActive(false);
-        setStatus("The enrolment challenge timed out. Camera resources were released.");
-        window.location.href = "/register";
-      }, SESSION_TIMEOUT_MS);
+        setCameraConfirmed(false);
+        setStatus("The camera was released after 25 minutes. Your validated observations remain checkpointed; confirm the camera to continue.");
+      }, CAMERA_SESSION_TIMEOUT_MS);
     } catch (error) {
       if (runGeneration !== runGenerationRef.current) return;
       releaseResources();
@@ -199,6 +215,7 @@ export default function EnrolmentPage() {
       await submitEnrollment({ enrollment_token: token, captures: finalCaptures, liveness_actions: finalLiveness, retry_count: retryCount });
       sessionStorage.removeItem("serps_enrollment_token");
       sessionStorage.removeItem("serps_enrollment_actions");
+      sessionStorage.removeItem(ENROLMENT_PROGRESS_KEY);
       releaseResources();
       setCameraActive(false);
       setStatus("Facial enrolment complete. Camera released; continue to password sign-in.");
@@ -249,6 +266,7 @@ export default function EnrolmentPage() {
     setCameraActive(false);
     sessionStorage.removeItem("serps_enrollment_token");
     sessionStorage.removeItem("serps_enrollment_actions");
+    sessionStorage.removeItem(ENROLMENT_PROGRESS_KEY);
     window.location.href = "/register";
   }
 
@@ -294,7 +312,7 @@ export default function EnrolmentPage() {
         <p className="live-guidance" role="status">{observation?.feedback ?? status}</p>
         <button className="primary-action" disabled={busy || !poseReady} title={disabledReason} onClick={captureCurrent}>{busy ? "Saving enrolment..." : captures.length < poses.length ? "Accept stable pose" : "Accept liveness movement"}</button>
       </article>
-      <aside className="card biometric-progress"><h2>Enrolment progress</h2><progress value={completed} max={total || 1}>{completed}/{total}</progress><p>{completed} of {total || "—"} validated observations</p><dl className="detector-metrics"><div><dt>Facial camera</dt><dd>{cameraLabel(selectedCamera)}</dd></div><div><dt>Model load</dt><dd>{modelLoadMs == null ? "Loading" : `${Math.round(modelLoadMs)} ms`}</dd></div><div><dt>Average processing</dt><dd>{averageMs == null ? "Waiting" : `${averageMs.toFixed(1)} ms`}</dd></div><div><dt>Retries</dt><dd>{retryCount}</dd></div></dl><ol>{poses.map((item, index) => <li className={index < captures.length ? "complete" : index === captures.length ? "current" : ""} key={item}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol>{captures.length === poses.length && <><h3>Dynamic liveness</h3><ol>{actions.map((item, index) => <li className={index < liveness.length ? "complete" : index === liveness.length ? "current" : ""} key={`${item}-${index}`}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol></>}<p className="form-note">{status}</p><div className="dialog-actions"><button onClick={retry} disabled={busy}>Retry</button><button onClick={cancel}>Cancel and release camera</button></div></aside>
+      <aside className="card biometric-progress"><h2>Enrolment progress</h2><progress value={completed} max={total || 1}>{completed}/{total}</progress><p>{completed} of {total || "—"} validated observations</p><p className="privacy-note">Validated derived observations are temporarily checkpointed in this browser session so a reload or renewed challenge can continue. Raw images and video are not stored.</p><dl className="detector-metrics"><div><dt>Facial camera</dt><dd>{cameraLabel(selectedCamera)}</dd></div><div><dt>Model load</dt><dd>{modelLoadMs == null ? "Loading" : `${Math.round(modelLoadMs)} ms`}</dd></div><div><dt>Average processing</dt><dd>{averageMs == null ? "Waiting" : `${averageMs.toFixed(1)} ms`}</dd></div><div><dt>Retries</dt><dd>{retryCount}</dd></div></dl><ol>{poses.map((item, index) => <li className={index < captures.length ? "complete" : index === captures.length ? "current" : ""} key={item}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol>{captures.length === poses.length && <><h3>Dynamic liveness</h3><ol>{actions.map((item, index) => <li className={index < liveness.length ? "complete" : index === liveness.length ? "current" : ""} key={`${item}-${index}`}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol></>}<p className="form-note">{status}</p><div className="dialog-actions"><button onClick={retry} disabled={busy}>Retry</button><button onClick={cancel}>Cancel and release camera</button></div></aside>
     </section>
   </main>;
 }
