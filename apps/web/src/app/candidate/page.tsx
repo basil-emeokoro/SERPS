@@ -7,6 +7,7 @@ import { PortalShell } from "../../components/PortalShell";
 import { ErrorState, LoadingState, ReadinessSummary, StatusBadge } from "../../components/OperationalStates";
 import { acceptCandidateConsent, CandidateDashboard, fetchCandidateDashboard, startCandidateSession, submitCameraPermission, submitCameraSelection, submitDeviceCheck } from "../../lib/api";
 import { cameraLabel, persistCameraRoles, readCameraRoles, recommendCameraRoles } from "../../lib/cameraRoles";
+import { classifyMediaError, discoverVideoDevices, stopMediaStream } from "../../lib/mediaDevices";
 import { validateCameraPair } from "../../lib/operational";
 
 function browserDetails() {
@@ -19,6 +20,7 @@ export default function CandidatePortalPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<CandidateDashboard | null>(null);
   const [status, setStatus] = useState("Loading candidate workflow...");
+  const [actionStatus, setActionStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -36,7 +38,12 @@ export default function CandidatePortalPage() {
 
   const refresh = useCallback(async (signal?: AbortSignal) => {
     await Promise.resolve();
-    try { setDashboard(await fetchCandidateDashboard(signal)); setError(""); }
+    try {
+      const next = await fetchCandidateDashboard(signal);
+      setDashboard(next);
+      setStatus(next.assigned_examinations.length ? "Candidate workflow ready. Complete the prerequisites shown for the assigned examination." : "Candidate workflow resolved: no examination is currently assigned.");
+      setError("");
+    }
     catch (reason) { if (!(reason instanceof DOMException && reason.name === "AbortError")) setError(reason instanceof Error ? reason.message : "Unable to load candidate workflow."); }
     finally { setLoading(false); }
   }, []);
@@ -46,19 +53,20 @@ export default function CandidatePortalPage() {
   async function acceptConsent() {
     if (!consentChecked) return;
     setBusy(true);
-    try { await acceptCandidateConsent(); setStatus("Consent version CONSENT-1.0 recorded as a new immutable record."); await refresh(); }
-    catch (reason) { setStatus(reason instanceof Error ? reason.message : "Consent could not be recorded."); }
+    try { await acceptCandidateConsent(); setActionStatus("Consent version CONSENT-1.0 recorded as a new immutable record."); await refresh(); }
+    catch (reason) { setActionStatus(reason instanceof Error ? reason.message : "Consent could not be recorded."); }
     finally { setBusy(false); }
   }
 
   async function discoverDevices() {
     setBusy(true);
+    setActionStatus("Releasing existing previews and requesting camera access...");
     try {
-      if (!navigator.mediaDevices?.enumerateDevices || !navigator.mediaDevices.getUserMedia) throw new Error("This browser does not expose required media-device APIs.");
-      const permissionStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      permissionStream.getTracks().forEach((track) => track.stop());
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter((device) => device.kind === "videoinput");
+      stopMediaStream(primaryStream.current); stopMediaStream(secondaryStream.current);
+      primaryStream.current = null; secondaryStream.current = null;
+      if (primaryVideo.current) primaryVideo.current.srcObject = null;
+      if (secondaryVideo.current) secondaryVideo.current.srcObject = null;
+      const { devices: videoDevices, allDevices: devices } = await discoverVideoDevices();
       const details = browserDetails();
       const result = await submitDeviceCheck({ supported_browser: details.supported, secure_context: window.isSecureContext, camera_available: videoDevices.length > 0, microphone_available: devices.some((device) => device.kind === "audioinput"), browser_name: details.name, browser_version: details.version, operating_system: navigator.platform, user_agent: navigator.userAgent }) as { passed: boolean };
       setCameras(videoDevices);
@@ -67,12 +75,14 @@ export default function CandidatePortalPage() {
       setSecondaryId(recommendation.secondaryId);
       setRolesConfirmed(false);
       setRoleReason(recommendation.reason);
-      setStatus(videoDevices.length >= 2 ? `${videoDevices.length} cameras discovered. Review the assignments for Mode B, or preview the primary camera for Mode A/C.` : "One camera was discovered. Mode A/C can proceed; Mode B requires a second camera.");
-      if (!result.passed) setStatus("One or more browser-reported device checks failed.");
+      const discovery = videoDevices.length >= 2 ? `${videoDevices.length} cameras discovered. Review the assignments for Mode B, or preview the primary camera for Mode A/C.` : "One camera was discovered. Mode A/C can proceed; Mode B requires a distinct second camera.";
+      setActionStatus(result.passed ? discovery : `${discovery} One or more browser-reported device checks failed.`);
       await refresh();
     } catch (reason) {
       await submitCameraPermission("primary", "denied").catch(() => undefined);
-      setStatus(reason instanceof Error ? reason.message : "Candidate-facing camera permission was denied.");
+      setCameras([]); setPrimaryId(""); setSecondaryId(""); setRolesConfirmed(false);
+      const failure = classifyMediaError(reason);
+      setActionStatus(`Camera discovery failed (${failure.kind.replaceAll("_", " ")}): ${failure.message}`);
     } finally { setBusy(false); }
   }
 
@@ -94,11 +104,12 @@ export default function CandidatePortalPage() {
       if (videoRef.current) videoRef.current.srcObject = stream;
       await submitCameraSelection({ camera_role: role, device_id: deviceId, label: device?.label || `${role} camera`, group_id: device?.groupId || null, camera_count: cameras.length, metadata: role === "primary" ? { preview_live_confirmed: true, mirror_assistance_confirmed: mirrorConfirmed } : { preview_live_confirmed: true } });
       await submitCameraPermission(role, "granted");
-      setStatus(`${role === "primary" ? "Primary" : "Secondary"} camera preview is live.`);
+      setActionStatus(`${role === "primary" ? "Primary" : "Secondary"} camera preview is live.`);
       await refresh();
     } catch (reason) {
       await submitCameraPermission(role, "denied").catch(() => undefined);
-      setStatus(reason instanceof Error ? reason.message : `${role} camera permission denied.`);
+      const failure = classifyMediaError(reason, "playback");
+      setActionStatus(`${role === "primary" ? "Primary" : "Secondary"} camera preview failed (${failure.kind.replaceAll("_", " ")}): ${failure.message}`);
     } finally { setBusy(false); }
   }
 
@@ -156,6 +167,7 @@ export default function CandidatePortalPage() {
 
   return <PortalShell allowedRoles={["Candidate"]} title="Candidate Portal" badge="Candidate" summary="Complete consent and the camera setup required by the assigned monitoring mode before entering the bounded demonstration examination workspace.">
     <p className="workflow-status" role="status" aria-live="polite">{status}</p>
+    {actionStatus && <p className="form-note" role="status" aria-live="polite">{actionStatus}</p>}
     {dashboard?.active_session && <section className="card active-session"><StatusBadge label="Active demonstration" tone="success" /><h2>Resume monitored workspace</h2><Link className="button-link" href={`/candidate/examinations/${dashboard.active_session.session_id}`}>Open demonstration workspace</Link></section>}
     <section className="status-grid">
       <article className="card"><span className="badge">Assigned examinations</span><h2>Available demonstrations</h2>{dashboard?.assigned_examinations.length ? dashboard.assigned_examinations.map((exam) => { const mode = exam.monitoring_mode as "A" | "B" | "C"; const readiness = dashboard.readiness_by_mode[mode] ?? {}; return <div className="assignment" key={exam.assignment_id}><strong>{exam.title}</strong><span>{exam.exam_code} · {exam.duration_minutes} minutes · Mode {mode}</span><button disabled={busy || !readiness.ready_to_start} onClick={() => void startExam(exam.examination_id, mode)}>Start demonstration</button></div>; }) : <p>No assigned examinations are available.</p>}</article>
