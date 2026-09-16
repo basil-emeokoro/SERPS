@@ -414,8 +414,7 @@ def begin_facial_authentication(db: Session, user: User) -> tuple[IdentityChalle
     )
     if enrollment is None:
         raise DomainConflict("Facial enrolment is required before this account can sign in.")
-    actions = random.sample(LIVENESS_ACTIONS[:-1], 2) + ["return_to_centre"]
-    challenge, token = _new_challenge(db, user.user_id, "authentication", actions)
+    challenge, token = _new_challenge(db, user.user_id, "authentication", [])
     audit(
         db,
         action="identity.password_stage",
@@ -457,7 +456,6 @@ def verify_facial_authentication(
         profile.authentication_result = "retry_required"
         profile.liveness_result = "retry_required"
         return user, 0.0, "Retry Required"
-    liveness_confidence = _validate_actions(challenge.required_actions, payload.liveness_actions)
     confidence = _similarity(enrollment.representation_json, payload.descriptor)
     if confidence >= 0.72:
         outcome = "Verified"
@@ -478,7 +476,7 @@ def verify_facial_authentication(
         profile.authentication_result = "failed"
         profile.liveness_result = "passed"
     challenge.confidence = confidence
-    challenge.metadata_json = {"liveness_confidence": liveness_confidence, "raw_media_stored": False}
+    challenge.metadata_json = {"observation_count": 1, "quality_validated": True, "raw_media_stored": False}
     audit(
         db,
         action="identity.facial_authentication",
@@ -487,14 +485,13 @@ def verify_facial_authentication(
         actor_user_id=user.user_id,
         target_type="identity_challenge",
         target_id=challenge.challenge_id,
-        metadata={"outcome": outcome, "confidence": confidence, "liveness_confidence": liveness_confidence},
+        metadata={"outcome": outcome, "confidence": confidence, "observation_count": 1, "raw_media_stored": False},
     )
     return user, confidence, outcome
 
 
 def begin_periodic_verification(db: Session, user: User) -> tuple[IdentityChallenge, str]:
-    actions = random.sample(LIVENESS_ACTIONS[:-1], 2) + ["return_to_centre"]
-    challenge, token = _new_challenge(db, user.user_id, "periodic", actions)
+    challenge, token = _new_challenge(db, user.user_id, "periodic", [])
     audit(
         db,
         action="identity.periodic_challenge",

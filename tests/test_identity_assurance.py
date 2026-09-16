@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -14,7 +14,8 @@ from apps.api.app.api.deps.database import get_db
 from apps.api.app.main import app
 from serps_pop.identity.schemas import InstitutionCreate, UserCreate
 from serps_pop.identity.services import ROLE_CANDIDATE, ROLE_SYSADMIN, create_institution, create_user
-from serps_pop.identity_assurance.services import _validate_actions, create_demo_profile
+from serps_pop.identity_assurance.models import IdentityChallenge
+from serps_pop.identity_assurance.services import _token_hash, _validate_actions, create_demo_profile
 from serps_pop.identity.services import DomainConflict
 from serps_pop.infrastructure.database import Base
 
@@ -210,6 +211,7 @@ def test_candidate_registration_enrollment_password_face_and_periodic_flow(clien
     assert password_stage.status_code == 200, password_stage.text
     challenge = password_stage.json()
     assert challenge["authentication_stage"] == "facial_required"
+    assert challenge["required_actions"] == []
 
     retry_required = client.post(
         "/api/v1/identity-assurance/facial-authentication",
@@ -241,6 +243,37 @@ def test_candidate_registration_enrollment_password_face_and_periodic_flow(clien
     assert verified.status_code == 200, verified.text
     assert verified.json()["outcome"] == "Verified"
     access_token = verified.json()["access_token"]
+
+    mismatch_challenge = client.post(
+        "/api/v1/auth/login",
+        json={"institution_code": "MIVA", "email": "biometric@example.test", "password": "Password123!"},
+    ).json()
+    mismatch = client.post(
+        "/api/v1/identity-assurance/facial-authentication",
+        json={
+            "challenge_token": mismatch_challenge["challenge_token"],
+            "descriptor": [0.0] * 64,
+            "one_face": True,
+            "lighting_score": 0.9,
+            "distance_score": 0.9,
+            "retry_count": 0,
+        },
+    )
+    assert mismatch.status_code == 200
+    assert mismatch.json()["outcome"] == "Authentication Failed"
+
+    expired_challenge = client.post(
+        "/api/v1/auth/login",
+        json={"institution_code": "MIVA", "email": "biometric@example.test", "password": "Password123!"},
+    ).json()
+    expired_record = db.scalar(select(IdentityChallenge).where(IdentityChallenge.token_hash == _token_hash(expired_challenge["challenge_token"])))
+    expired_record.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+    db.commit()
+    expired = client.post(
+        "/api/v1/identity-assurance/facial-authentication",
+        json={"challenge_token": expired_challenge["challenge_token"], "descriptor": [0.5] * 64, "one_face": True, "lighting_score": 0.9, "distance_score": 0.9, "retry_count": 0},
+    )
+    assert expired.status_code == 409
 
     periodic = client.post("/api/v1/identity-assurance/periodic/challenge", headers=auth(access_token))
     assert periodic.status_code == 200, periodic.text

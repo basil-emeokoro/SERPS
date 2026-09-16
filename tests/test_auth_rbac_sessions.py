@@ -12,9 +12,10 @@ from apps.api.app.api.deps.database import get_db
 from apps.api.app.main import app
 from serps_pop.evidence import models as evidence_models  # noqa: F401
 from serps_pop.identity import models as identity_models  # noqa: F401
-from serps_pop.identity.models import AuditLog, Institution, User
+from serps_pop.identity.models import AuditLog, Candidate, Examination, Institution, User
 from serps_pop.identity.services import ROLE_ADMIN, ROLE_CANDIDATE, ROLE_REVIEWER, ROLE_SYSADMIN, create_institution, create_user
 from serps_pop.identity.schemas import InstitutionCreate, UserCreate
+from serps_pop.identity_assurance.models import IdentityAssuranceProfile
 from serps_pop.infrastructure.database import Base
 from serps_pop.security.tokens import create_access_token
 
@@ -219,6 +220,15 @@ def test_examination_assignment_session_and_invalid_transition(client: TestClien
         json={"candidate_id": candidate["candidate_id"], "examination_id": exam["examination_id"]},
         headers=headers,
     )
+    assert assignment.status_code == 409
+    candidate_record = db_session.get(Candidate, candidate["candidate_id"])
+    candidate_user = create_user(db_session, UserCreate(institution_id=users["institution_id"], email="session-user@miva.edu.ng", full_name="Session Candidate", password="Password123!", roles=[ROLE_CANDIDATE]))
+    candidate_record.user_id = candidate_user.user_id
+    candidate_record.status = "active"
+    db_session.add(IdentityAssuranceProfile(user_id=candidate_user.user_id, enrolment_status="enrolled"))
+    db_session.get(Examination, exam["examination_id"]).status = "active"
+    db_session.commit()
+    assignment = client.post("/api/v1/examinations/assignments", json={"candidate_id": candidate["candidate_id"], "examination_id": exam["examination_id"]}, headers=headers)
     assert assignment.status_code == 201
     session = client.post(
         "/api/v1/examination-sessions/",

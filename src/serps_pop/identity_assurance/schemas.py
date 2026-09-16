@@ -119,7 +119,6 @@ class FaceAuthenticationSubmit(BaseModel):
     one_face: bool
     lighting_score: float = Field(ge=0, le=1)
     distance_score: float = Field(ge=0, le=1)
-    liveness_actions: list[LivenessAction] = Field(min_length=3, max_length=8)
     retry_count: int = Field(default=0, ge=0, le=20)
 
 

@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import type { LivenessAction } from "../../lib/contracts";
 import { fetchCurrentUser, submitFacialAuthentication, submitPeriodicVerification } from "../../lib/api";
 import { detectedOrientation, directionSymbol, instructionFor, observeFace, openIdentityCamera, poseIsValid, supportsFaceDetection, type FaceObservation } from "../../lib/biometrics";
 import { cameraLabel, persistIdentityCamera, readIdentityCamera } from "../../lib/cameraRoles";
 import { LocalFaceLandmarker } from "../../lib/faceDetection";
+import { facialVerificationDestination } from "../../lib/facialVerification";
 
 const HOLD_MS = 1500;
 const SESSION_TIMEOUT_MS = 10 * 60 * 1000;
-const destinations: Record<string, string> = { Candidate: "/candidate", "Reviewer/Proctor": "/reviewer", Administrator: "/admin", "System Administrator": "/system-admin" };
 
 export default function FacialAuthenticationPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -19,11 +18,8 @@ export default function FacialAuthenticationPage() {
   const loopRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const runGenerationRef = useRef(0);
-  const promptRef = useRef<string | undefined>(undefined);
   const stableSinceRef = useRef<number | null>(null);
   const [observation, setObservation] = useState<FaceObservation | null>(null);
-  const [actions, setActions] = useState<string[]>([]);
-  const [completed, setCompleted] = useState<LivenessAction[]>([]);
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState("");
   const [cameraActive, setCameraActive] = useState(false);
@@ -31,7 +27,7 @@ export default function FacialAuthenticationPage() {
   const [status, setStatus] = useState("Preparing the identity camera...");
   const [retryCount, setRetryCount] = useState(0);
   const [busy, setBusy] = useState(false);
-  const prompt = actions[completed.length];
+  const prompt = "forward";
   const selectedCamera = cameras.find((camera) => camera.deviceId === selectedCameraId);
 
   const releaseResources = useCallback(() => {
@@ -46,8 +42,6 @@ export default function FacialAuthenticationPage() {
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
-
-  useEffect(() => { promptRef.current = prompt; stableSinceRef.current = null; }, [prompt]);
 
   const startCamera = useCallback(async (device: MediaDeviceInfo) => {
     if (!videoRef.current) return;
@@ -70,13 +64,12 @@ export default function FacialAuthenticationPage() {
       detectorRef.current = detector;
       await detector.initialise();
       if (runGeneration !== runGenerationRef.current) { detector.close(); return; }
-      setStatus("Camera and detector ready. Complete each unpredictable liveness prompt.");
+      setStatus("Camera and detector ready. Hold one quality-valid forward-facing observation.");
       loopRef.current = window.setInterval(() => {
         if (!videoRef.current || !canvasRef.current || videoRef.current.readyState < 2 || !detectorRef.current) return;
         void observeFace(videoRef.current, canvasRef.current, detectorRef.current).then((value) => {
           setObservation(value);
-          const currentPrompt = promptRef.current;
-          const valid = !!currentPrompt && poseIsValid(currentPrompt, value);
+          const valid = poseIsValid("forward", value);
           if (!valid) {
             stableSinceRef.current = null;
             setStableMs(0);
@@ -103,10 +96,8 @@ export default function FacialAuthenticationPage() {
   }, [releaseResources]);
 
   useEffect(() => {
-    const required = JSON.parse(sessionStorage.getItem("serps_face_actions") ?? "[]") as string[];
     const initialise = window.setTimeout(() => {
-      setActions(required);
-      if (!sessionStorage.getItem("serps_face_challenge") || required.length < 3) {
+      if (!sessionStorage.getItem("serps_face_challenge")) {
         setStatus("The facial-authentication challenge is missing or expired. Return to sign-in.");
       } else if (!supportsFaceDetection()) {
         setStatus("Local WebAssembly face detection is unavailable in this browser.");
@@ -130,14 +121,14 @@ export default function FacialAuthenticationPage() {
     return () => { window.clearTimeout(initialise); releaseResources(); };
   }, [releaseResources, startCamera]);
 
-  async function verify(finalActions: LivenessAction[], face: FaceObservation) {
+  async function verify(face: FaceObservation) {
     const challengeToken = sessionStorage.getItem("serps_face_challenge");
     const mode = sessionStorage.getItem("serps_face_mode") ?? "authentication";
     if (!challengeToken) return;
     setBusy(true);
     setStatus("Comparing the derived representation and validating liveness...");
     try {
-      const payload = { challenge_token: challengeToken, descriptor: face.descriptor, one_face: face.oneFace, lighting_score: face.lightingScore, distance_score: face.distanceScore, liveness_actions: finalActions, retry_count: retryCount };
+      const payload = { challenge_token: challengeToken, descriptor: face.descriptor, one_face: face.oneFace, lighting_score: face.lightingScore, distance_score: face.distanceScore, retry_count: retryCount };
       const result = mode === "periodic" ? await submitPeriodicVerification(payload) : await submitFacialAuthentication(payload);
       const outcome = String(result.outcome ?? "Authentication Failed");
       setStatus(`${outcome}. Identity confidence: ${Math.round(Number(result.identity_confidence ?? 0) * 100)}%.`);
@@ -157,12 +148,11 @@ export default function FacialAuthenticationPage() {
         sessionStorage.setItem("serps_refresh_token", refreshToken);
         const user = await fetchCurrentUser(accessToken);
         sessionStorage.setItem("serps_current_user", JSON.stringify(user));
-        window.location.href = user.roles.map((role) => destinations[role]).find(Boolean) ?? "/";
+        window.location.href = facialVerificationDestination(user.roles);
       }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Facial authentication failed.");
       setRetryCount((value) => value + 1);
-      setCompleted([]);
     } finally {
       setBusy(false);
     }
@@ -170,21 +160,16 @@ export default function FacialAuthenticationPage() {
 
   function completePrompt() {
     if (!observation || !prompt || busy || stableMs < HOLD_MS || !poseIsValid(prompt, observation)) return;
-    const action: LivenessAction = { action: prompt, completed: true, confidence: observation.confidence, timestamp: new Date().toISOString() };
-    const next = [...completed, action];
     stableSinceRef.current = null;
     setStableMs(0);
-    setCompleted(next);
-    if (next.length === actions.length) void verify(next, observation);
-    else setStatus(`${instructionFor(prompt)} verified after a stable hold. Continue.`);
+    void verify(observation);
   }
 
   function retry() {
-    setCompleted([]);
     setRetryCount((value) => value + 1);
     stableSinceRef.current = null;
     setStableMs(0);
-    setStatus("Liveness sequence reset. Follow the highlighted candidate-relative prompt.");
+    setStatus("Observation reset. Hold one quality-valid forward-facing pose.");
   }
 
   function cancel() {
@@ -203,8 +188,8 @@ export default function FacialAuthenticationPage() {
   const promptReady = !!observation && !!prompt && poseIsValid(prompt, observation) && stableMs >= HOLD_MS;
 
   return <main className="page-shell biometric-page">
-    <section className="biometric-header"><span className="badge">Two-stage authentication</span><h1>Facial identity verification</h1><p>Directions refer to your own left and right. The mirrored preview does not alter detector coordinates.</p></section>
+    <section className="biometric-header"><span className="badge">Two-stage authentication</span><h1>Facial identity verification</h1><p>One quality-valid derived facial observation is compared with the enrolled representation. The mirrored preview does not alter detector coordinates.</p></section>
     {!cameraActive && <section className="card identity-camera-choice"><h2>Facial authentication camera: {cameraLabel(selectedCamera)}</h2><p>The saved candidate-facing primary camera is reused. If it is unavailable, select the correct replacement explicitly.</p><label>Candidate-facing camera<select value={selectedCameraId} onChange={(event) => setSelectedCameraId(event.target.value)}><option value="">Select primary camera</option>{cameras.map((camera, index) => <option key={camera.deviceId} value={camera.deviceId}>{cameraLabel(camera, `Camera ${index + 1}`)}</option>)}</select></label><div className="camera-role-actions"><button className="primary-action" disabled={!selectedCamera || busy} onClick={() => selectedCamera && void startCamera(selectedCamera)}>Confirm and open camera</button><button onClick={cancel}>Cancel and return</button></div><p className="form-note" role="status">{status}</p></section>}
-    <section className="biometric-layout" hidden={!cameraActive}><article className="camera-capture-card"><div className="camera-guide" style={guideStyle}><video className="mirrored-preview" ref={videoRef} autoPlay muted playsInline aria-label="Mirrored local facial authentication preview" /><div className="face-guide" aria-hidden="true" /><div className="pose-instruction"><span className="direction-arrow" aria-hidden="true">{prompt ? directionSymbol(prompt) : "●"}</span><strong>{prompt ? instructionFor(prompt) : "Evaluating identity"}</strong></div></div><canvas ref={canvasRef} hidden /><p className="direction-note">Directions refer to your own left and right, not the screen.</p><div className="quality-row"><span className={observation?.oneFace ? "quality-pass" : "quality-warn"}>{observation?.oneFace ? "One face" : observation?.feedback ?? "Checking face"}</span><span>Lighting {Math.round((observation?.lightingScore ?? 0) * 100)}%</span><span>Distance {Math.round((observation?.distanceScore ?? 0) * 100)}%</span></div><div className="orientation-feedback"><span>Instruction: <strong>{prompt ? `${directionSymbol(prompt)} ${instructionFor(prompt)}` : "Complete"}</strong></span><span>Detected: <strong>{detectedOrientation(observation)}</strong></span><span>Hold still: <strong>{(Math.min(HOLD_MS, stableMs) / 1000).toFixed(1)} / {(HOLD_MS / 1000).toFixed(1)} seconds</strong></span></div><p className="live-guidance">{observation?.feedback ?? status}</p><button className="primary-action" disabled={busy || !promptReady} onClick={completePrompt}>Accept stable movement</button></article><aside className="card biometric-progress"><h2>Dynamic liveness</h2><p>Camera: <strong>{cameraLabel(selectedCamera)}</strong></p><progress value={completed.length} max={actions.length || 1}>{completed.length}/{actions.length}</progress><ol>{actions.map((item, index) => <li className={index < completed.length ? "complete" : index === completed.length ? "current" : ""} key={`${item}-${index}`}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol><p className="form-note" role="status">{status}</p><p className="privacy-note">This is bounded research-prototype liveness, not certified presentation-attack detection. No raw media is stored.</p><div className="dialog-actions"><button disabled={busy} onClick={retry}>Retry</button><button onClick={cancel}>Cancel and release camera</button></div></aside></section>
+    <section className="biometric-layout" hidden={!cameraActive}><article className="camera-capture-card"><div className="camera-guide" style={guideStyle}><video className="mirrored-preview" ref={videoRef} autoPlay muted playsInline aria-label="Mirrored local facial authentication preview" /><div className="face-guide" aria-hidden="true" /><div className="pose-instruction"><span className="direction-arrow" aria-hidden="true">{directionSymbol(prompt)}</span><strong>{instructionFor(prompt)}</strong></div></div><canvas ref={canvasRef} hidden /><p className="direction-note">Centre your face and hold still; failed quality checks do not consume the observation.</p><div className="quality-row"><span className={observation?.oneFace ? "quality-pass" : "quality-warn"}>{observation?.oneFace ? "One face" : observation?.feedback ?? "Checking face"}</span><span>Lighting {Math.round((observation?.lightingScore ?? 0) * 100)}%</span><span>Distance {Math.round((observation?.distanceScore ?? 0) * 100)}%</span></div><div className="orientation-feedback"><span>Required: <strong>1 validated observation</strong></span><span>Detected: <strong>{detectedOrientation(observation)}</strong></span><span>Hold still: <strong>{(Math.min(HOLD_MS, stableMs) / 1000).toFixed(1)} / {(HOLD_MS / 1000).toFixed(1)} seconds</strong></span></div><p className="live-guidance">{observation?.feedback ?? status}</p><button className="primary-action" disabled={busy || !promptReady} onClick={completePrompt}>{busy ? "Verifying identity..." : "Verify facial identity"}</button></article><aside className="card biometric-progress"><h2>Single-observation verification</h2><p>Camera: <strong>{cameraLabel(selectedCamera)}</strong></p><p>One accepted derived observation is compared with the stored enrolment representation.</p><p className="form-note" role="status">{status}</p><p className="privacy-note">Raw images, frame bytes, and video are not stored.</p><div className="dialog-actions"><button disabled={busy} onClick={retry}>Retry observation</button><button onClick={cancel}>Cancel and release camera</button></div></aside></section>
   </main>;
 }
