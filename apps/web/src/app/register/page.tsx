@@ -58,7 +58,7 @@ export default function RegistrationPage() {
       const fullName = String(configured_fields.full_name ?? form.get("full_name") ?? "");
       const candidateIdentifier = selected.candidate_identifier_field ? String(configured_fields[selected.candidate_identifier_field] ?? "") : null;
       const result = await registerIdentity({ institution_code: selected.code, configuration_version: selected.version, configured_fields, account_type: accountType, candidate_identifier: accountType === "candidate" ? candidateIdentifier : null, full_name: fullName, email, password: String(form.get("password")), confirm_password: String(form.get("confirm_password")), biometric_consent: accountType === "candidate" && form.get("biometric_consent") === "on" });
-      if (accountType === "candidate" && result.enrollment_token) { sessionStorage.setItem("serps_enrollment_token", result.enrollment_token); sessionStorage.setItem("serps_enrollment_actions", JSON.stringify(result.required_actions)); window.location.href = "/enrolment"; return; }
+      if (accountType === "candidate" && result.enrollment_token) { sessionStorage.setItem("serps_enrollment_token", result.enrollment_token); sessionStorage.setItem("serps_enrollment_actions", JSON.stringify(result.required_actions)); sessionStorage.setItem("serps_enrollment_subject", email.trim().toLowerCase()); window.location.href = "/enrolment"; return; }
       setStatus("Registration request recorded. A System Administrator must approve this account before sign-in."); event.currentTarget.reset(); setInstitutionCode("");
     } catch (error) { setStatus(error instanceof Error ? error.message : "Registration failed."); } finally { setBusy(false); }
   }
@@ -74,6 +74,7 @@ export default function RegistrationPage() {
       const result = await resumeEnrollment({ ...(resumeInstitutionCode ? { institution_code: resumeInstitutionCode } : {}), email: resumeEmail.trim(), password: resumePassword });
       sessionStorage.setItem("serps_enrollment_token", result.challenge_token);
       sessionStorage.setItem("serps_enrollment_actions", JSON.stringify(result.required_actions));
+      sessionStorage.setItem("serps_enrollment_subject", resumeEmail.trim().toLowerCase());
       window.location.href = "/enrolment";
     } catch (error) { setResumeStatus(error instanceof Error ? error.message : "Pending enrolment could not be resumed."); }
     finally { setBusy(false); }

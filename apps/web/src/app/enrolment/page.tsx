@@ -61,7 +61,8 @@ export default function EnrolmentPage() {
   useEffect(() => { poseRef.current = pose; }, [pose]);
   useEffect(() => {
     if (!checkpointLoadedRef.current) return;
-    writeEnrolmentProgress(sessionStorage, { captures, liveness, actions, retryCount });
+    const subject = sessionStorage.getItem("serps_enrollment_subject");
+    if (subject) writeEnrolmentProgress(localStorage, { subject, captures, liveness: [], actions, retryCount });
   }, [captures, liveness, actions, retryCount]);
   useEffect(() => {
     const onResize = () => setViewportWidth(window.innerWidth);
@@ -102,9 +103,10 @@ export default function EnrolmentPage() {
     const token = sessionStorage.getItem("serps_enrollment_token");
     const required = JSON.parse(sessionStorage.getItem("serps_enrollment_actions") ?? "[]") as string[];
     const recoveryNotice = sessionStorage.getItem("serps_enrollment_notice");
+    const subject = sessionStorage.getItem("serps_enrollment_subject") ?? "";
     const initialise = window.setTimeout(() => {
       setActions(required);
-      const checkpoint = readEnrolmentProgress(sessionStorage, poses, required);
+      const checkpoint = subject ? readEnrolmentProgress(localStorage, subject, poses, required) : null;
       if (checkpoint) {
         setCaptures(checkpoint.captures);
         setLiveness(checkpoint.liveness);
@@ -215,7 +217,8 @@ export default function EnrolmentPage() {
       await submitEnrollment({ enrollment_token: token, captures: finalCaptures, liveness_actions: finalLiveness, retry_count: retryCount });
       sessionStorage.removeItem("serps_enrollment_token");
       sessionStorage.removeItem("serps_enrollment_actions");
-      sessionStorage.removeItem(ENROLMENT_PROGRESS_KEY);
+      sessionStorage.removeItem("serps_enrollment_subject");
+      localStorage.removeItem(ENROLMENT_PROGRESS_KEY);
       releaseResources();
       setCameraActive(false);
       setStatus("Facial enrolment complete. Camera released; continue to password sign-in.");
@@ -247,7 +250,7 @@ export default function EnrolmentPage() {
     const action: LivenessAction = { action: pose, completed: true, confidence: observation.confidence, timestamp: new Date(now).toISOString() };
     const next = [...liveness, action];
     setLiveness(next);
-    if (next.length === actions.length) void finish(captures, next);
+    if (next.length === actions.length) setStatus("All nine observations are validated. Select Complete facial enrolment to submit them securely.");
     else setStatus(`${instructionFor(pose)} accepted. Move to the next prompt.`);
   }
 
@@ -266,12 +269,14 @@ export default function EnrolmentPage() {
     setCameraActive(false);
     sessionStorage.removeItem("serps_enrollment_token");
     sessionStorage.removeItem("serps_enrollment_actions");
-    sessionStorage.removeItem(ENROLMENT_PROGRESS_KEY);
+    sessionStorage.removeItem("serps_enrollment_subject");
+    localStorage.removeItem(ENROLMENT_PROGRESS_KEY);
     window.location.href = "/register";
   }
 
   const completed = captures.length + liveness.length;
   const total = poses.length + actions.length;
+  const captureComplete = total > poses.length && completed === total;
   const averageMs = processingTimes.length ? processingTimes.reduce((sum, item) => sum + item, 0) / processingTimes.length : null;
   const poseReady = !!observation && !!pose && poseIsValid(pose, observation) && stableMs >= HOLD_MS;
   const disabledReason = !cameraActive ? "Camera stream is required" : detectorStatus !== "ready" ? "Local detector must finish loading" : !observation?.oneFace ? "Exactly one face is required" : !pose || !poseIsValid(pose, observation) ? "Match the requested orientation and quality guidance" : stableMs < HOLD_MS ? "Hold the correct pose steadily" : undefined;
@@ -303,16 +308,16 @@ export default function EnrolmentPage() {
         <div className="camera-guide" style={guideStyle}>
           <video className="mirrored-preview" ref={videoRef} autoPlay muted playsInline aria-label="Mirrored local facial enrolment preview" />
           <div className="face-guide" aria-hidden="true" />
-          <div className="pose-instruction"><span className="direction-arrow" aria-hidden="true">{pose ? directionSymbol(pose) : "●"}</span><strong>{pose ? instructionFor(pose) : "Completing enrolment"}</strong></div>
+          <div className="pose-instruction"><span className="direction-arrow" aria-hidden="true">{pose ? directionSymbol(pose) : "✓"}</span><strong>{pose ? instructionFor(pose) : "All observations captured"}</strong></div>
         </div>
         <canvas ref={canvasRef} hidden />
         <p className="direction-note">Directions refer to your own left and right, not the screen.</p>
         <div className="quality-row"><span className={cameraActive ? "quality-pass" : "quality-warn"}>Camera {cameraActive ? "active" : "inactive"}</span><span className={detectorStatus === "ready" ? "quality-pass" : "quality-warn"}>Detector {detectorStatus}</span><span>{observation?.faceCount === 1 ? "One face" : observation?.faceCount === 0 ? "No face" : observation ? `${observation.faceCount} faces` : "Checking face"}</span><span>Face illumination {observation ? `${Math.round(observation.lightingScore * 100)}%` : "Not measured"}</span><span>Distance {observation ? `${Math.round(observation.distanceScore * 100)}%` : "Not measured"}</span></div>
-        <div className="orientation-feedback"><span>Instruction: <strong>{pose ? `${directionSymbol(pose)} ${instructionFor(pose)}` : "Complete"}</strong></span><span>Detected: <strong>{detectedOrientation(observation)}</strong></span><span>Hold still: <strong>{(Math.min(HOLD_MS, stableMs) / 1000).toFixed(1)} / {(HOLD_MS / 1000).toFixed(1)} seconds</strong></span></div>
-        <p className="live-guidance" role="status">{observation?.feedback ?? status}</p>
-        <button className="primary-action" disabled={busy || !poseReady} title={disabledReason} onClick={captureCurrent}>{busy ? "Saving enrolment..." : captures.length < poses.length ? "Accept stable pose" : "Accept liveness movement"}</button>
+        <div className="orientation-feedback"><span>Instruction: <strong>{pose ? `${directionSymbol(pose)} ${instructionFor(pose)}` : "Complete"}</strong></span><span>Detected: <strong>{captureComplete ? "All required observations validated" : detectedOrientation(observation)}</strong></span>{!captureComplete && <span>Hold still: <strong>{(Math.min(HOLD_MS, stableMs) / 1000).toFixed(1)} / {(HOLD_MS / 1000).toFixed(1)} seconds</strong></span>}</div>
+        <p className="live-guidance" role="status">{captureComplete ? status : observation?.feedback ?? status}</p>
+        {captureComplete ? <button className="primary-action" disabled={busy} onClick={() => void finish(captures, liveness)}>{busy ? "Submitting enrolment..." : "Complete facial enrolment"}</button> : <button className="primary-action" disabled={busy || !poseReady} title={disabledReason} onClick={captureCurrent}>{captures.length < poses.length ? "Accept stable pose" : "Accept liveness movement"}</button>}
       </article>
-      <aside className="card biometric-progress"><h2>Enrolment progress</h2><progress value={completed} max={total || 1}>{completed}/{total}</progress><p>{completed} of {total || "—"} validated observations</p><p className="privacy-note">Validated derived observations are temporarily checkpointed in this browser session so a reload or renewed challenge can continue. Raw images and video are not stored.</p><dl className="detector-metrics"><div><dt>Facial camera</dt><dd>{cameraLabel(selectedCamera)}</dd></div><div><dt>Model load</dt><dd>{modelLoadMs == null ? "Loading" : `${Math.round(modelLoadMs)} ms`}</dd></div><div><dt>Average processing</dt><dd>{averageMs == null ? "Waiting" : `${averageMs.toFixed(1)} ms`}</dd></div><div><dt>Retries</dt><dd>{retryCount}</dd></div></dl><ol>{poses.map((item, index) => <li className={index < captures.length ? "complete" : index === captures.length ? "current" : ""} key={item}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol>{captures.length === poses.length && <><h3>Dynamic liveness</h3><ol>{actions.map((item, index) => <li className={index < liveness.length ? "complete" : index === liveness.length ? "current" : ""} key={`${item}-${index}`}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol></>}<p className="form-note">{status}</p><div className="dialog-actions"><button onClick={retry} disabled={busy}>Retry</button><button onClick={cancel}>Cancel and release camera</button></div></aside>
+      <aside className="card biometric-progress"><h2>Enrolment progress</h2><progress value={completed} max={total || 1}>{completed}/{total}</progress><p>{completed} of {total || "—"} validated observations</p><p className="privacy-note">Validated fixed observations are checkpointed in this browser for account-bound recovery after reload or closure. Dynamic liveness restarts after interruption. Raw images and video are not stored.</p><dl className="detector-metrics"><div><dt>Facial camera</dt><dd>{cameraLabel(selectedCamera)}</dd></div><div><dt>Model load</dt><dd>{modelLoadMs == null ? "Loading" : `${Math.round(modelLoadMs)} ms`}</dd></div><div><dt>Average processing</dt><dd>{averageMs == null ? "Waiting" : `${averageMs.toFixed(1)} ms`}</dd></div><div><dt>Retries</dt><dd>{retryCount}</dd></div></dl><ol>{poses.map((item, index) => <li className={index < captures.length ? "complete" : index === captures.length ? "current" : ""} key={item}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol>{captures.length === poses.length && <><h3>Dynamic liveness</h3><ol>{actions.map((item, index) => <li className={index < liveness.length ? "complete" : index === liveness.length ? "current" : ""} key={`${item}-${index}`}>{directionSymbol(item)} {instructionFor(item)}</li>)}</ol></>}<p className="form-note">{status}</p><div className="dialog-actions"><button onClick={retry} disabled={busy}>Retry</button><button onClick={cancel}>Cancel and release camera</button></div></aside>
     </section>
   </main>;
 }

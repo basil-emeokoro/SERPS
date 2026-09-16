@@ -66,12 +66,12 @@ export async function observeFace(video: HTMLVideoElement, canvas: HTMLCanvasEle
   brightness /= 64; const lightingScore = clamp(1 - Math.abs(brightness - 0.55) / 0.55); const distanceScore = clamp(1 - Math.abs(detected.faceSize - 0.24) / 0.24);
   const centred = Math.abs(detected.faceCentre.x - 0.5) < 0.16 && Math.abs(detected.faceCentre.y - 0.5) < 0.18;
   let feedback = "Hold still";
-  if (lightingScore < 0.45) feedback = "Improve face illumination"; else if (detected.faceSize < 0.12) feedback = "Move closer"; else if (detected.faceSize > 0.42) feedback = "Move farther away"; else if (detected.faceCentre.y > 0.59) feedback = "Raise your head slightly"; else if (detected.faceCentre.y < 0.41) feedback = "Lower your head slightly"; else if (!centred) feedback = "Centre your face";
+  if (lightingScore < 0.55) feedback = "Improve face illumination"; else if (distanceScore < 0.55 && detected.faceSize < 0.24) feedback = "Move closer"; else if (distanceScore < 0.55) feedback = "Move farther away"; else if (detected.faceCentre.y > 0.59) feedback = "Raise your head slightly"; else if (detected.faceCentre.y < 0.41) feedback = "Lower your head slightly"; else if (!centred) feedback = "Centre your face";
   return { descriptor, oneFace: true, faceCount: 1, centreX: detected.faceCentre.x, centreY: detected.faceCentre.y, lightingScore, distanceScore, confidence: Math.min(lightingScore, distanceScore), feedback, yawEstimate: detected.yawEstimate, pitchEstimate: detected.pitchEstimate, rollEstimate: detected.rollEstimate, processingTime: detected.processingTime, boundingBox: detected.boundingBox };
 }
 
 export function poseIsValid(pose: string, observation: FaceObservation): boolean {
-  if (!observation.oneFace || observation.lightingScore < 0.45 || observation.distanceScore < 0.45 || observation.yawEstimate == null || observation.pitchEstimate == null || observation.rollEstimate == null || Math.abs(observation.rollEstimate) > 15) return false;
+  if (!observation.oneFace || observation.lightingScore < 0.45 || observation.distanceScore < 0.45 || observation.confidence < 0.55 || observation.yawEstimate == null || observation.pitchEstimate == null || observation.rollEstimate == null || Math.abs(observation.rollEstimate) > 15) return false;
   // Detection uses the original, unmirrored video. Candidate-right appears on
   // the camera image's left, so negative yaw is candidate-relative right.
   if (pose === "left" || pose === "turn_left") return observation.yawEstimate > 0.16;

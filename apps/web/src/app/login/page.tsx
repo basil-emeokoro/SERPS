@@ -57,7 +57,8 @@ export default function LoginPage() {
       if (tokens.authentication_stage === "enrollment_required") {
         sessionStorage.setItem("serps_enrollment_token", tokens.challenge_token);
         sessionStorage.setItem("serps_enrollment_actions", JSON.stringify(tokens.required_actions));
-        sessionStorage.setItem("serps_enrollment_notice", "Your account was recovered. The facial capture must restart with this fresh short-lived challenge.");
+        sessionStorage.setItem("serps_enrollment_subject", normalizedEmail);
+        sessionStorage.setItem("serps_enrollment_notice", "Your account was recovered. Validated fixed observations were restored where available; dynamic liveness restarts with this fresh challenge.");
         window.location.href = "/enrolment";
         return;
       }
