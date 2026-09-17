@@ -353,7 +353,7 @@ def create_assignment(
     profile = db.scalar(select(IdentityAssuranceProfile).where(IdentityAssuranceProfile.user_id == candidate.user_id))
     if profile is None or profile.enrolment_status != "enrolled":
         raise DomainConflict("Only an active enrolled candidate can be assigned to an examination.")
-    if not exam.is_active or exam.status != "active":
+    if not exam.is_active or exam.status not in {"published", "active"}:
         raise DomainConflict("Only an active examination can be assigned.")
     assignment = CandidateExaminationAssignment(
         institution_id=institution_id,

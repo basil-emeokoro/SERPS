@@ -183,6 +183,8 @@ class OperationalSessionDetail(BaseModel):
     latest_policy_evaluation: dict[str, Any] | None
     reviewer_decisions: list[dict[str, Any]]
     timeline: list[TimelineEntry]
+    timeline_total_entries: int
+    timeline_truncated: bool
     reports: list[dict[str, Any]]
 
 

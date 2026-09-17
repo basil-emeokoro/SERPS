@@ -17,7 +17,12 @@ from serps_pop.governance.models import (
     ReviewerDecision,
     SessionReportSnapshot,
 )
-from serps_pop.governance.services import _authorised_session, governance_timeline, reviewer_queue
+from serps_pop.governance.services import (
+    _authorised_session,
+    governance_timeline,
+    governance_timeline_count,
+    reviewer_queue,
+)
 from serps_pop.identity.models import Candidate, Examination, ExaminationSession, Institution
 from serps_pop.identity.services import ROLE_SYSADMIN
 from serps_pop.identity_assurance.models import IdentityAssuranceProfile
@@ -72,6 +77,7 @@ def operational_session_detail(
     actor_institution_id: str,
     actor_roles: Iterable[str],
 ) -> dict[str, Any]:
+    timeline_limit = 200
     session = _authorised_session(db, session_id, actor_institution_id, actor_roles)
     candidate = db.get(Candidate, session.candidate_id)
     examination = db.get(Examination, session.examination_id)
@@ -107,6 +113,7 @@ def operational_session_detail(
         .where(SessionReportSnapshot.session_id == session_id)
         .order_by(SessionReportSnapshot.generated_at.desc())
     ).all()
+    timeline_total = governance_timeline_count(db, session_id=session_id)
     return {
         "session": _record(session, ("session_id", "institution_id", "candidate_id", "examination_id", "status", "deployment_mode", "started_at", "ended_at", "monitoring_status")),
         "candidate": _record(candidate, ("candidate_id", "candidate_identifier", "full_name", "email", "status")),
@@ -144,7 +151,10 @@ def operational_session_detail(
             session_id=session_id,
             actor_institution_id=actor_institution_id,
             actor_roles=actor_roles,
+            limit=timeline_limit,
         ),
+        "timeline_total_entries": timeline_total,
+        "timeline_truncated": timeline_total > timeline_limit,
         "reports": [
             _record(item, ("report_id", "generated_at", "generated_by", "report_version", "summary"))
             for item in reports

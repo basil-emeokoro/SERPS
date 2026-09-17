@@ -59,6 +59,7 @@ export function SessionOperationalView({ detail }: { detail: OperationalSessionD
     <section className="card timeline-card">
       <div className="section-heading"><div><span className="badge">Metadata only</span><h2>Evidence and governance timeline</h2></div></div>
       <p>Reviewer evidence contains structured detector metadata and explainable governance output. SERPS does not provide a remote live-media feed.</p>
+      {detail.timeline_truncated ? <p className="form-note">Showing the most recent {detail.timeline.length.toLocaleString()} of {detail.timeline_total_entries.toLocaleString()} persisted entries.</p> : null}
       {detail.timeline.length ? <ol className="timeline">{detail.timeline.map((entry) => <li key={`${entry.entry_type}-${entry.entity_id}`}>
         <time>{new Date(entry.timestamp).toLocaleString()}</time><strong>{timelineText(entry)}</strong>
         <details><summary title="Show technical event details">Technical details</summary><dl>

@@ -226,7 +226,7 @@ def test_examination_assignment_session_and_invalid_transition(client: TestClien
     candidate_record.user_id = candidate_user.user_id
     candidate_record.status = "active"
     db_session.add(IdentityAssuranceProfile(user_id=candidate_user.user_id, enrolment_status="enrolled"))
-    db_session.get(Examination, exam["examination_id"]).status = "active"
+    db_session.get(Examination, exam["examination_id"]).status = "published"
     db_session.commit()
     assignment = client.post("/api/v1/examinations/assignments", json={"candidate_id": candidate["candidate_id"], "examination_id": exam["examination_id"]}, headers=headers)
     assert assignment.status_code == 201

@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from typing import Any, Iterable
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.orm import Session
 
 from serps_pop.evidence.repository import EvidenceEventRepository
@@ -553,13 +553,16 @@ AUDIT_FIELDS = (
 
 
 def governance_timeline(
-    db: Session, *, session_id: str, actor_institution_id: str, actor_roles: Iterable[str]
+    db: Session, *, session_id: str, actor_institution_id: str, actor_roles: Iterable[str], limit: int | None = None
 ) -> list[dict[str, Any]]:
     _authorised_session(db, session_id, actor_institution_id, actor_roles)
     entries: list[dict[str, Any]] = []
-    evidence = db.scalars(
-        select(EvidenceEventRecord).where(EvidenceEventRecord.session_id == session_id)
-    ).all()
+    evidence_stmt = select(EvidenceEventRecord).where(EvidenceEventRecord.session_id == session_id)
+    if limit is not None:
+        evidence_stmt = evidence_stmt.order_by(
+            EvidenceEventRecord.timestamp.desc(), EvidenceEventRecord.event_id.desc()
+        ).limit(limit)
+    evidence = db.scalars(evidence_stmt).all()
     for item in evidence:
         entries.append({
             "entry_type": "EvidenceEvent",
@@ -575,7 +578,10 @@ def governance_timeline(
         (GovernanceAuditRecord, "GovernanceAuditRecord", "audit_id", "timestamp", AUDIT_FIELDS),
     )
     for model, entry_type, id_field, time_field, fields in collections:
-        for item in db.scalars(select(model).where(model.session_id == session_id)).all():
+        statement = select(model).where(model.session_id == session_id)
+        if limit is not None:
+            statement = statement.order_by(getattr(model, time_field).desc(), getattr(model, id_field).desc()).limit(limit)
+        for item in db.scalars(statement).all():
             entries.append({
                 "entry_type": entry_type,
                 "entity_id": getattr(item, id_field),
@@ -583,7 +589,22 @@ def governance_timeline(
                 "payload": _model_payload(item, fields),
             })
     entries.sort(key=lambda item: (item["timestamp"], item["entry_type"], item["entity_id"]))
-    return entries
+    return entries[-limit:] if limit is not None else entries
+
+
+def governance_timeline_count(db: Session, *, session_id: str) -> int:
+    models = (
+        EvidenceEventRecord,
+        ContextualAssessment,
+        AgentRecommendation,
+        PolicyEvaluation,
+        ReviewerDecision,
+        GovernanceAuditRecord,
+    )
+    return sum(
+        db.scalar(select(func.count()).select_from(model).where(model.session_id == session_id)) or 0
+        for model in models
+    )
 
 
 def _report_payload(db: Session, examination_session: ExaminationSession) -> dict[str, Any]:

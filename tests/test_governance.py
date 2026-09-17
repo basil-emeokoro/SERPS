@@ -16,6 +16,7 @@ from serps_pop.domain.evidence import EvidenceEvent
 from serps_pop.evidence.models import EvidenceEventRecord
 from serps_pop.governance.engine import assess_events, risk_level_for_score
 from serps_pop.governance.models import ContextualAssessment, GovernanceAuditRecord, PolicyEvaluation
+from serps_pop.governance.services import governance_timeline, governance_timeline_count
 from serps_pop.identity.models import Candidate, Examination, ExaminationSession, Institution
 from serps_pop.identity.services import ROLE_REVIEWER
 from serps_pop.infrastructure.database import Base
@@ -184,6 +185,35 @@ def test_full_governance_chain_queue_decision_timeline_and_report():
         retrieved = client.get(f"/api/v1/examination-sessions/SESSION-1/reports/{report_body['report_id']}")
         assert retrieved.status_code == 200
         assert retrieved.json() == report_body
+
+
+def test_operational_timeline_can_be_bounded_without_deleting_history():
+    with governance_db() as db:
+        seed_session(db)
+        base = datetime(2026, 7, 19, 10, 0, tzinfo=timezone.utc)
+        db.add_all([
+            EvidenceEventRecord(
+                event_id=f"EVT-{index:03d}",
+                session_id="SESSION-1",
+                candidate_id="CAND-INST-1",
+                timestamp=base + timedelta(seconds=index),
+                source_module="camera",
+                event_type="camera_heartbeat",
+                risk_weight=0.0,
+                confidence=1.0,
+                description="Camera heartbeat",
+            )
+            for index in range(205)
+        ])
+        db.commit()
+
+        timeline = governance_timeline(
+            db, session_id="SESSION-1", actor_institution_id="INST-1", actor_roles=(ROLE_REVIEWER,), limit=200
+        )
+        assert len(timeline) == 200
+        assert timeline[0]["entity_id"] == "EVT-005"
+        assert timeline[-1]["entity_id"] == "EVT-204"
+        assert governance_timeline_count(db, session_id="SESSION-1") == 205
 
 
 def test_reviewer_decision_validation_rejects_empty_and_unsupported_values():

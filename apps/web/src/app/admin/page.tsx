@@ -25,7 +25,7 @@ export default function AdminPortalPage() {
     setLoading(true);
     try {
       const [metricData, policyData, sessionData, registrationData, candidateData, examinationData] = await Promise.all([fetchAdminMetrics(), fetchAdminPolicy(), fetchReviewerQueue(), fetchRegistrations(), fetchAdministrativeCandidates(), fetchAdministrativeExaminations()]);
-      setMetrics(metricData); setPolicy(policyData); setSessions(sessionData); setRegistrations(registrationData); setCandidates(candidateData); setExaminations(examinationData.filter((item) => item.is_active && item.status === "active")); setUpdatedAt(metricData.last_updated_at ?? new Date().toISOString()); setError("");
+      setMetrics(metricData); setPolicy(policyData); setSessions(sessionData); setRegistrations(registrationData); setCandidates(candidateData); setExaminations(examinationData.filter((item) => item.is_active && ["published", "active"].includes(item.status))); setUpdatedAt(metricData.last_updated_at ?? new Date().toISOString()); setError("");
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Administrator oversight unavailable."); }
     finally { setLoading(false); }
   }, []);
