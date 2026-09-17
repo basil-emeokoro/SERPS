@@ -62,7 +62,6 @@ function DemonstrationWorkspacePageContent() {
   const interruptionStartedAt = useRef<number | null>(null);
   const lastServerAckAt = useRef<number | null>(null);
   const connectivityFailures = useRef(0);
-  const demoPolicyInitialised = useRef(false);
   const requiredMonitoringUnavailable = !!workspace && !finished && (
     primaryState !== "connected"
     || (workspace.session.deployment_mode === "B" && secondaryState !== "connected")
@@ -437,20 +436,6 @@ function DemonstrationWorkspacePageContent() {
         connectivityFailures.current = 0;
         lastServerAckAt.current = now;
         setLastHeartbeat(new Date(now).toISOString());
-        if (!demoPolicyInitialised.current && policy.demo_controls_enabled) {
-          demoPolicyInitialised.current = true;
-          if (policy.demo_phone_policy_armed) {
-            const reset = await updateDemoPhonePolicy(workspace.session.session_id, false);
-            if (disposed) return;
-            setDemoControlsEnabled(reset.demo_controls_enabled);
-            setDemoPhonePolicyArmed(false);
-            if (protectionRef.current.reason === "policy_review") {
-              clearProtectedState("policy_review", { demonstration_opened_disarmed: true }, true);
-            }
-            setStatus("Demonstration workspace opened with phone-protection simulation disarmed. Use the demonstration control to enable it.");
-            return;
-          }
-        }
         if (policy.state === "PROTECTED" && policy.policy_action === "PROTECT_AND_PAUSE") {
           enterProtectedState("policy_review", { policy_action: policy.policy_action, requires_reviewer: policy.requires_reviewer });
         } else if (protectionRef.current.reason === "policy_review") {
