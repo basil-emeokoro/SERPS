@@ -29,7 +29,7 @@ export default function AdminPortalPage() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Administrator oversight unavailable."); }
     finally { setLoading(false); }
   }, []);
-  useEffect(() => { const task = window.setTimeout(() => void load(), 0); const poll = window.setInterval(() => void load(), 10000); return () => { window.clearTimeout(task); window.clearInterval(poll); }; }, [load]);
+  useEffect(() => { const task = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(task); }, [load]);
   async function assignExamination() {
     if (!candidateId || !examinationId) return;
     setAssigning(true); setAssignmentStatus("Persisting institution-scoped assignment...");
