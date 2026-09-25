@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, normalProtectionState } from "./protectionState";
+import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, monitoringProtectionRequired, normalProtectionState } from "./protectionState";
 
 describe("examination protection state", () => {
+  it("does not require monitoring protection while the demonstration policy is disarmed", () => {
+    expect(monitoringProtectionRequired(false, true)).toBe(false);
+    expect(monitoringProtectionRequired(true, true)).toBe(true);
+    expect(monitoringProtectionRequired(true, false)).toBe(false);
+  });
+
   it("protects, pauses elapsed time, and resumes", () => {
     const start = "2026-09-11T10:00:00Z";
     const protectedState = enterProtection(normalProtectionState(), "monitoring_verification", Date.parse("2026-09-11T10:00:10Z"));

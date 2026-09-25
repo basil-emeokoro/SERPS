@@ -476,7 +476,7 @@ def verify_facial_authentication(
         profile.authentication_result = "failed"
         profile.liveness_result = "passed"
     challenge.confidence = confidence
-    challenge.metadata_json = {"observation_count": 1, "quality_validated": True, "raw_media_stored": False}
+    challenge.metadata_json = {**challenge.metadata_json, "observation_count": 1, "quality_validated": True, "raw_media_stored": False}
     audit(
         db,
         action="identity.facial_authentication",

@@ -4,14 +4,17 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { ConfirmationDialog, ErrorState, LoadingState, StatusBadge } from "../../../../components/OperationalStates";
 import { PortalShell } from "../../../../components/PortalShell";
-import { beginPeriodicVerification, completeCandidateSession, fetchCandidateProtection, fetchCandidateWorkspace, fetchIdentityStatus, submitEvidenceEvent, updateDemoPhonePolicy } from "../../../../lib/api";
+import { completeCandidateSession, fetchCandidateProtection, fetchCandidateWorkspace, submitEvidenceEvent, updateDemoPhonePolicy } from "../../../../lib/api";
 import { AUDIO_MONITOR_NAME, AUDIO_MONITOR_VERSION, AUDIO_SAMPLE_INTERVAL_MS, AudioActivityTracker, LocalAudioMonitor } from "../../../../lib/audioMonitoring";
 import type { CandidateWorkspace } from "../../../../lib/contracts";
 import { audioEvidence, detectorUnavailableEvidence, DuplicateEventGate, faceDetectorUnavailableEvidence, facePresenceEvidence, objectEvidence, objectRolesForMode, type CameraRole, type EvidenceDraft } from "../../../../lib/multimodalEvents";
 import { FACE_SAMPLE_INTERVAL_MS, FacePresenceTracker, LocalFacePerceptionService } from "../../../../lib/faceDetection";
 import { LocalObjectDetector, OBJECT_MODEL_NAME, OBJECT_MODEL_VERSION, OBJECT_SAMPLE_INTERVAL_MS } from "../../../../lib/objectDetection";
 import { formatElapsed } from "../../../../lib/operational";
-import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, normalProtectionState, type ProtectionReason, type ProtectionState } from "../../../../lib/protectionState";
+import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, monitoringProtectionRequired, normalProtectionState, type ProtectionReason, type ProtectionState } from "../../../../lib/protectionState";
+
+import FacialVerification from "../../../../components/FacialVerification";
+import { fetchReauthentication, reauthenticationMessage, type ReauthenticationState } from "../../../../lib/reauthentication";
 
 const questions = [
   { prompt: "Which principle best describes SERPS decision authority?", options: ["Fully autonomous discipline", "Human-governed advisory support", "Automatic examination termination", "Unreviewed biometric scoring"] },
@@ -43,7 +46,8 @@ function DemonstrationWorkspacePageContent() {
   const [objectSummary, setObjectSummary] = useState<Record<CameraRole, string>>({ primary: "No sample yet", secondary: "No sample yet" });
   const [audioState, setAudioState] = useState("requesting permission");
   const [audioLevel, setAudioLevel] = useState(0);
-  const [periodicDue, setPeriodicDue] = useState(false);
+  const [identityRequirement, setIdentityRequirement] = useState<ReauthenticationState | null>(null);
+  const [identityCheckOpen, setIdentityCheckOpen] = useState(false);
   const [lastHeartbeat, setLastHeartbeat] = useState<string | null>(null);
   const [protection, setProtection] = useState<ProtectionState>(() => normalProtectionState());
   const [demoControlsEnabled, setDemoControlsEnabled] = useState(false);
@@ -68,6 +72,7 @@ function DemonstrationWorkspacePageContent() {
     || audioState !== "active"
     || !faceCapability.startsWith("Face monitoring: Active")
   );
+  const monitoringProtectionActive = monitoringProtectionRequired(demoPhonePolicyArmed, requiredMonitoringUnavailable);
 
   useEffect(() => { protectionRef.current = protection; }, [protection]);
   useEffect(() => {
@@ -161,14 +166,26 @@ function DemonstrationWorkspacePageContent() {
       { trigger_category: expectedReason, protection_state: "NORMAL", misconduct_determination: false, ...metadata });
   }, [emit]);
 
+  const refreshIdentityRequirement = useCallback(async () => {
+    const next = await fetchReauthentication(sessionId);
+    setIdentityRequirement(next);
+    if (!next.required) setIdentityCheckOpen(false);
+  }, [sessionId]);
+
   useEffect(() => {
     if (!workspace || finished) return;
-    let timer = 0;
-    void fetchIdentityStatus().then((identity) => {
-      if (identity.biometric_required && !identity.demo_bypass) timer = window.setTimeout(() => setPeriodicDue(true), 120000);
-    }).catch(() => undefined);
-    return () => window.clearTimeout(timer);
-  }, [workspace, finished]);
+    let disposed = false;
+    const controller = new AbortController();
+    const check = async () => {
+      try {
+        const next = await fetchReauthentication(sessionId, controller.signal);
+        if (!disposed) { setIdentityRequirement(next); if (!next.required) setIdentityCheckOpen(false); }
+      } catch { /* A read failure must never clear an existing requirement. */ }
+    };
+    void check();
+    const interval = window.setInterval(() => void check(), 3000);
+    return () => { disposed = true; controller.abort(); window.clearInterval(interval); };
+  }, [workspace, finished, sessionId]);
 
   useEffect(() => {
     if (!workspace || finished) return;
@@ -411,8 +428,11 @@ function DemonstrationWorkspacePageContent() {
 
   useEffect(() => {
     if (!workspace || finished) return;
-    if (!requiredMonitoringUnavailable) {
-      clearProtectedState("monitoring_verification", { readiness_revalidated: true });
+    if (!monitoringProtectionActive) {
+      clearProtectedState("monitoring_verification", {
+        readiness_revalidated: !requiredMonitoringUnavailable,
+        demo_phone_policy_armed: demoPhonePolicyArmed,
+      });
       return;
     }
     const grace = window.setTimeout(() => enterProtectedState("monitoring_verification", {
@@ -421,7 +441,7 @@ function DemonstrationWorkspacePageContent() {
       configured_mode: workspace.session.deployment_mode,
     }), 5000);
     return () => window.clearTimeout(grace);
-  }, [workspace, finished, requiredMonitoringUnavailable, enterProtectedState, clearProtectedState]);
+  }, [workspace, finished, requiredMonitoringUnavailable, monitoringProtectionActive, demoPhonePolicyArmed, enterProtectedState, clearProtectedState]);
 
   useEffect(() => {
     if (!workspace || finished) return;
@@ -498,25 +518,12 @@ function DemonstrationWorkspacePageContent() {
     }
   }
 
-  async function beginPeriodic() {
-    try {
-      const challenge = await beginPeriodicVerification();
-      sessionStorage.setItem("serps_face_challenge", challenge.challenge_token);
-      sessionStorage.setItem("serps_face_actions", JSON.stringify(challenge.required_actions));
-      sessionStorage.setItem("serps_face_mode", "periodic");
-      sessionStorage.setItem("serps_face_return", window.location.pathname);
-      await stopMedia();
-      window.location.href = "/facial-auth";
-    } catch (reason) {
-      setStatus(reason instanceof Error ? reason.message : "Periodic identity verification could not begin.");
-    }
-  }
 
   if (loading) return <section className="workspace-shell"><LoadingState label="Loading authorised demonstration workspace..." /></section>;
   if (error || !workspace) return <section className="workspace-shell"><ErrorState message={error || "Workspace unavailable."} /></section>;
   const protectionStatus = protection.reason === "connectivity_interrupted" ? "Connectivity interrupted"
     : protection.reason === "policy_review" ? "Policy review required" : "Monitoring verification required";
-  const controlsDisabled = interactionDisabled(protection, requiredMonitoringUnavailable, finished);
+  const controlsDisabled = interactionDisabled(protection, monitoringProtectionActive, finished) || !!identityRequirement?.required;
   return <section className="workspace-shell">
     <header className="workspace-header">
       <div><p className="eyebrow dark">Assessment Demonstration Harness</p><h1>{workspace.examination.title}</h1><p>{workspace.candidate.full_name} · {workspace.institution.name} · Session {workspace.session.session_id}</p></div>
@@ -527,8 +534,9 @@ function DemonstrationWorkspacePageContent() {
     <p className="freshness-note">Candidate device heartbeat: {finished ? "monitoring stopped" : lastHeartbeat ? new Date(lastHeartbeat).toLocaleTimeString() : "awaiting first update"}</p>
     <p className="mode-disclosure"><strong>Proctoring mode:</strong> {modeDescription[workspace.session.deployment_mode]}</p>
     {demoControlsEnabled && protection.mode !== "PROTECTED" && <aside className="demo-policy-control" role="note"><div><strong>Prototype demonstration configuration</strong><p>Phone evidence remains logged. Policy protection is applied only when this demo control is armed and at least two phone-positive EvidenceEvents occur in the bounded contextual window.</p></div><button type="button" onClick={() => void configureDemoPhonePolicy(!demoPhonePolicyArmed)}>{demoPhonePolicyArmed ? "Disable phone-protection demonstration" : "Enable phone-protection demonstration"}</button></aside>}
-    {periodicDue && <aside className="identity-prompt" role="alert"><div><strong>Periodic identity verification due</strong><p>Pause the demonstration and complete a bounded facial/liveness check before continuing.</p></div><button className="primary-action" onClick={() => void beginPeriodic()}>Verify identity</button></aside>}
-    {requiredMonitoringUnavailable && <aside className="inline-warning" role="alert"><strong>Assessment interaction paused:</strong> required monitoring is unavailable. Restore the indicated camera, microphone or face-monitoring component to continue. The session remains active for human-governed review.</aside>}
+    {identityRequirement?.required && <aside className="identity-prompt" role="alert"><div><strong>Identity assurance required by institutional policy</strong><p>{reauthenticationMessage(identityRequirement)}</p></div>{identityRequirement.state !== "manual_review" && <button className="primary-action" onClick={() => setIdentityCheckOpen(true)}>Verify identity</button>}</aside>}
+    {identityCheckOpen && <FacialVerification examination={{ sessionId, primaryStream: () => streamByRole.current.primary ?? null, onReturn: () => { setIdentityCheckOpen(false); void refreshIdentityRequirement().catch(() => undefined); } }} /> }
+    {requiredMonitoringUnavailable && <aside className="inline-warning" role="alert"><strong>{demoPhonePolicyArmed ? "Assessment interaction paused:" : "Monitoring readiness notice:"}</strong> required monitoring is unavailable. Restore the indicated camera, microphone or face-monitoring component to continue. {demoPhonePolicyArmed ? "The session remains active for human-governed review." : "Protection remains inactive while the demonstration policy is disarmed."}</aside>}
 
     <section className="dual-camera-grid workspace-cameras">
       <article className="camera-panel"><div className="camera-title"><h2>Primary camera</h2><StatusBadge label={finished ? "stopped" : primaryState} tone={finished ? "neutral" : primaryState === "connected" ? "success" : "danger"} /></div><video ref={primaryVideo} autoPlay muted playsInline aria-label="Primary candidate-facing live local preview" /><p>Candidate-facing face and upper-body view.</p><div className="detector-readout"><strong>Object detector: {finished ? "stopped" : objectStates.primary}</strong><span>{finished ? "Monitoring completed" : objectSummary.primary}</span></div></article>

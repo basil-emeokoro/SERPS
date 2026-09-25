@@ -275,23 +275,17 @@ def test_candidate_registration_enrollment_password_face_and_periodic_flow(clien
     )
     assert expired.status_code == 409
 
+    # The retired unbound endpoints must never bypass institutional context.
+    count_before = len(db.scalars(select(IdentityChallenge)).all())
     periodic = client.post("/api/v1/identity-assurance/periodic/challenge", headers=auth(access_token))
-    assert periodic.status_code == 200, periodic.text
+    assert periodic.status_code == 410, periodic.text
     periodic_result = client.post(
-        "/api/v1/identity-assurance/periodic/verify",
-        headers=auth(access_token),
-        json={
-            "challenge_token": periodic.json()["challenge_token"],
-            "descriptor": [0.5] * 64,
-            "one_face": True,
-            "lighting_score": 0.9,
-            "distance_score": 0.9,
-            "liveness_actions": liveness(periodic.json()["required_actions"]),
-            "retry_count": 0,
-        },
+        "/api/v1/identity-assurance/periodic/verify", headers=auth(access_token),
+        json={"challenge_token": expired_challenge["challenge_token"], "descriptor": [0.5] * 64,
+              "one_face": True, "lighting_score": 0.9, "distance_score": 0.9, "retry_count": 0},
     )
-    assert periodic_result.status_code == 200, periodic_result.text
-    assert periodic_result.json()["outcome"] == "Verified"
+    assert periodic_result.status_code == 410, periodic_result.text
+    assert len(db.scalars(select(IdentityChallenge)).all()) == count_before
 
 
 def test_registration_approval_and_demo_bypass(client: TestClient, db: Session):

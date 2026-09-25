@@ -25,6 +25,10 @@ export function interactionDisabled(state: ProtectionState, monitoringUnavailabl
   return finished || monitoringUnavailable || state.mode === "PROTECTED";
 }
 
+export function monitoringProtectionRequired(phonePolicyArmed: boolean, monitoringUnavailable: boolean): boolean {
+  return phonePolicyArmed && monitoringUnavailable;
+}
+
 export function canDemoRestore(enabled: boolean, phonePolicyArmed: boolean, reason: ProtectionReason | null): boolean {
   return enabled && phonePolicyArmed && reason === "policy_review";
 }

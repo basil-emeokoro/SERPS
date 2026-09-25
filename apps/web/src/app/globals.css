@@ -392,6 +392,8 @@ textarea { width: 100%; border: 1px solid var(--serps-border); border-radius: 8p
 .protection-shield { display: block; color: #ffca5c; font-size: 4rem; }
 .protection-boundary { margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.35); }
 .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.success-text { color: #087a55; }
+.error-text { color: #b42318; }
 
 @media (max-width: 820px) {
   .page-shell {

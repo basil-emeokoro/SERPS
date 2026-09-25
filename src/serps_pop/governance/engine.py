@@ -191,6 +191,26 @@ def assess_events(events: list[EvidenceEvent], window_seconds: int = DEFAULT_WIN
     if any(unavailable_counts.values()):
         explanation += " Detector-unavailable states were recorded as operational limitations and did not contribute to misconduct risk."
 
+    # Identity context is separate from aggregate risk. Recovery must follow a
+    # sustained primary-camera absence; an arbitrary high score is insufficient.
+    sustained = [event for event in window_events
+                 if event.event_type == "sustained_face_absence" and event.camera_id in (None, "primary")]
+    recovery = next((event for event in reversed(window_events)
+                     if sustained and event.event_type == "face_detected"
+                     and event.camera_id in (None, "primary") and event.timestamp > sustained[-1].timestamp), None)
+    persons = [event for event in window_events if event.event_type == "multiple_persons_detected"]
+    identity_context = {}
+    for name, context_events, count in (
+        ("sustained_absence_reappearance", sustained + ([recovery] if recovery else []), len(sustained) if recovery else 0),
+        ("additional_persons", persons, len(persons)),
+    ):
+        if count:
+            identity_context[name] = {
+                "count": count, "confidence": min(event.confidence for event in context_events),
+                "event_ids": [event.event_id for event in context_events],
+                "first_event_at": min(event.timestamp for event in context_events).isoformat(),
+            }
+
     return AssessmentResult(
         risk_score=score,
         risk_level=risk_level_for_score(score),
@@ -206,6 +226,7 @@ def assess_events(events: list[EvidenceEvent], window_seconds: int = DEFAULT_WIN
             "combined_pattern": combined,
             "correlations": correlations,
             "face_presence_recovered": face_recovered,
+            "identity_context": identity_context,
             "repeated_event_types": [event_type for event_type, count in counts.items() if count > 1],
             "detector_unavailable_counts": unavailable_counts,
         },

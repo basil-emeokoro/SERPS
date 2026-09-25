@@ -174,6 +174,7 @@ class OperationalSessionDetail(BaseModel):
     session: dict[str, Any]
     candidate: dict[str, Any]
     identity_assurance: dict[str, Any]
+    identity_reauthentication: dict[str, Any] = Field(default_factory=dict)
     institution: dict[str, Any]
     examination: dict[str, Any]
     primary_camera: OperationalCameraStatus

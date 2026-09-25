@@ -103,6 +103,11 @@ def operational_session_detail(
         .order_by(PolicyEvaluation.evaluated_at.desc())
         .limit(1)
     )
+    # Pin the presented chain to one evaluation even if a new event commits
+    # between these reads; never mix unrelated "latest" records.
+    if evaluation:
+        recommendation = db.get(AgentRecommendation, evaluation.recommendation_id)
+        assessment = db.get(ContextualAssessment, recommendation.assessment_id) if recommendation else None
     decisions = db.scalars(
         select(ReviewerDecision)
         .where(ReviewerDecision.session_id == session_id)
@@ -113,10 +118,13 @@ def operational_session_detail(
         .where(SessionReportSnapshot.session_id == session_id)
         .order_by(SessionReportSnapshot.generated_at.desc())
     ).all()
+    from serps_pop.identity_assurance.reauthentication import latest_requirement, state
+    identity_requirement = state(latest_requirement(db, session_id), session_id)
     timeline_total = governance_timeline_count(db, session_id=session_id)
     return {
         "session": _record(session, ("session_id", "institution_id", "candidate_id", "examination_id", "status", "deployment_mode", "started_at", "ended_at", "monitoring_status")),
         "candidate": _record(candidate, ("candidate_id", "candidate_identifier", "full_name", "email", "status")),
+        "identity_reauthentication": identity_requirement,
         "identity_assurance": _record(
             identity_profile,
             (

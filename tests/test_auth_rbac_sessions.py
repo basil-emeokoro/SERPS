@@ -251,3 +251,49 @@ def test_examination_assignment_session_and_invalid_transition(client: TestClien
     )
     assert valid.status_code == 200
     assert valid.json()["status"] == "device_check_pending"
+
+
+def test_administrator_examination_creation_modes_and_candidate_rejection(client: TestClient, db_session: Session) -> None:
+    users = seed_users(db_session)
+    admin_headers = {"Authorization": f"Bearer {login(client, users['admin'])}"}
+    candidate_headers = {"Authorization": f"Bearer {login(client, users['candidate_user'])}"}
+    for mode in ("A", "B", "C"):
+        response = client.post("/api/v1/examinations/", json={"exam_code": f"MODE-{mode}", "title": f"Mode {mode} examination", "duration_minutes": 90, "status": "published", "monitoring_mode": mode, "is_active": True, "policy_profile": "generic"}, headers=admin_headers)
+        assert response.status_code == 201, response.text
+        assert response.json()["monitoring_mode"] == mode
+        assert response.json()["is_active"] is True
+    invalid = client.post("/api/v1/examinations/", json={"exam_code": "BAD", "title": "Bad mode", "monitoring_mode": "D"}, headers=admin_headers)
+    assert invalid.status_code == 422
+    forbidden = client.post("/api/v1/examinations/", json={"exam_code": "NOPE", "title": "Forbidden", "monitoring_mode": "A"}, headers=candidate_headers)
+    assert forbidden.status_code == 403
+
+
+def test_course_cohort_preview_assignment_duplicates_and_institution_isolation(client: TestClient, db_session: Session) -> None:
+    users = seed_users(db_session)
+    admin_headers = {"Authorization": f"Bearer {login(client, users['admin'])}"}
+    other_headers = {"Authorization": f"Bearer {login(client, users['other_admin'])}"}
+    candidate = client.post("/api/v1/candidates/", json={"candidate_identifier": "COHORT-1", "full_name": "Cohort Candidate", "email": "cohort@miva.edu.ng"}, headers=admin_headers).json()
+    record = db_session.get(Candidate, candidate["candidate_id"])
+    user = create_user(db_session, UserCreate(institution_id=users["institution_id"], email="cohort-user@miva.edu.ng", full_name="Cohort Candidate", password="Password123!", roles=[ROLE_CANDIDATE]))
+    record.user_id = user.user_id; record.status = "active"
+    db_session.add(IdentityAssuranceProfile(user_id=user.user_id, enrolment_status="enrolled")); db_session.commit()
+    exam = client.post("/api/v1/examinations/", json={"exam_code": "COHORT-EXAM", "title": "Cohort Exam", "status": "published", "monitoring_mode": "C"}, headers=admin_headers).json()
+    course = client.post("/api/v1/examinations/courses", json={"course_code": "CSC900", "title": "Research Methods"}, headers=admin_headers)
+    assert course.status_code == 201, course.text
+    course_id = course.json()["course_id"]
+    assert client.get("/api/v1/examinations/courses", headers=other_headers).json() == []
+    registered = client.post("/api/v1/examinations/course-registrations", json={"course_id": course_id, "candidate_id": candidate["candidate_id"]}, headers=admin_headers)
+    assert registered.status_code == 201, registered.text
+    duplicate_registration = client.post("/api/v1/examinations/course-registrations", json={"course_id": course_id, "candidate_id": candidate["candidate_id"]}, headers=admin_headers)
+    assert duplicate_registration.status_code == 409
+    payload = {"course_id": course_id, "examination_id": exam["examination_id"]}
+    preview = client.post("/api/v1/examinations/cohorts/preview", json=payload, headers=admin_headers)
+    assert preview.status_code == 200 and preview.json()["eligible_count"] == 1
+    assert preview.json()["monitoring_mode"] == "C"
+    assigned = client.post("/api/v1/examinations/cohorts/assign", json=payload, headers=admin_headers)
+    assert assigned.status_code == 201 and assigned.json()["created_count"] == 1
+    repeated = client.post("/api/v1/examinations/cohorts/assign", json=payload, headers=admin_headers)
+    assert repeated.status_code == 201 and repeated.json()["created_count"] == 0
+    assert repeated.json()["already_assigned_count"] == 1
+    isolated = client.post("/api/v1/examinations/cohorts/preview", json=payload, headers=other_headers)
+    assert isolated.status_code == 404

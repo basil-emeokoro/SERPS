@@ -14,7 +14,10 @@ from apps.api.app.api.v1.routes.identity_assurance import router as identity_ass
 from apps.api.app.api.v1.routes.roles import router as roles_router
 from apps.api.app.api.v1.routes.users import router as users_router
 
+from apps.api.app.api.v1.routes.reauthentication import router as reauthentication_router
+
 api_v1_router = APIRouter()
+api_v1_router.include_router(reauthentication_router, prefix="/identity-assurance/reauthentication", tags=["identity-assurance"])
 api_v1_router.include_router(health_router, tags=["health"])
 api_v1_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_v1_router.include_router(identity_assurance_router, prefix="/identity-assurance", tags=["identity-assurance"])

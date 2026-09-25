@@ -278,7 +278,6 @@ def create_policy_evaluation(
     policy = get_or_create_default_policy(db, recommendation.institution_id, actor_user_id)
     level_rank = RISK_LEVEL_ORDER[assessment.risk_level]
     notification_rank = RISK_LEVEL_ORDER[policy.reviewer_notification_threshold]
-    reauth_rank = RISK_LEVEL_ORDER[policy.reauthentication_threshold]
     approved_action = recommendation.recommended_action
     if assessment.risk_level == "High":
         approved_action = policy.high_risk_action
@@ -305,13 +304,20 @@ def create_policy_evaluation(
         approved_action = "PROTECT_AND_PAUSE"
     requires_reviewer = recommendation.requires_reviewer or level_rank >= notification_rank
     requires_ack = policy.candidate_acknowledgement_required and level_rank >= RISK_LEVEL_ORDER["Moderate"]
-    reauthentication_expected = level_rank >= reauth_rank
+    from serps_pop.identity_assurance.reauthentication import identity_conditions, require_from_evaluation
+    reauth_conditions = identity_conditions(assessment, policy)
+    reauthentication_expected = bool(reauth_conditions)
+    if reauthentication_expected:
+        requires_reviewer = True
+        if approved_action in {"CONTINUE_MONITORING", "REQUEST_CANDIDATE_ACKNOWLEDGEMENT"}:
+            approved_action = "REQUEST_REAUTHENTICATION"
     explanation = (
         f"Policy {policy.policy_version} evaluated {recommendation.recommended_action} at "
         f"{assessment.risk_level} risk and approved {approved_action}. "
         f"Reviewer required: {str(requires_reviewer).lower()}; candidate acknowledgement required: "
         f"{str(requires_ack).lower()}; the session is not terminated. A policy-controlled protective pause may apply. "
-        "Automatic termination and misconduct determination are prohibited."
+        "Automatic termination and misconduct determination are prohibited. "
+        f"Identity re-authentication conditions: {', '.join(reauth_conditions) or 'none'}."
     )
     evaluation = PolicyEvaluation(
         institution_id=recommendation.institution_id,
@@ -327,6 +333,8 @@ def create_policy_evaluation(
         policy_version=policy.policy_version,
         metadata_json={
             "reauthentication_expected": reauthentication_expected,
+            "identity_conditions": reauth_conditions,
+            "identity_reauthentication_policy": policy.metadata_json.get("identity_reauthentication", {}),
             "protection_required": approved_action == "PROTECT_AND_PAUSE",
             "protection_trigger": "persistent_mobile_phone_evidence" if approved_action == "PROTECT_AND_PAUSE" else None,
             "misconduct_determination": False,
@@ -352,6 +360,7 @@ def create_policy_evaluation(
             "policy_version": policy.policy_version,
         },
     )
+    require_from_evaluation(db, evaluation, assessment, policy)
     db.flush()
     return evaluation
 
@@ -407,6 +416,8 @@ def record_reviewer_decision(
         previous_entity_id=previous_id or evaluation.evaluation_id,
         details={"decision": decision.decision, "rationale": decision.rationale},
     )
+    from serps_pop.identity_assurance.reauthentication import apply_reviewer_decision
+    apply_reviewer_decision(db, decision)
     db.flush()
     return decision
 
