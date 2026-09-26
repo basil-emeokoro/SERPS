@@ -125,6 +125,8 @@ def create_contextual_assessment(
     examination_session = _authorised_session(db, session_id, actor_institution_id, actor_roles)
     events = EvidenceEventRepository(db).list_by_session(session_id)
     result = assess_events(events, window_seconds)
+    from serps_pop.governance.camera_monitoring import camera_condition
+    camera_context = camera_condition(events, examination_session.deployment_mode)
     previous_id = db.scalar(
         select(ContextualAssessment.assessment_id)
         .where(ContextualAssessment.session_id == session_id)
@@ -144,7 +146,7 @@ def create_contextual_assessment(
         evidence_window_end=result.evidence_window_end,
         evidence_event_ids=result.evidence_event_ids,
         rule_version=result.rule_version,
-        metadata_json=result.metadata,
+        metadata_json={**result.metadata, "required_camera_condition": camera_context},
     )
     db.add(assessment)
     db.flush()
@@ -303,6 +305,20 @@ def create_policy_evaluation(
     if phone_protection_enabled and phone_count >= 2 and assessment.risk_level in {"High", "Critical"}:
         approved_action = "PROTECT_AND_PAUSE"
     requires_reviewer = recommendation.requires_reviewer or level_rank >= notification_rank
+    from serps_pop.governance.camera_monitoring import camera_loss_action
+    camera_context = assessment.metadata_json.get("required_camera_condition", {})
+    camera_action = camera_loss_action(policy.metadata_json, camera_context)
+    # Explicit operational policy is independent of phone-demo arming and identity checks.
+    # Preserve a concurrently required phone protective pause.
+    other_context = any(count for name, count in assessment.metadata_json.get("event_counts", {}).items()
+                        if name != "camera_disconnected")
+    if camera_action and approved_action != "PROTECT_AND_PAUSE":
+        if not other_context or camera_action == "PROTECT_AND_PAUSE":
+            approved_action = camera_action
+        elif camera_action == "NOTIFY_REVIEWER" and approved_action in {"CONTINUE_MONITORING", "REQUEST_CANDIDATE_ACKNOWLEDGEMENT"}:
+            approved_action = camera_action
+    if camera_action in {"NOTIFY_REVIEWER", "PROTECT_AND_PAUSE"}:
+        requires_reviewer = True
     requires_ack = policy.candidate_acknowledgement_required and level_rank >= RISK_LEVEL_ORDER["Moderate"]
     from serps_pop.identity_assurance.reauthentication import identity_conditions, require_from_evaluation
     reauth_conditions = identity_conditions(assessment, policy)
@@ -317,6 +333,7 @@ def create_policy_evaluation(
         f"Reviewer required: {str(requires_reviewer).lower()}; candidate acknowledgement required: "
         f"{str(requires_ack).lower()}; the session is not terminated. A policy-controlled protective pause may apply. "
         "Automatic termination and misconduct determination are prohibited. "
+        f"Required camera operational response: {camera_action or 'not configured'}; no misconduct determination. "
         f"Identity re-authentication conditions: {', '.join(reauth_conditions) or 'none'}."
     )
     evaluation = PolicyEvaluation(
@@ -336,7 +353,11 @@ def create_policy_evaluation(
             "identity_conditions": reauth_conditions,
             "identity_reauthentication_policy": policy.metadata_json.get("identity_reauthentication", {}),
             "protection_required": approved_action == "PROTECT_AND_PAUSE",
-            "protection_trigger": "persistent_mobile_phone_evidence" if approved_action == "PROTECT_AND_PAUSE" else None,
+            "protection_trigger": ("required_camera_unavailable" if camera_action == "PROTECT_AND_PAUSE" else
+                                   "persistent_mobile_phone_evidence" if approved_action == "PROTECT_AND_PAUSE" else None),
+            "required_camera_condition": camera_context,
+            "required_camera_loss_action": camera_action,
+            "phone_protection_required": phone_protection_enabled and phone_count >= 2 and assessment.risk_level in {"High", "Critical"},
             "misconduct_determination": False,
             "prototype_demo_phone_policy_armed": phone_protection_enabled,
             "phone_persistence_rule": "at_least_2_mobile_phone_detected_events_in_contextual_window" if phone_protection_enabled else None,
@@ -724,3 +745,23 @@ def get_report(
     if report is None or report.session_id != session_id:
         raise GovernanceNotFound("Session report not found.")
     return _authorised_entity(report, actor_institution_id, actor_roles)
+
+
+def configure_camera_policy(db: Session, institution_id: str, actor_user_id: str, action: str | None) -> InstitutionalPolicy:
+    from serps_pop.governance.camera_monitoring import CameraMonitoringPolicy
+    CameraMonitoringPolicy(required_camera_loss_action=action)
+    old = get_or_create_default_policy(db, institution_id, actor_user_id)
+    policy = InstitutionalPolicy(institution_id=institution_id, created_by=actor_user_id,
+        policy_version="IPIME-CAMERA-1.0", high_risk_action=old.high_risk_action,
+        critical_risk_action=old.critical_risk_action, reviewer_notification_threshold=old.reviewer_notification_threshold,
+        candidate_acknowledgement_required=old.candidate_acknowledgement_required,
+        reauthentication_threshold=old.reauthentication_threshold, automatic_exam_termination_allowed=False,
+        metadata_json={**old.metadata_json, "required_camera_loss_action": action, "previous_policy_id": old.policy_id})
+    db.add(policy)
+    db.flush()
+    from serps_pop.identity.services import audit
+    audit(db, institution_id=institution_id, actor_user_id=actor_user_id,
+          action="camera_monitoring_policy.configure", result="success", target_type="InstitutionalPolicy",
+          target_id=policy.policy_id, metadata={"previous_policy_id": old.policy_id,
+          "required_camera_loss_action": action, "misconduct_determination": False})
+    return policy

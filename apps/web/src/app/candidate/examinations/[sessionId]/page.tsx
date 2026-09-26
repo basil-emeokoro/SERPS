@@ -13,6 +13,7 @@ import { LocalObjectDetector, OBJECT_MODEL_NAME, OBJECT_MODEL_VERSION, OBJECT_SA
 import { formatElapsed } from "../../../../lib/operational";
 import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, monitoringProtectionRequired, normalProtectionState, type ProtectionReason, type ProtectionState } from "../../../../lib/protectionState";
 
+import { AssignedCamera, FreshCameraFrame } from "../../../../lib/cameraLifecycle";
 import FacialVerification from "../../../../components/FacialVerification";
 import { fetchReauthentication, reauthenticationMessage, type ReauthenticationState } from "../../../../lib/reauthentication";
 
@@ -55,10 +56,8 @@ function DemonstrationWorkspacePageContent() {
 
   const primaryVideo = useRef<HTMLVideoElement | null>(null);
   const secondaryVideo = useRef<HTMLVideoElement | null>(null);
-  const streams = useRef<MediaStream[]>([]);
+  const cameras = useRef<Partial<Record<CameraRole, AssignedCamera>>>({});
   const streamByRole = useRef<Partial<Record<CameraRole, MediaStream>>>({});
-  const disconnectReported = useRef(new Set<string>());
-  const connectionInFlight = useRef(new Set<CameraRole>());
   const objectDetectors = useRef<Partial<Record<CameraRole, LocalObjectDetector>>>({});
   const faceDetector = useRef<LocalFacePerceptionService | null>(null);
   const audioMonitor = useRef<LocalAudioMonitor | null>(null);
@@ -83,15 +82,16 @@ function DemonstrationWorkspacePageContent() {
   }, [protection.mode]);
 
   const stopMedia = useCallback(async () => {
-    streams.current.flatMap((stream) => stream.getTracks()).forEach((track) => track.stop());
-    streams.current = [];
+    Object.values(cameras.current).forEach(camera => camera?.close());
+    cameras.current = {};
     streamByRole.current = {};
     Object.values(objectDetectors.current).forEach((detector) => detector?.close());
     objectDetectors.current = {};
     faceDetector.current?.close();
     faceDetector.current = null;
-    await audioMonitor.current?.close();
+    const monitor = audioMonitor.current;
     audioMonitor.current = null;
+    await monitor?.close();
   }, []);
 
   const emit = useCallback(async (
@@ -195,49 +195,52 @@ function DemonstrationWorkspacePageContent() {
     const audioTracker = new AudioActivityTracker();
     let audioDisconnectReported = false;
 
-    async function connect(role: CameraRole, deviceId: string, video: RefObject<HTMLVideoElement | null>, reconnected = false) {
-      if (connectionInFlight.current.has(role)) return;
-      connectionInFlight.current.add(role);
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } }, audio: false });
-        if (disposed) { stream.getTracks().forEach((track) => track.stop()); return; }
-        streams.current.push(stream);
-        streamByRole.current[role]?.getTracks().forEach((track) => track.stop());
-        streamByRole.current[role] = stream;
-        disconnectReported.current.delete(role);
-        if (video.current) {
-          video.current.srcObject = stream;
-          await video.current.play().catch(() => undefined);
+    const ownedCameras: Partial<Record<CameraRole, AssignedCamera>> = {};
+    const lossTimers = new Map<CameraRole, number>();
+    const reportedLoss = new Set<CameraRole>();
+    const operationalMetadata = (reason: string, role: CameraRole) => ({
+      source: "browser_media_lifecycle", operational_limitation: true,
+      media_reason: reason, track_state: ownedCameras[role]?.stream?.getVideoTracks()[0]?.readyState ?? "unavailable",
+      application_release: false, misconduct_determination: false,
+      required_for_mode: true, deployment_mode: workspace!.session.deployment_mode,
+      document_visibility: document.visibilityState, window_focused: document.hasFocus(),
+      viewport_width: window.innerWidth, viewport_height: window.innerHeight,
+    });
+    const invalidateObject = (role: CameraRole, reason: string) => {
+      if (disposed) return;
+      setObjectStates(current => ({ ...current, [role]: "unavailable" }));
+      setObjectSummary(current => ({ ...current, [role]: "No current observation ? " + reason }));
+      if (objectGate.allow(`object_detector_unavailable:${role}`, Date.now())) void emitDraft(detectorUnavailableEvidence(role, reason));
+    };
+    function connect(role: CameraRole, deviceId: string, video: RefObject<HTMLVideoElement | null>) {
+      const camera = new AssignedCamera(deviceId, () => video.current, (state, reason, recovered) => {
+        if (disposed) return;
+        streamByRole.current[role] = camera.stream ?? undefined;
+        role === "primary" ? setPrimaryState(state) : setSecondaryState(state);
+        if (state !== "connected") invalidateObject(role, reason);
+        if (state === "connected") {
+          window.clearTimeout(lossTimers.get(role)); lossTimers.delete(role);
+          if (!recovered || reportedLoss.delete(role)) void emit(recovered ? "camera_reconnected" : "camera_connected",
+            `${role} camera has a live unmuted track.`, role, 1, 0, { ...operationalMetadata(reason, role), operational_limitation: false });
+        } else if (!reportedLoss.has(role) && !lossTimers.has(role)) {
+          // Temporary mute retains ownership; only sustained loss enters policy assessment.
+          const timer = window.setTimeout(() => {
+            lossTimers.delete(role);
+            if (disposed) return;
+            reportedLoss.add(role);
+            void emit("camera_disconnected", `${role} required camera unavailable for at least 5 seconds: ${reason}.`,
+              role, 1, 0, { ...operationalMetadata(reason, role), sustained_unavailability_ms: 5000 });
+          }, 5000);
+          lossTimers.set(role, timer);
         }
-        role === "primary" ? setPrimaryState("connected") : setSecondaryState("connected");
-        await emit(
-          reconnected ? "camera_reconnected" : "camera_connected",
-          `${role} camera stream ${reconnected ? "reconnected and revalidated" : "connected"} in the demonstration workspace.`,
-          role,
-          1,
-          0,
-        );
-        stream.getVideoTracks().forEach((track) => {
-          const disconnected = (reason: string) => {
-            if (disconnectReported.current.has(role)) return;
-            disconnectReported.current.add(role);
-            streamByRole.current[role] = undefined;
-            if (video.current) video.current.srcObject = null;
-            role === "primary" ? setPrimaryState("disconnected") : setSecondaryState("disconnected");
-            void emit("camera_disconnected", `${role} camera ${reason}.`, role);
-          };
-          track.addEventListener("ended", () => disconnected("track ended or permission was revoked"), { once: true });
-          track.addEventListener("mute", () => disconnected("stream became unavailable"), { once: true });
-        });
-      } catch (reason) {
-        role === "primary" ? setPrimaryState("permission denied") : setSecondaryState("permission denied");
-        await emit("camera_disconnected", `${role} camera could not connect: ${reason instanceof Error ? reason.message : "permission denied"}.`, role);
-      } finally {
-        connectionInFlight.current.delete(role);
-      }
+      });
+      ownedCameras[role] = camera;
+      cameras.current[role] = camera;
+      return camera.connect();
     }
 
     async function startObjectDetector(role: CameraRole, video: RefObject<HTMLVideoElement | null>) {
+      if (disposed) return;
       try {
         setObjectStates((current) => ({ ...current, [role]: "loading model" }));
         const detector = new LocalObjectDetector();
@@ -245,24 +248,30 @@ function DemonstrationWorkspacePageContent() {
         if (disposed) { detector.close(); return; }
         objectDetectors.current[role] = detector;
         setObjectStates((current) => ({ ...current, [role]: "ready" }));
+        const frames = new FreshCameraFrame();
         const timer = window.setInterval(() => {
-          if (disposed || !video.current || video.current.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+          if (disposed) return;
+          if (document.hidden || !frames.available(ownedCameras[role]?.stream, video.current)) {
+            invalidateObject(role, "camera stream or fresh video frame unavailable");
+            return;
+          }
           try {
-            const snapshot = detector.detect(video.current);
+            const snapshot = detector.detect(video.current!);
+            setObjectStates(current => ({ ...current, [role]: "ready" }));
             setObjectSummary((current) => ({ ...current, [role]: `${snapshot.personCount} person(s), ${snapshot.mobilePhoneCount} phone(s); ${snapshot.processingTime.toFixed(0)} ms` }));
             for (const draft of objectEvidence(snapshot, role)) {
               if (objectGate.allow(`${draft.eventType}:${role}`, Date.now())) void emitDraft(draft);
             }
           } catch (reason) {
             const message = reason instanceof Error ? reason.message : "inference failed";
-            setObjectStates((current) => ({ ...current, [role]: "unavailable" }));
+            invalidateObject(role, message);
             if (objectGate.allow(`object_detector_unavailable:${role}`, Date.now())) void emitDraft(detectorUnavailableEvidence(role, message));
           }
         }, OBJECT_SAMPLE_INTERVAL_MS);
         timers.push(timer);
       } catch (reason) {
         const message = reason instanceof Error ? reason.message : "model loading failed";
-        setObjectStates((current) => ({ ...current, [role]: "unavailable" }));
+        invalidateObject(role, message);
         if (objectGate.allow(`object_detector_unavailable:${role}`, Date.now())) await emitDraft(detectorUnavailableEvidence(role, message));
       }
     }
@@ -281,8 +290,9 @@ function DemonstrationWorkspacePageContent() {
           threshold: audioTracker.threshold,
           raw_audio_stored: false,
         });
+        if (disposed) return;
         const disconnected = (reason: string) => {
-          if (audioDisconnectReported) return;
+          if (disposed || audioDisconnectReported) return;
           audioDisconnectReported = true;
           setAudioState("disconnected");
           void emit("microphone_disconnected", `The candidate microphone ${reason}.`, undefined, 1, 0.1, {
@@ -328,7 +338,9 @@ function DemonstrationWorkspacePageContent() {
     }
 
     async function startFaceMonitor() {
+      if (disposed) return;
       const tracker = new FacePresenceTracker();
+      const frames = new FreshCameraFrame();
       try {
         const detector = new LocalFacePerceptionService();
         await detector.initialise();
@@ -336,14 +348,15 @@ function DemonstrationWorkspacePageContent() {
         faceDetector.current = detector;
         setFaceCapability("Face monitoring: Active — Local MediaPipe detector");
         const timer = window.setInterval(() => {
-          const stream = streamByRole.current.primary;
-          const cameraConnected = !!stream?.active && stream.getVideoTracks().some((track) => track.readyState === "live" && !track.muted);
-          if (disposed || !cameraConnected || !primaryVideo.current || primaryVideo.current.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          if (disposed) return;
+          if (document.hidden || !frames.available(ownedCameras.primary?.stream, primaryVideo.current)) {
+            setFaceCapability("Face monitoring: Unavailable ? no fresh primary camera frame");
             tracker.update(0, performance.now(), false);
             return;
           }
           try {
-            const snapshot = detector.detect(primaryVideo.current);
+            const snapshot = detector.detect(primaryVideo.current!);
+            setFaceCapability("Face monitoring: Active ? Local MediaPipe detector");
             for (const signal of tracker.update(snapshot.faceCount, performance.now(), true)) void emitDraft(facePresenceEvidence(signal, snapshot));
           } catch (reason) {
             const message = reason instanceof Error ? reason.message : "face inference failed";
@@ -366,8 +379,8 @@ function DemonstrationWorkspacePageContent() {
       const invalidModeTimer = window.setTimeout(() => setStatus("Mode B requires a configured secondary camera. Monitoring did not start."), 0);
       return () => { disposed = true; window.clearTimeout(invalidModeTimer); };
     }
-    const cameraStarts = [connect("primary", workspace.primary_camera.device_id, primaryVideo)];
-    if (secondaryUsed && secondaryCamera) cameraStarts.push(connect("secondary", secondaryCamera.device_id, secondaryVideo));
+    const cameraStarts = [connect("primary", String(workspace.primary_camera.device_id), primaryVideo)];
+    if (secondaryUsed && secondaryCamera) cameraStarts.push(connect("secondary", String(secondaryCamera.device_id), secondaryVideo));
     void Promise.all(cameraStarts).then(async () => {
       if (disposed) return;
       await startObjectDetector("primary", primaryVideo);
@@ -376,34 +389,18 @@ function DemonstrationWorkspacePageContent() {
     });
     void startAudioMonitor();
 
-    const visibility = () => { if (document.hidden) void emit("tab_focus_lost", "Demonstration workspace lost document visibility."); };
-    const deviceChange = async () => {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const ids = new Set(devices.filter((item) => item.kind === "videoinput").map((item) => item.deviceId));
-      if (!ids.has(workspace.primary_camera.device_id)) {
-        if (!disconnectReported.current.has("primary")) {
-          disconnectReported.current.add("primary");
-          setPrimaryState("device removed");
-          streamByRole.current.primary?.getTracks().forEach((track) => track.stop());
-          streamByRole.current.primary = undefined;
-          void emit("camera_disconnected", "Primary camera device was removed.", "primary");
-        }
-      } else if (disconnectReported.current.has("primary") || !streamByRole.current.primary?.active) {
-        void connect("primary", workspace.primary_camera.device_id, primaryVideo, true);
-      }
-      if (secondaryUsed && secondaryCamera) {
-        if (!ids.has(secondaryCamera.device_id)) {
-          if (!disconnectReported.current.has("secondary")) {
-            disconnectReported.current.add("secondary");
-            setSecondaryState("device removed");
-            streamByRole.current.secondary?.getTracks().forEach((track) => track.stop());
-            streamByRole.current.secondary = undefined;
-            void emit("camera_disconnected", "Secondary camera device was removed.", "secondary");
-          }
-        } else if (disconnectReported.current.has("secondary") || !streamByRole.current.secondary?.active) {
-          void connect("secondary", secondaryCamera.device_id, secondaryVideo, true);
-        }
-      }
+    const visibility = () => {
+      if (disposed) return;
+      for (const role of activeObjectRoles) invalidateObject(role, document.hidden ? "page backgrounded; no current observation" : "awaiting a fresh frame after visibility change");
+      setFaceCapability("Face monitoring: Recovering - awaiting a fresh primary camera frame");
+      if (document.hidden) void emit("tab_focus_lost", "Demonstration workspace lost document visibility.");
+      else for (const camera of Object.values(ownedCameras)) void camera?.connect();
+    };
+    // Enumeration changes alone are not proof that an owned live camera has failed.
+    // Recover ended/failed sources; temporary mute uses the original track's unmute.
+    const deviceChange = () => {
+      if (disposed) return;
+      for (const camera of Object.values(ownedCameras)) void camera?.connect();
     };
     document.addEventListener("visibilitychange", visibility);
     navigator.mediaDevices?.addEventListener("devicechange", deviceChange);
@@ -420,6 +417,7 @@ function DemonstrationWorkspacePageContent() {
     return () => {
       disposed = true;
       timers.forEach((timer) => window.clearInterval(timer));
+      lossTimers.forEach(timer => window.clearTimeout(timer));
       document.removeEventListener("visibilitychange", visibility);
       navigator.mediaDevices?.removeEventListener("devicechange", deviceChange);
       void stopMedia();
@@ -492,8 +490,8 @@ function DemonstrationWorkspacePageContent() {
   async function finish() {
     setFinishOpen(false);
     try {
-      await stopMedia();
       await completeCandidateSession(sessionId);
+      await stopMedia();
       setFinished(true);
       setStatus("Demonstration completed. Evidence and governance records were preserved for review.");
     } catch (reason) {
@@ -536,8 +534,9 @@ function DemonstrationWorkspacePageContent() {
     {demoControlsEnabled && protection.mode !== "PROTECTED" && <aside className="demo-policy-control" role="note"><div><strong>Prototype demonstration configuration</strong><p>Phone evidence remains logged. Policy protection is applied only when this demo control is armed and at least two phone-positive EvidenceEvents occur in the bounded contextual window.</p></div><button type="button" onClick={() => void configureDemoPhonePolicy(!demoPhonePolicyArmed)}>{demoPhonePolicyArmed ? "Disable phone-protection demonstration" : "Enable phone-protection demonstration"}</button></aside>}
     {identityRequirement?.required && <aside className="identity-prompt" role="alert"><div><strong>Identity assurance required by institutional policy</strong><p>{reauthenticationMessage(identityRequirement)}</p></div>{identityRequirement.state !== "manual_review" && <button className="primary-action" onClick={() => setIdentityCheckOpen(true)}>Verify identity</button>}</aside>}
     {identityCheckOpen && <FacialVerification examination={{ sessionId, primaryStream: () => streamByRole.current.primary ?? null, onReturn: () => { setIdentityCheckOpen(false); void refreshIdentityRequirement().catch(() => undefined); } }} /> }
-    {requiredMonitoringUnavailable && <aside className="inline-warning" role="alert"><strong>{demoPhonePolicyArmed ? "Assessment interaction paused:" : "Monitoring readiness notice:"}</strong> required monitoring is unavailable. Restore the indicated camera, microphone or face-monitoring component to continue. {demoPhonePolicyArmed ? "The session remains active for human-governed review." : "Protection remains inactive while the demonstration policy is disarmed."}</aside>}
+    {requiredMonitoringUnavailable && <aside className="inline-warning" role="alert"><strong>{demoPhonePolicyArmed ? "Assessment interaction paused:" : "Monitoring readiness notice:"}</strong> required monitoring is unavailable. Restore the indicated camera, microphone or face-monitoring component to continue. {demoPhonePolicyArmed ? "The session remains active for human-governed review." : "Operational events are recorded for institutional policy evaluation and human review."}</aside>}
 
+    {!finished && (primaryState !== "connected" || (workspace.session.deployment_mode === "B" && secondaryState !== "connected")) && <button type="button" onClick={() => { Object.values(cameras.current).forEach(camera => { void camera?.connect(); }); }}>Restore assigned cameras</button>}
     <section className="dual-camera-grid workspace-cameras">
       <article className="camera-panel"><div className="camera-title"><h2>Primary camera</h2><StatusBadge label={finished ? "stopped" : primaryState} tone={finished ? "neutral" : primaryState === "connected" ? "success" : "danger"} /></div><video ref={primaryVideo} autoPlay muted playsInline aria-label="Primary candidate-facing live local preview" /><p>Candidate-facing face and upper-body view.</p><div className="detector-readout"><strong>Object detector: {finished ? "stopped" : objectStates.primary}</strong><span>{finished ? "Monitoring completed" : objectSummary.primary}</span></div></article>
       <article className="camera-panel"><div className="camera-title"><h2>Secondary camera</h2><StatusBadge label={finished ? "stopped" : workspace.session.deployment_mode === "B" ? secondaryState : `not used in Mode ${workspace.session.deployment_mode}`} tone={finished ? "neutral" : secondaryState === "connected" && workspace.session.deployment_mode === "B" ? "success" : "warning"} /></div><video ref={secondaryVideo} autoPlay muted playsInline aria-label="Secondary room or side-angle live local preview" /><p>Room, desk or side-angle environmental view.</p><div className="detector-readout"><strong>Object detector: {finished ? "stopped" : workspace.session.deployment_mode === "B" ? objectStates.secondary : "not used"}</strong><span>{finished ? "Monitoring completed" : workspace.session.deployment_mode === "B" ? objectSummary.secondary : "No independent secondary evidence expected"}</span></div></article>
@@ -558,10 +557,11 @@ function DemonstrationWorkspacePageContent() {
     </section>
     {finished && <section className="state-card" role="status"><StatusBadge label="Completed" tone="success" /><h2>Demonstration finished</h2><p>The session is now available in reviewer and administrator operational views.</p></section>}
     <ConfirmationDialog open={finishOpen} title="Finish this demonstration?" detail="This completes the session and stops camera, object-detector and microphone resources. Evidence and governance records remain append-only." confirmLabel="Finish demonstration" onConfirm={() => void finish()} onCancel={() => setFinishOpen(false)} />
-    {protection.mode === "PROTECTED" && <div className="examination-protection-overlay" role="alertdialog" aria-live="assertive" aria-modal="true" aria-labelledby="protection-title"><div className="protection-panel"><span className="protection-shield" aria-hidden="true">◆</span><p className="eyebrow">{protectionStatus}</p><h2 id="protection-title">EXAMINATION CONTENT TEMPORARILY PROTECTED</h2><p>SERPS has detected a monitoring or policy condition requiring verification. Examination content has been temporarily concealed and the assessment timer paused. The session will resume when the applicable monitoring or governance condition is restored.</p><strong>Timer paused at {elapsed}</strong><p className="protection-boundary">This operational response is not a misconduct determination. Human review authority is preserved.</p>{canDemoRestore(demoControlsEnabled, demoPhonePolicyArmed, protection.reason) && <button type="button" className="demo-restore-action" onClick={() => void configureDemoPhonePolicy(false)}>Demo: restore examination</button>}</div></div>}
+    {protection.mode === "PROTECTED" && <div className="examination-protection-overlay" role="alertdialog" aria-live="assertive" aria-modal="true" aria-labelledby="protection-title"><div className="protection-panel"><span className="protection-shield" aria-hidden="true">◆</span><p className="eyebrow">{protectionStatus}</p><h2 id="protection-title">EXAMINATION CONTENT TEMPORARILY PROTECTED</h2><p>SERPS has detected a monitoring or policy condition requiring verification. Examination content has been temporarily concealed and the assessment timer paused. The session will resume when the applicable monitoring or governance condition is restored.</p><strong>Timer paused at {elapsed}</strong><button type="button" onClick={() => { Object.values(cameras.current).forEach(camera => { void camera?.connect(); }); }}>Restore assigned cameras while protected</button><p className="protection-boundary">This operational response is not a misconduct determination. Human review authority is preserved.</p>{canDemoRestore(demoControlsEnabled, demoPhonePolicyArmed, protection.reason) && <button type="button" className="demo-restore-action" onClick={() => void configureDemoPhonePolicy(false)}>Demo: restore examination</button>}</div></div>}
   </section>;
 }
 
 export default function DemonstrationWorkspacePage() {
-  return <PortalShell allowedRoles={["Candidate"]} title="Demonstration Examination Workspace" badge="Candidate" summary="A bounded monitored assessment harness; not a complete CBT platform or secure browser."><DemonstrationWorkspacePageContent /></PortalShell>;
+  const { sessionId } = useParams<{ sessionId: string }>();
+  return <PortalShell allowedRoles={["Candidate"]} title="Demonstration Examination Workspace" badge="Candidate" summary="A bounded monitored assessment harness; not a complete CBT platform or secure browser."><DemonstrationWorkspacePageContent key={sessionId} /></PortalShell>;
 }

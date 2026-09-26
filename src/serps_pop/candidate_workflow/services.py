@@ -567,17 +567,44 @@ def candidate_protection_state(db: Session, candidate: Candidate, session_id: st
         raise DomainNotFound("Examination session not found.")
     if session.candidate_id != candidate.candidate_id or session.institution_id != candidate.institution_id:
         raise CandidateAccessDenied("Candidate cannot access another candidate's session.")
-    evaluation = db.scalar(select(PolicyEvaluation).where(
+    evaluations = db.scalars(select(PolicyEvaluation).where(
         PolicyEvaluation.session_id == session_id,
         PolicyEvaluation.approved_action == "PROTECT_AND_PAUSE",
-    ).order_by(PolicyEvaluation.evaluated_at.desc()).limit(1))
-    recovery = None if evaluation is None else db.scalar(select(ReviewerDecision).where(
-        ReviewerDecision.policy_evaluation_id == evaluation.evaluation_id,
-        ReviewerDecision.decision.in_(("CONTINUE", "ACKNOWLEDGE")),
-    ).order_by(ReviewerDecision.created_at.desc()).limit(1))
+    ).order_by(PolicyEvaluation.evaluated_at.desc())).all()
     demo_enabled = get_settings().demo_policy_controls
     demo_armed = demo_enabled and phone_protection_is_armed(session_id)
-    protected = bool(evaluation and recovery is None and demo_armed)
+    from serps_pop.governance.camera_monitoring import camera_condition
+    from serps_pop.evidence.repository import EvidenceEventRepository
+    current = None
+    evaluation = evaluations[0] if evaluations else None
+    protected = False
+    seen_causes: set[str] = set()
+    for item in evaluations if session.status == "active" else []:
+        camera_required = item.metadata_json.get("required_camera_loss_action") == "PROTECT_AND_PAUSE"
+        phone_required = item.metadata_json.get("phone_protection_required",
+                         item.metadata_json.get("protection_trigger") != "required_camera_unavailable")
+        check_camera = camera_required and "camera" not in seen_causes
+        check_phone = phone_required and "phone" not in seen_causes
+        if camera_required: seen_causes.add("camera")
+        if phone_required: seen_causes.add("phone")
+        if not check_camera and not check_phone:
+            continue
+        recovery = db.scalar(select(ReviewerDecision).where(
+            ReviewerDecision.policy_evaluation_id == item.evaluation_id,
+            ReviewerDecision.decision.in_(("CONTINUE", "ACKNOWLEDGE")),
+        ).limit(1))
+        if recovery:
+            continue
+        camera_protected = False
+        if check_camera:
+            if current is None:
+                current = camera_condition(EvidenceEventRepository(db).list_by_session(session_id), session.deployment_mode)
+            # A recovered historical outage must not protect a new outage without its own evaluation.
+            camera_protected = bool(set(current["event_ids"]) & set(item.metadata_json.get("required_camera_condition", {}).get("event_ids", [])))
+        if camera_protected or (check_phone and demo_armed):
+            evaluation = item
+            protected = True
+            break
     return {
         "state": "PROTECTED" if protected else "NORMAL",
         "reason_category": "policy_review_required" if protected else None,
