@@ -157,13 +157,12 @@ function DemonstrationWorkspacePageContent() {
 
   const clearProtectedState = useCallback((expectedReason: ProtectionReason, metadata: Record<string, unknown> = {}, policyRecoveryConfirmed = false) => {
     const previous = protectionRef.current;
-    if (previous.reason !== expectedReason) return;
-    const next = clearProtection(previous, Date.now(), policyRecoveryConfirmed);
+    const next = clearProtection(previous, Date.now(), policyRecoveryConfirmed, expectedReason);
     if (next === previous) return;
     protectionRef.current = next;
     setProtection(next);
-    void emit("protection_cleared", "Examination content protection cleared after readiness revalidation.", undefined, 1, 0,
-      { trigger_category: expectedReason, protection_state: "NORMAL", misconduct_determination: false, ...metadata });
+    void emit("protection_cleared", "A protection cause cleared after revalidation; independent causes remain enforced.", undefined, 1, 0,
+      { trigger_category: expectedReason, protection_state: next.mode, remaining_causes: next.reasons, misconduct_determination: false, ...metadata });
   }, [emit]);
 
   const refreshIdentityRequirement = useCallback(async () => {
@@ -456,9 +455,14 @@ function DemonstrationWorkspacePageContent() {
         setLastHeartbeat(new Date(now).toISOString());
         if (policy.state === "PROTECTED" && policy.policy_action === "PROTECT_AND_PAUSE") {
           enterProtectedState("policy_review", { policy_action: policy.policy_action, requires_reviewer: policy.requires_reviewer });
-        } else if (protectionRef.current.reason === "policy_review") {
+        } else if (protectionRef.current.reasons.includes("policy_review")) {
           clearProtectedState("policy_review", { reviewer_recovery_confirmed: true }, true);
         }
+        // Re-evaluate outstanding connectivity protection on every successful check,
+        // including the check triggered by later monitoring-readiness recovery.
+        if (!requiredMonitoringUnavailable) clearProtectedState("connectivity_interrupted", {
+          connectivity_revalidated: true, readiness_revalidated: true,
+        });
         setDemoControlsEnabled(policy.demo_controls_enabled);
         setDemoPhonePolicyArmed(policy.demo_phone_policy_armed);
         if (priorInterruption != null) {
@@ -468,7 +472,6 @@ function DemonstrationWorkspacePageContent() {
             { interruption_started_at: new Date(priorInterruption).toISOString(), last_successful_acknowledgement: priorAck ? new Date(priorAck).toISOString() : null });
           await emit("connectivity_restored", "Candidate session reconnected to the SERPS server.", undefined, 1, 0,
             { interruption_ended_at: new Date(now).toISOString(), interruption_duration_ms: duration, readiness_revalidated: !requiredMonitoringUnavailable });
-          if (!requiredMonitoringUnavailable) clearProtectedState("connectivity_interrupted", { interruption_duration_ms: duration, readiness_revalidated: true });
         }
       } catch {
         if (disposed) return;

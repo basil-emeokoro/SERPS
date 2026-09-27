@@ -1,16 +1,23 @@
 export type ProtectionReason = "monitoring_verification" | "connectivity_interrupted" | "policy_review";
-export type ProtectionState = { mode: "NORMAL" | "PROTECTED"; reason: ProtectionReason | null; enteredAt: number | null; accumulatedPausedMs: number };
+export type ProtectionState = { mode: "NORMAL" | "PROTECTED"; reason: ProtectionReason | null; reasons: ProtectionReason[]; enteredAt: number | null; accumulatedPausedMs: number };
 
-export const normalProtectionState = (): ProtectionState => ({ mode: "NORMAL", reason: null, enteredAt: null, accumulatedPausedMs: 0 });
+export const normalProtectionState = (): ProtectionState => ({ mode: "NORMAL", reason: null, reasons: [], enteredAt: null, accumulatedPausedMs: 0 });
 
-export function enterProtection(state: ProtectionState, reason: ProtectionReason, now: number): ProtectionState {
-  if (state.mode === "PROTECTED") return state.reason === "policy_review" ? state : { ...state, reason };
-  return { ...state, mode: "PROTECTED", reason, enteredAt: now };
+function displayedReason(reasons: ProtectionReason[]): ProtectionReason | null {
+  return (["policy_review", "connectivity_interrupted", "monitoring_verification"] as const).find(reason => reasons.includes(reason)) ?? null;
 }
 
-export function clearProtection(state: ProtectionState, now: number, policyRecoveryConfirmed = false): ProtectionState {
-  if (state.mode === "NORMAL" || state.enteredAt == null || (state.reason === "policy_review" && !policyRecoveryConfirmed)) return state;
-  return { mode: "NORMAL", reason: null, enteredAt: null, accumulatedPausedMs: state.accumulatedPausedMs + Math.max(0, now - state.enteredAt) };
+export function enterProtection(state: ProtectionState, reason: ProtectionReason, now: number): ProtectionState {
+  if (state.reasons.includes(reason)) return state;
+  const reasons = [...state.reasons, reason];
+  return { ...state, mode: "PROTECTED", reasons, reason: displayedReason(reasons), enteredAt: state.enteredAt ?? now };
+}
+
+export function clearProtection(state: ProtectionState, now: number, policyRecoveryConfirmed = false, reason = state.reason): ProtectionState {
+  if (!reason || !state.reasons.includes(reason) || state.enteredAt == null || (reason === "policy_review" && !policyRecoveryConfirmed)) return state;
+  const reasons = state.reasons.filter(item => item !== reason);
+  if (reasons.length) return { ...state, reasons, reason: displayedReason(reasons) };
+  return { mode: "NORMAL", reason: null, reasons: [], enteredAt: null, accumulatedPausedMs: state.accumulatedPausedMs + Math.max(0, now - state.enteredAt) };
 }
 
 export function activeElapsedMs(startedAt: string, now: number, state: ProtectionState): number {

@@ -114,3 +114,47 @@ it("inference failure clears previous counts and a successful new inference rest
   inferenceFails = false; await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
   expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(2);
 });
+
+async function connectivityLoss() {
+  vi.mocked(fetchCandidateProtection).mockRejectedValue(new Error("Synthetic offline"));
+  await act(async () => { await vi.advanceTimersByTimeAsync(21000); });
+  expect(screen.getByRole("alertdialog")).toBeTruthy();
+}
+function onlinePolicy(protectedBy?: string) {
+  vi.mocked(fetchCandidateProtection).mockResolvedValue({ state: protectedBy ? "PROTECTED" : "NORMAL", policy_action: protectedBy ? "PROTECT_AND_PAUSE" : null, reason_category: protectedBy, requires_reviewer: !!protectedBy, demo_controls_enabled: false, demo_phone_policy_armed: false } as never);
+}
+it("connectivity recovery with ready monitoring resumes without restarting cameras", async () => {
+  await open(); await connectivityLoss(); onlinePolicy();
+  await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+  tracks.forEach(t => expect(t.stop).not.toHaveBeenCalled()); expect(getUserMedia).toHaveBeenCalledTimes(2);
+});
+it("holds after network recovery until subsequent monitoring readiness recovery, then resumes", async () => {
+  await open(); await connectivityLoss();
+  await act(async () => { tracks[1].muted = true; tracks[1].dispatchEvent(new Event("mute")); });
+  onlinePolicy(); await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
+  expect(screen.getByRole("alertdialog")).toBeTruthy();
+  await act(async () => { tracks[1].muted = false; tracks[1].dispatchEvent(new Event("unmute")); await vi.advanceTimersByTimeAsync(1500); });
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+  const clear = vi.mocked(submitEvidenceEvent).mock.calls.filter(([e]) => e.event_type === "protection_cleared" && e.metadata_json?.trigger_category === "connectivity_interrupted");
+  expect(clear).toHaveLength(1); expect(clear[0][0].metadata_json?.misconduct_determination).toBe(false);
+  tracks.forEach(t => expect(t.stop).not.toHaveBeenCalled());
+});
+it.each(["phone_policy", "required_camera_unavailable"])("connectivity/readiness recovery preserves independent %s protection", async cause => {
+  await open(); await connectivityLoss();
+  await act(async () => { tracks[1].muted = true; tracks[1].dispatchEvent(new Event("mute")); });
+  onlinePolicy(cause); await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
+  await act(async () => { tracks[1].muted = false; tracks[1].dispatchEvent(new Event("unmute")); await vi.advanceTimersByTimeAsync(1500); });
+  expect(screen.getByRole("alertdialog").textContent).toContain("Policy review required");
+  const clear = vi.mocked(submitEvidenceEvent).mock.calls.filter(([e]) => e.event_type === "protection_cleared" && e.metadata_json?.trigger_category === "connectivity_interrupted");
+  expect(clear).toHaveLength(1); expect(clear[0][0].metadata_json?.protection_state).toBe("PROTECTED");
+});
+it("repeated outages recover once each and unmount stops polling and media", async () => {
+  const view = await open();
+  for (let i = 0; i < 2; i++) { await connectivityLoss(); onlinePolicy(); await act(async () => { await vi.advanceTimersByTimeAsync(10000); }); expect(screen.queryByRole("alertdialog")).toBeNull(); }
+  const clear = vi.mocked(submitEvidenceEvent).mock.calls.filter(([e]) => e.event_type === "protection_cleared" && e.metadata_json?.trigger_category === "connectivity_interrupted");
+  expect(clear).toHaveLength(2);
+  view.unmount(); const calls = vi.mocked(fetchCandidateProtection).mock.calls.length;
+  await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+  expect(fetchCandidateProtection).toHaveBeenCalledTimes(calls); tracks.forEach(t => expect(t.stop).toHaveBeenCalledTimes(1));
+});
