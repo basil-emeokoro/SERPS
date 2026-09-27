@@ -13,7 +13,7 @@ import { LocalObjectDetector, OBJECT_MODEL_NAME, OBJECT_MODEL_VERSION, OBJECT_SA
 import { formatElapsed } from "../../../../lib/operational";
 import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, monitoringProtectionRequired, normalProtectionState, type ProtectionReason, type ProtectionState } from "../../../../lib/protectionState";
 
-import { AssignedCamera, FreshCameraFrame } from "../../../../lib/cameraLifecycle";
+import { AssignedCamera, CameraFrameSampler } from "../../../../lib/cameraLifecycle";
 import FacialVerification from "../../../../components/FacialVerification";
 import { fetchReauthentication, reauthenticationMessage, type ReauthenticationState } from "../../../../lib/reauthentication";
 
@@ -194,6 +194,7 @@ function DemonstrationWorkspacePageContent() {
     const audioTracker = new AudioActivityTracker();
     let audioDisconnectReported = false;
 
+    const frameSamplers: CameraFrameSampler[] = [];
     const ownedCameras: Partial<Record<CameraRole, AssignedCamera>> = {};
     const lossTimers = new Map<CameraRole, number>();
     const reportedLoss = new Set<CameraRole>();
@@ -208,7 +209,7 @@ function DemonstrationWorkspacePageContent() {
     const invalidateObject = (role: CameraRole, reason: string) => {
       if (disposed) return;
       setObjectStates(current => ({ ...current, [role]: "unavailable" }));
-      setObjectSummary(current => ({ ...current, [role]: "No current observation ? " + reason }));
+      setObjectSummary(current => ({ ...current, [role]: "No current observation - " + reason }));
       if (objectGate.allow(`object_detector_unavailable:${role}`, Date.now())) void emitDraft(detectorUnavailableEvidence(role, reason));
     };
     function connect(role: CameraRole, deviceId: string, video: RefObject<HTMLVideoElement | null>) {
@@ -247,24 +248,23 @@ function DemonstrationWorkspacePageContent() {
         if (disposed) { detector.close(); return; }
         objectDetectors.current[role] = detector;
         setObjectStates((current) => ({ ...current, [role]: "ready" }));
-        const frames = new FreshCameraFrame();
-        const timer = window.setInterval(() => {
+        const frames = new CameraFrameSampler();
+        frameSamplers.push(frames);
+        const timer = window.setInterval(async () => {
           if (disposed) return;
-          if (document.hidden || !frames.available(ownedCameras[role]?.stream, video.current)) {
-            invalidateObject(role, "camera stream or fresh video frame unavailable");
-            return;
-          }
           try {
-            const snapshot = detector.detect(video.current!);
-            setObjectStates(current => ({ ...current, [role]: "ready" }));
-            setObjectSummary((current) => ({ ...current, [role]: `${snapshot.personCount} person(s), ${snapshot.mobilePhoneCount} phone(s); ${snapshot.processingTime.toFixed(0)} ms` }));
-            for (const draft of objectEvidence(snapshot, role)) {
-              if (objectGate.allow(`${draft.eventType}:${role}`, Date.now())) void emitDraft(draft);
-            }
+            const sampled = await frames.sample(ownedCameras[role]?.stream, video.current, frame => {
+              if (disposed) return;
+              const snapshot = detector.detect(frame);
+              setObjectStates(current => ({ ...current, [role]: "ready" }));
+              setObjectSummary(current => ({ ...current, [role]: `${snapshot.personCount} person(s), ${snapshot.mobilePhoneCount} phone(s); ${snapshot.processingTime.toFixed(0)} ms` }));
+              for (const draft of objectEvidence(snapshot, role)) {
+                if (objectGate.allow(`${draft.eventType}:${role}`, Date.now())) void emitDraft(draft);
+              }
+            });
+            if (!sampled) invalidateObject(role, "camera stream or fresh video frame unavailable");
           } catch (reason) {
-            const message = reason instanceof Error ? reason.message : "inference failed";
-            invalidateObject(role, message);
-            if (objectGate.allow(`object_detector_unavailable:${role}`, Date.now())) void emitDraft(detectorUnavailableEvidence(role, message));
+            invalidateObject(role, reason instanceof Error ? reason.message : "inference failed");
           }
         }, OBJECT_SAMPLE_INTERVAL_MS);
         timers.push(timer);
@@ -339,27 +339,32 @@ function DemonstrationWorkspacePageContent() {
     async function startFaceMonitor() {
       if (disposed) return;
       const tracker = new FacePresenceTracker();
-      const frames = new FreshCameraFrame();
+      const frames = new CameraFrameSampler();
+        frameSamplers.push(frames);
       try {
         const detector = new LocalFacePerceptionService();
         await detector.initialise();
         if (disposed) { detector.close(); return; }
         faceDetector.current = detector;
-        setFaceCapability("Face monitoring: Active — Local MediaPipe detector");
-        const timer = window.setInterval(() => {
+        setFaceCapability("Face monitoring: Recovering - awaiting a fresh primary camera frame");
+        const timer = window.setInterval(async () => {
           if (disposed) return;
-          if (document.hidden || !frames.available(ownedCameras.primary?.stream, primaryVideo.current)) {
-            setFaceCapability("Face monitoring: Unavailable ? no fresh primary camera frame");
-            tracker.update(0, performance.now(), false);
-            return;
-          }
           try {
-            const snapshot = detector.detect(primaryVideo.current!);
-            setFaceCapability("Face monitoring: Active ? Local MediaPipe detector");
-            for (const signal of tracker.update(snapshot.faceCount, performance.now(), true)) void emitDraft(facePresenceEvidence(signal, snapshot));
+            const sampled = await frames.sample(ownedCameras.primary?.stream, primaryVideo.current, frame => {
+              if (disposed) return;
+              const snapshot = detector.detect(frame);
+              setFaceCapability("Face monitoring: Active - Local MediaPipe detector");
+              for (const signal of tracker.update(snapshot.faceCount, performance.now(), true)) void emitDraft(facePresenceEvidence(signal, snapshot));
+            });
+            if (!sampled && !disposed) {
+              setFaceCapability("Face monitoring: Unavailable - no fresh primary camera frame");
+              tracker.update(0, performance.now(), false);
+            }
           } catch (reason) {
+            if (disposed) return;
+            tracker.update(0, performance.now(), false);
             const message = reason instanceof Error ? reason.message : "face inference failed";
-            setFaceCapability(`Face monitoring: Degraded — Local MediaPipe detector unavailable (${message}). Other evidence sources remain active.`);
+            setFaceCapability(`Face monitoring: Degraded - Local MediaPipe detector unavailable (${message}). Other evidence sources remain active.`);
             if (objectGate.allow("face_detector_unavailable:primary", Date.now())) void emitDraft(faceDetectorUnavailableEvidence(message));
           }
         }, FACE_SAMPLE_INTERVAL_MS);
@@ -390,8 +395,6 @@ function DemonstrationWorkspacePageContent() {
 
     const visibility = () => {
       if (disposed) return;
-      for (const role of activeObjectRoles) invalidateObject(role, document.hidden ? "page backgrounded; no current observation" : "awaiting a fresh frame after visibility change");
-      setFaceCapability("Face monitoring: Recovering - awaiting a fresh primary camera frame");
       if (document.hidden) void emit("tab_focus_lost", "Demonstration workspace lost document visibility.");
       else for (const camera of Object.values(ownedCameras)) void camera?.connect();
     };
@@ -416,6 +419,7 @@ function DemonstrationWorkspacePageContent() {
     return () => {
       disposed = true;
       timers.forEach((timer) => window.clearInterval(timer));
+      frameSamplers.forEach(sampler => sampler.close());
       lossTimers.forEach(timer => window.clearTimeout(timer));
       document.removeEventListener("visibilitychange", visibility);
       navigator.mediaDevices?.removeEventListener("devicechange", deviceChange);

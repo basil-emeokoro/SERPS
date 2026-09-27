@@ -72,13 +72,15 @@ it("keeps cameras alive when completion fails and releases after successful comp
   await act(async () => { await vi.advanceTimersByTimeAsync(0); }); tracks.forEach(t => expect(t.stop).toHaveBeenCalledTimes(1));
 });
 
-it("preserves camera ownership on resize, blur, background and foreground; clears stale readings", async () => {
+it("preserves camera ownership on resize, blur, background and foreground; continues fresh monitoring", async () => {
   await open(); await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
   act(() => { window.dispatchEvent(new Event("resize")); window.dispatchEvent(new Event("blur")); });
   Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
   act(() => { document.dispatchEvent(new Event("visibilitychange")); });
-  expect(screen.queryByText(/1 person\(s\)/)).toBeNull();
+  expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(2);
   await act(async () => { await vi.advanceTimersByTimeAsync(20000); });
+  expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(2);
+  expect(screen.getByText("Face monitoring: Active - Local MediaPipe detector")).toBeTruthy();
   tracks.forEach(t => expect(t.stop).not.toHaveBeenCalled()); expect(getUserMedia).toHaveBeenCalledTimes(2);
   Object.defineProperty(document, "hidden", { configurable: true, get: () => false });
   await act(async () => { document.dispatchEvent(new Event("visibilitychange")); window.dispatchEvent(new Event("focus")); await vi.advanceTimersByTimeAsync(1500); });
@@ -157,4 +159,25 @@ it("repeated outages recover once each and unmount stops polling and media", asy
   view.unmount(); const calls = vi.mocked(fetchCandidateProtection).mock.calls.length;
   await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
   expect(fetchCandidateProtection).toHaveBeenCalledTimes(calls); tracks.forEach(t => expect(t.stop).toHaveBeenCalledTimes(1));
+});
+
+
+it("uses track snapshots for both detectors when hidden preview frames stop, without new streams", async () => {
+  const close = vi.fn();
+  const grabFrame = vi.fn(async () => ({ width: 640, height: 480, close }));
+  vi.stubGlobal("ImageCapture", class { grabFrame = grabFrame; });
+  try {
+    await open(); frozen = true;
+    Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
+    act(() => document.dispatchEvent(new Event("visibilitychange")));
+    await act(async () => { await vi.advanceTimersByTimeAsync(6000); });
+    expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(2);
+    expect(screen.getByText("Face monitoring: Active - Local MediaPipe detector")).toBeTruthy();
+    expect(grabFrame).toHaveBeenCalled(); expect(close.mock.calls.length).toBe(grabFrame.mock.calls.length);
+    expect(getUserMedia).toHaveBeenCalledTimes(2); tracks.forEach(t => expect(t.stop).not.toHaveBeenCalled());
+    await act(async () => { tracks[0].muted = true; tracks[0].dispatchEvent(new Event("mute")); await vi.advanceTimersByTimeAsync(3000); });
+    expect(screen.getByText("Face monitoring: Unavailable - no fresh primary camera frame")).toBeTruthy();
+    expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(1);
+    expect(document.body.textContent).not.toMatch(/(?:Active|Unavailable|observation) \?/);
+  } finally { vi.unstubAllGlobals(); }
 });

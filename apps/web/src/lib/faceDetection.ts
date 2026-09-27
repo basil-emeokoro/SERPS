@@ -62,7 +62,7 @@ export class LocalFacePerceptionService {
     this.modelLoadTime = performance.now() - started;
   }
 
-  detect(video: HTMLVideoElement): LocalFaceResult {
+  detect(video: HTMLVideoElement | ImageBitmap): LocalFaceResult {
     if (!this.task) throw new Error("The local face detector has not finished loading.");
     const started = performance.now(); const now = Math.max(performance.now(), this.lastTimestamp + 0.01); this.lastTimestamp = now;
     const result = this.task.detectForVideo(video, now); const faceCount = result.faceLandmarks.length;

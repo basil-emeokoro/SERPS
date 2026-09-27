@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
-import { AssignedCamera, FreshCameraFrame } from "./cameraLifecycle";
+import { AssignedCamera, FreshCameraFrame, CameraFrameSampler } from "./cameraLifecycle";
 
 function source() {
   const track = Object.assign(new EventTarget(), { readyState: "live", muted: false, stop: vi.fn(() => { track.readyState = "ended"; }) });
@@ -63,4 +63,49 @@ it("rejects unchanged decoded-frame counts even when the media clock advances", 
   v.currentTime = 5; expect(frames.available(a.stream, v)).toBe(false);
   v.getVideoPlaybackQuality = () => ({ totalVideoFrames: 11 }) as VideoPlaybackQuality;
   expect(frames.available(a.stream, v)).toBe(true);
+});
+
+
+it("captures from a healthy track despite frozen preview counters and closes each snapshot", async () => {
+  const a = source(), v = video(), frames = new CameraFrameSampler(), consume = vi.fn(); v.srcObject = a.stream;
+  const close = vi.fn(), grabFrame = vi.fn(async () => ({ width: 640, height: 480, close }));
+  vi.stubGlobal("ImageCapture", class { grabFrame = grabFrame; });
+  try {
+    expect(await frames.sample(a.stream, v, consume)).toBe(true);
+    expect(await frames.sample(a.stream, v, consume)).toBe(true);
+    expect(consume).toHaveBeenCalledTimes(2); expect(close).toHaveBeenCalledTimes(2);
+    a.track.muted = true; expect(await frames.sample(a.stream, v, consume)).toBe(false);
+    expect(grabFrame).toHaveBeenCalledTimes(2); expect(a.track.stop).not.toHaveBeenCalled();
+  } finally { frames.close(); vi.unstubAllGlobals(); }
+});
+
+it("bounds stalled captures, rejects late frames and does not overlap or leak snapshots", async () => {
+  vi.useFakeTimers();
+  const a = source(), frames = new CameraFrameSampler(), consume = vi.fn(), close = vi.fn();
+  let resolve!: (frame: ImageBitmap) => void;
+  const grabFrame = vi.fn(() => new Promise<ImageBitmap>(r => { resolve = r; }));
+  vi.stubGlobal("ImageCapture", class { grabFrame = grabFrame; });
+  try {
+    const pending = frames.sample(a.stream, video(), consume);
+    await vi.advanceTimersByTimeAsync(1500); expect(await pending).toBe(false);
+    expect(await frames.sample(a.stream, video(), consume)).toBe(false);
+    expect(grabFrame).toHaveBeenCalledTimes(1);
+    resolve({ width: 640, height: 480, close } as unknown as ImageBitmap);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(consume).not.toHaveBeenCalled(); expect(close).toHaveBeenCalledTimes(1);
+    const next = frames.sample(a.stream, video(), consume); await vi.advanceTimersByTimeAsync(0);
+    frames.close(); resolve({ width: 640, height: 480, close } as unknown as ImageBitmap);
+    expect(await next).toBe(false); expect(close).toHaveBeenCalledTimes(2);
+    expect(a.track.stop).not.toHaveBeenCalled();
+  } finally { frames.close(); vi.unstubAllGlobals(); vi.useRealTimers(); }
+});
+
+it("closes frames even when inference fails and allows the next sample", async () => {
+  const a = source(), frames = new CameraFrameSampler(), close = vi.fn();
+  vi.stubGlobal("ImageCapture", class { async grabFrame() { return { width: 640, height: 480, close }; } });
+  try {
+    await expect(frames.sample(a.stream, video(), () => { throw new Error("inference"); })).rejects.toThrow("inference");
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(await frames.sample(a.stream, video(), vi.fn())).toBe(true);
+  } finally { frames.close(); vi.unstubAllGlobals(); }
 });

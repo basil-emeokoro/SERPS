@@ -56,7 +56,7 @@ export class LocalObjectDetector {
     this.modelLoadTime = performance.now() - started;
   }
 
-  detect(video: HTMLVideoElement): ObjectDetectionSnapshot {
+  detect(video: HTMLVideoElement | ImageBitmap): ObjectDetectionSnapshot {
     if (!this.task) throw new Error("The local object detector has not finished loading.");
     const started = performance.now();
     const timestamp = Math.max(performance.now(), this.lastTimestamp + 0.01);

@@ -82,3 +82,46 @@ export class FreshCameraFrame {
     return true;
   }
 }
+
+
+// Track snapshots are independent of preview painting (which browsers throttle off-screen).
+type TrackCapture = { grabFrame(): Promise<ImageBitmap> };
+type CaptureConstructor = new (track: MediaStreamTrack) => TrackCapture;
+export class CameraFrameSampler {
+  private fallback = new FreshCameraFrame();
+  private track: MediaStreamTrack | null = null;
+  private capture: TrackCapture | null = null;
+  private busy = false;
+  private disposed = false;
+
+  close() { this.disposed = true; this.capture = null; this.track = null; }
+
+  async sample(stream: MediaStream | null | undefined, video: HTMLVideoElement | null,
+    consume: (frame: HTMLVideoElement | ImageBitmap) => void): Promise<boolean> {
+    const track = stream?.getVideoTracks()[0];
+    const healthy = () => !this.disposed && !!stream?.active && track?.readyState === "live" && !track.muted && stream.getVideoTracks()[0] === track;
+    if (!healthy() || this.busy) return false;
+    const Capture = (globalThis as typeof globalThis & { ImageCapture?: CaptureConstructor }).ImageCapture;
+    if (!Capture) {
+      if (!this.fallback.available(stream, video)) return false;
+      consume(video!); return true;
+    }
+    if (this.track !== track) { this.capture = new Capture(track!); this.track = track!; }
+    const capture = this.capture!;
+    this.busy = true;
+    const started = performance.now();
+    let expired = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const pending = Promise.resolve().then(() => capture.grabFrame()).then(frame => {
+      try {
+        if (expired || !healthy() || performance.now() - started > 1500 || !frame.width || !frame.height) return false;
+        consume(frame); return true;
+      } finally { frame.close(); }
+    }).finally(() => { this.busy = false; });
+    try {
+      return await Promise.race([pending, new Promise<boolean>(resolve => {
+        timer = setTimeout(() => { expired = true; resolve(false); }, 1500);
+      })]);
+    } finally { clearTimeout(timer); }
+  }
+}
