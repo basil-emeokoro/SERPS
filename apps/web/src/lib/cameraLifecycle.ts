@@ -84,7 +84,42 @@ export class FreshCameraFrame {
 }
 
 
-// Track snapshots are independent of preview painting (which browsers throttle off-screen).
+// Local diagnostics contain operational timings only; never frames or candidate identifiers.
+export function recordFrameDiagnostic(detail: Record<string, unknown>) {
+  const root = globalThis as typeof globalThis & { __serpsFrameDiagnostics?: Array<Record<string, unknown>> };
+  const records = root.__serpsFrameDiagnostics ??= [];
+  records.push({ at: Date.now(), pageTimeOrigin: performance.timeOrigin, ...detail });
+  if (records.length > 200) records.splice(0, records.length - 200);
+}
+
+/** One fair queue for expensive detector work; repeated ticks never pile up. */
+export class DetectorWorkQueue {
+  private jobs = new Map<string, () => Promise<void>>();
+  private active: string | null = null;
+  private closed = false;
+  private timer: ReturnType<typeof setTimeout> | undefined;
+  enqueue(key: string, work: () => Promise<void>) {
+    if (this.closed || this.active === key || this.jobs.has(key)) return;
+    this.jobs.set(key, work);
+    recordFrameDiagnostic({ phase: "detector_queued", detector: key, activeDetector: this.active, detectorBusy: this.active !== null, queueDepth: this.jobs.size });
+    this.schedule();
+  }
+  private schedule() {
+    if (this.closed || this.active || this.timer != null || !this.jobs.size) return;
+    this.timer = setTimeout(() => {
+      this.timer = undefined;
+      const [key, work] = this.jobs.entries().next().value!;
+      this.jobs.delete(key); this.active = key;
+      recordFrameDiagnostic({ phase: "detector_started", detector: key, detectorBusy: true, queueDepth: this.jobs.size });
+      void work().catch(error => recordFrameDiagnostic({ phase: "queue_error", detector: key, error: String(error) }))
+        .finally(() => { recordFrameDiagnostic({ phase: "detector_finished", detector: key, detectorBusy: false }); this.active = null; this.schedule(); });
+    }, 0); // Yield for preview decoding, UI and media events between detectors.
+  }
+  close() { this.closed = true; clearTimeout(this.timer); this.jobs.clear(); }
+}
+
+const pendingTrackCaptures = new WeakSet<MediaStreamTrack>();
+
 type TrackCapture = { grabFrame(): Promise<ImageBitmap> };
 type CaptureConstructor = new (track: MediaStreamTrack) => TrackCapture;
 export class CameraFrameSampler {
@@ -93,34 +128,62 @@ export class CameraFrameSampler {
   private capture: TrackCapture | null = null;
   private busy = false;
   private disposed = false;
-
+  constructor(private diagnostic: (detail: Record<string, unknown>) => void = () => {}) {}
   close() { this.disposed = true; this.capture = null; this.track = null; }
 
+  // true = sampled; null = pending/no new frame yet; false = actual source unavailable.
   async sample(stream: MediaStream | null | undefined, video: HTMLVideoElement | null,
-    consume: (frame: HTMLVideoElement | ImageBitmap) => void): Promise<boolean> {
+    consume: (frame: HTMLVideoElement | ImageBitmap) => void): Promise<boolean | null> {
     const track = stream?.getVideoTracks()[0];
     const healthy = () => !this.disposed && !!stream?.active && track?.readyState === "live" && !track.muted && stream.getVideoTracks()[0] === track;
-    if (!healthy() || this.busy) return false;
-    const Capture = (globalThis as typeof globalThis & { ImageCapture?: CaptureConstructor }).ImageCapture;
-    if (!Capture) {
-      if (!this.fallback.available(stream, video)) return false;
-      consume(video!); return true;
+    const report = (detail: Record<string, unknown>) => this.diagnostic({
+      trackState: track?.readyState ?? "missing", muted: track?.muted ?? null,
+      streamActive: stream?.active ?? false, hidden: document.hidden, busy: this.busy,
+      previewPaused: video?.paused ?? null, previewReadyState: video?.readyState ?? null,
+      previewFrames: video?.getVideoPlaybackQuality?.().totalVideoFrames ?? null,
+      previewTime: video?.currentTime ?? null, captureTimeout: false, lateFrameRejected: false, ...detail,
+    });
+    if (!healthy()) { report({ phase: "source_unavailable" }); return false; }
+    // Foreground is the stable direct-video path, with no asynchronous capture deadline.
+    const fresh = this.fallback.available(stream, video);
+    if (fresh) {
+      const start = performance.now();
+      try { consume(video!); return true; }
+      catch (error) { report({ phase: "inference_error", source: "preview", inferenceMs: performance.now() - start, error: String(error) }); throw error; }
+      finally { report({ phase: "inference", source: "preview", previewFresh: true, acquisitionMs: 0, inferenceMs: performance.now() - start }); }
     }
+    if (!document.hidden) { report({ phase: "waiting_frame", source: "preview", previewFresh: false }); return null; }
+    if (this.busy || pendingTrackCaptures.has(track!)) { report({ phase: "capture_busy", source: "track", busy: true, previewFresh: false }); return null; }
+    const Capture = (globalThis as typeof globalThis & { ImageCapture?: CaptureConstructor }).ImageCapture;
+    if (!Capture) { report({ phase: "waiting_frame", source: "preview", previewFresh: false }); return null; }
     if (this.track !== track) { this.capture = new Capture(track!); this.track = track!; }
     const capture = this.capture!;
     this.busy = true;
+    pendingTrackCaptures.add(track!);
     const started = performance.now();
     let expired = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const pending = Promise.resolve().then(() => capture.grabFrame()).then(frame => {
+    const pending = Promise.resolve().then(() => capture.grabFrame()).catch(error => {
+      report({ phase: "capture_error", source: "track", acquisitionMs: performance.now() - started, error: String(error) }); throw error;
+    }).then(frame => {
+      const acquisitionMs = performance.now() - started;
       try {
-        if (expired || !healthy() || performance.now() - started > 1500 || !frame.width || !frame.height) return false;
-        consume(frame); return true;
+        if (expired || acquisitionMs > 1500 || this.disposed) { report({ phase: "late_frame_rejected", source: "track", acquisitionMs, lateFrameRejected: true }); return null; }
+        if (!healthy()) { report({ phase: "source_unavailable", source: "track", acquisitionMs }); return false; }
+        if (!frame.width || !frame.height) { report({ phase: "empty_frame", source: "track", acquisitionMs }); return null; }
+        const inferenceStart = performance.now();
+        try { consume(frame); return true; }
+        catch (error) { report({ phase: "inference_error", source: "track", inferenceMs: performance.now() - inferenceStart, error: String(error) }); throw error; }
+        finally { report({ phase: "inference", source: "track", acquisitionMs, inferenceMs: performance.now() - inferenceStart }); }
       } finally { frame.close(); }
-    }).finally(() => { this.busy = false; });
+    }).finally(() => { this.busy = false; pendingTrackCaptures.delete(track!); });
     try {
-      return await Promise.race([pending, new Promise<boolean>(resolve => {
-        timer = setTimeout(() => { expired = true; resolve(false); }, 1500);
+      return await Promise.race([pending, new Promise<null>(resolve => {
+        timer = setTimeout(() => {
+          expired = true;
+          report({ phase: "capture_timeout", source: "track", acquisitionMs: performance.now() - started, captureTimeout: true });
+          resolve(null);
+        }, 1500);
       })]);
     } finally { clearTimeout(timer); }
   }

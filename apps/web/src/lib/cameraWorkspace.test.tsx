@@ -47,19 +47,19 @@ it.each(["A", "B", "C"].flatMap(mode => [false, true].map(enrolled => ({ mode, e
   view.unmount(); tracks.forEach(t => expect(t.stop).toHaveBeenCalledTimes(1));
 });
 it("invalidates counts immediately on mute, records loss, and recovers original stream on unmute", async () => {
-  await open(); await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+  await open(); await act(async () => { await vi.advanceTimersByTimeAsync(1510); });
   expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(2);
   await act(async () => { tracks[1].muted = true; tracks[1].dispatchEvent(new Event("mute")); await vi.advanceTimersByTimeAsync(5000); });
   expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(1);
   expect(screen.getByText(/No current observation/)).toBeTruthy();
   expect(screen.queryByText(/0 person\(s\)/)).toBeNull();
   expect(vi.mocked(submitEvidenceEvent).mock.calls.some(([e]) => e.event_type === "camera_disconnected" && e.camera_id === "secondary")).toBe(true);
-  await act(async () => { tracks[1].muted = false; tracks[1].dispatchEvent(new Event("unmute")); await vi.advanceTimersByTimeAsync(1500); });
+  await act(async () => { tracks[1].muted = false; tracks[1].dispatchEvent(new Event("unmute")); await vi.advanceTimersByTimeAsync(1510); });
   expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(2); expect(getUserMedia).toHaveBeenCalledTimes(2);
   expect(vi.mocked(submitEvidenceEvent).mock.calls.some(([e]) => e.event_type === "camera_reconnected")).toBe(true);
 });
 it("invalidates frozen frames and emits no new positive detection from them", async () => {
-  await open(); frozen = true; await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+  await open(); frozen = true; await act(async () => { await vi.advanceTimersByTimeAsync(1510); });
   const positives = () => vi.mocked(submitEvidenceEvent).mock.calls.filter(([e]) => e.event_type === "person_detected").length;
   const before = positives(); await act(async () => { await vi.advanceTimersByTimeAsync(15000); });
   expect(positives()).toBe(before); expect(screen.getAllByText(/No current observation/)).toHaveLength(2);
@@ -73,7 +73,7 @@ it("keeps cameras alive when completion fails and releases after successful comp
 });
 
 it("preserves camera ownership on resize, blur, background and foreground; continues fresh monitoring", async () => {
-  await open(); await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+  await open(); await act(async () => { await vi.advanceTimersByTimeAsync(1510); });
   act(() => { window.dispatchEvent(new Event("resize")); window.dispatchEvent(new Event("blur")); });
   Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
   act(() => { document.dispatchEvent(new Event("visibilitychange")); });
@@ -83,13 +83,13 @@ it("preserves camera ownership on resize, blur, background and foreground; conti
   expect(screen.getByText("Face monitoring: Active - Local MediaPipe detector")).toBeTruthy();
   tracks.forEach(t => expect(t.stop).not.toHaveBeenCalled()); expect(getUserMedia).toHaveBeenCalledTimes(2);
   Object.defineProperty(document, "hidden", { configurable: true, get: () => false });
-  await act(async () => { document.dispatchEvent(new Event("visibilitychange")); window.dispatchEvent(new Event("focus")); await vi.advanceTimersByTimeAsync(1500); });
+  await act(async () => { document.dispatchEvent(new Event("visibilitychange")); window.dispatchEvent(new Event("focus")); await vi.advanceTimersByTimeAsync(1510); });
   expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(2); expect(getUserMedia).toHaveBeenCalledTimes(2);
 });
 it("reconnects an ended secondary without stopping the primary, preserving loss and recovery evidence", async () => {
   await open();
   await act(async () => { tracks[1].readyState = "ended"; tracks[1].dispatchEvent(new Event("ended")); await vi.advanceTimersByTimeAsync(5000); });
-  await act(async () => { navigator.mediaDevices.dispatchEvent(new Event("devicechange")); await vi.advanceTimersByTimeAsync(1500); });
+  await act(async () => { navigator.mediaDevices.dispatchEvent(new Event("devicechange")); await vi.advanceTimersByTimeAsync(1510); });
   expect(getUserMedia).toHaveBeenCalledTimes(3); expect(tracks[0].stop).not.toHaveBeenCalled();
   const events = vi.mocked(submitEvidenceEvent).mock.calls.map(([e]) => e.event_type);
   expect(events).toContain("camera_disconnected"); expect(events).toContain("camera_reconnected");
@@ -109,11 +109,11 @@ it("temporary mute recovers without a permanent-disconnection event or stream re
   tracks.forEach(t => expect(t.stop).not.toHaveBeenCalled()); expect(getUserMedia).toHaveBeenCalledTimes(2);
 });
 it("inference failure clears previous counts and a successful new inference restores readiness", async () => {
-  await open(); await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
-  inferenceFails = true; await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+  await open(); await act(async () => { await vi.advanceTimersByTimeAsync(1510); });
+  inferenceFails = true; await act(async () => { await vi.advanceTimersByTimeAsync(1510); });
   expect(screen.queryByText(/1 person\(s\)/)).toBeNull(); expect(screen.queryByText(/0 person\(s\)/)).toBeNull();
   expect(screen.getAllByText(/No current observation/)).toHaveLength(2);
-  inferenceFails = false; await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+  inferenceFails = false; await act(async () => { await vi.advanceTimersByTimeAsync(1510); });
   expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(2);
 });
 
@@ -136,7 +136,7 @@ it("holds after network recovery until subsequent monitoring readiness recovery,
   await act(async () => { tracks[1].muted = true; tracks[1].dispatchEvent(new Event("mute")); });
   onlinePolicy(); await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
   expect(screen.getByRole("alertdialog")).toBeTruthy();
-  await act(async () => { tracks[1].muted = false; tracks[1].dispatchEvent(new Event("unmute")); await vi.advanceTimersByTimeAsync(1500); });
+  await act(async () => { tracks[1].muted = false; tracks[1].dispatchEvent(new Event("unmute")); await vi.advanceTimersByTimeAsync(1510); });
   expect(screen.queryByRole("alertdialog")).toBeNull();
   const clear = vi.mocked(submitEvidenceEvent).mock.calls.filter(([e]) => e.event_type === "protection_cleared" && e.metadata_json?.trigger_category === "connectivity_interrupted");
   expect(clear).toHaveLength(1); expect(clear[0][0].metadata_json?.misconduct_determination).toBe(false);
@@ -146,7 +146,7 @@ it.each(["phone_policy", "required_camera_unavailable"])("connectivity/readiness
   await open(); await connectivityLoss();
   await act(async () => { tracks[1].muted = true; tracks[1].dispatchEvent(new Event("mute")); });
   onlinePolicy(cause); await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
-  await act(async () => { tracks[1].muted = false; tracks[1].dispatchEvent(new Event("unmute")); await vi.advanceTimersByTimeAsync(1500); });
+  await act(async () => { tracks[1].muted = false; tracks[1].dispatchEvent(new Event("unmute")); await vi.advanceTimersByTimeAsync(1510); });
   expect(screen.getByRole("alertdialog").textContent).toContain("Policy review required");
   const clear = vi.mocked(submitEvidenceEvent).mock.calls.filter(([e]) => e.event_type === "protection_cleared" && e.metadata_json?.trigger_category === "connectivity_interrupted");
   expect(clear).toHaveLength(1); expect(clear[0][0].metadata_json?.protection_state).toBe("PROTECTED");
@@ -168,6 +168,7 @@ it("uses track snapshots for both detectors when hidden preview frames stop, wit
   vi.stubGlobal("ImageCapture", class { grabFrame = grabFrame; });
   try {
     await open(); frozen = true;
+    Object.defineProperty(HTMLVideoElement.prototype, "paused", { configurable: true, get: () => true });
     Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
     act(() => document.dispatchEvent(new Event("visibilitychange")));
     await act(async () => { await vi.advanceTimersByTimeAsync(6000); });
@@ -176,7 +177,7 @@ it("uses track snapshots for both detectors when hidden preview frames stop, wit
     expect(grabFrame).toHaveBeenCalled(); expect(close.mock.calls.length).toBe(grabFrame.mock.calls.length);
     expect(getUserMedia).toHaveBeenCalledTimes(2); tracks.forEach(t => expect(t.stop).not.toHaveBeenCalled());
     await act(async () => { tracks[0].muted = true; tracks[0].dispatchEvent(new Event("mute")); await vi.advanceTimersByTimeAsync(3000); });
-    expect(screen.getByText("Face monitoring: Unavailable - no fresh primary camera frame")).toBeTruthy();
+    expect(screen.getByText("Face monitoring: Unavailable - primary camera stream unavailable")).toBeTruthy();
     expect(screen.getAllByText(/1 person\(s\)/)).toHaveLength(1);
     expect(document.body.textContent).not.toMatch(/(?:Active|Unavailable|observation) \?/);
   } finally { vi.unstubAllGlobals(); }

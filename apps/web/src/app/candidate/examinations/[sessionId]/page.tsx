@@ -13,7 +13,7 @@ import { LocalObjectDetector, OBJECT_MODEL_NAME, OBJECT_MODEL_VERSION, OBJECT_SA
 import { formatElapsed } from "../../../../lib/operational";
 import { activeElapsedMs, canDemoRestore, clearProtection, enterProtection, formatActiveElapsed, interactionDisabled, interruptionDurationMs, monitoringProtectionRequired, normalProtectionState, type ProtectionReason, type ProtectionState } from "../../../../lib/protectionState";
 
-import { AssignedCamera, CameraFrameSampler } from "../../../../lib/cameraLifecycle";
+import { AssignedCamera, CameraFrameSampler, DetectorWorkQueue, recordFrameDiagnostic } from "../../../../lib/cameraLifecycle";
 import FacialVerification from "../../../../components/FacialVerification";
 import { fetchReauthentication, reauthenticationMessage, type ReauthenticationState } from "../../../../lib/reauthentication";
 
@@ -195,6 +195,9 @@ function DemonstrationWorkspacePageContent() {
     let audioDisconnectReported = false;
 
     const frameSamplers: CameraFrameSampler[] = [];
+    const detectorQueue = new DetectorWorkQueue();
+    const lifecycle = performance.now();
+    recordFrameDiagnostic({ phase: "lifecycle_start", lifecycle });
     const ownedCameras: Partial<Record<CameraRole, AssignedCamera>> = {};
     const lossTimers = new Map<CameraRole, number>();
     const reportedLoss = new Set<CameraRole>();
@@ -215,6 +218,7 @@ function DemonstrationWorkspacePageContent() {
     function connect(role: CameraRole, deviceId: string, video: RefObject<HTMLVideoElement | null>) {
       const camera = new AssignedCamera(deviceId, () => video.current, (state, reason, recovered) => {
         if (disposed) return;
+        recordFrameDiagnostic({ phase: "track_event", lifecycle, role, state, reason });
         streamByRole.current[role] = camera.stream ?? undefined;
         role === "primary" ? setPrimaryState(state) : setSecondaryState(state);
         if (state !== "connected") invalidateObject(role, reason);
@@ -244,29 +248,35 @@ function DemonstrationWorkspacePageContent() {
       try {
         setObjectStates((current) => ({ ...current, [role]: "loading model" }));
         const detector = new LocalObjectDetector();
+        recordFrameDiagnostic({ phase: "model_initializing", lifecycle, detector: "object", role });
         await detector.initialise();
+        recordFrameDiagnostic({ phase: "model_ready", lifecycle, detector: "object", role });
         if (disposed) { detector.close(); return; }
         objectDetectors.current[role] = detector;
         setObjectStates((current) => ({ ...current, [role]: "ready" }));
-        const frames = new CameraFrameSampler();
+        const frames = new CameraFrameSampler(detail => recordFrameDiagnostic({ lifecycle, detector: "object", role, ...detail }));
         frameSamplers.push(frames);
-        const timer = window.setInterval(async () => {
+        const timer = window.setInterval(() => detectorQueue.enqueue(`object:${role}`, async () => {
           if (disposed) return;
           try {
             const sampled = await frames.sample(ownedCameras[role]?.stream, video.current, frame => {
               if (disposed) return;
               const snapshot = detector.detect(frame);
               setObjectStates(current => ({ ...current, [role]: "ready" }));
-              setObjectSummary(current => ({ ...current, [role]: `${snapshot.personCount} person(s), ${snapshot.mobilePhoneCount} phone(s); ${snapshot.processingTime.toFixed(0)} ms` }));
+              setObjectSummary(current => ({ ...current, [role]: `Last completed observation (${new Date().toLocaleTimeString()}): ${snapshot.personCount} person(s), ${snapshot.mobilePhoneCount} phone(s); ${snapshot.processingTime.toFixed(0)} ms` }));
               for (const draft of objectEvidence(snapshot, role)) {
                 if (objectGate.allow(`${draft.eventType}:${role}`, Date.now())) void emitDraft(draft);
               }
             });
-            if (!sampled) invalidateObject(role, "camera stream or fresh video frame unavailable");
+            if (sampled === false) invalidateObject(role, "camera stream unavailable");
+            else if (sampled === null && !disposed) {
+              setObjectStates(current => ({ ...current, [role]: "waiting for fresh frame" }));
+              setObjectSummary(current => ({ ...current, [role]: "No current observation - waiting for fresh camera data" }));
+            }
           } catch (reason) {
             invalidateObject(role, reason instanceof Error ? reason.message : "inference failed");
           }
-        }, OBJECT_SAMPLE_INTERVAL_MS);
+        }), OBJECT_SAMPLE_INTERVAL_MS);
         timers.push(timer);
       } catch (reason) {
         const message = reason instanceof Error ? reason.message : "model loading failed";
@@ -339,15 +349,17 @@ function DemonstrationWorkspacePageContent() {
     async function startFaceMonitor() {
       if (disposed) return;
       const tracker = new FacePresenceTracker();
-      const frames = new CameraFrameSampler();
+      const frames = new CameraFrameSampler(detail => recordFrameDiagnostic({ lifecycle, detector: "face", role: "primary", ...detail }));
         frameSamplers.push(frames);
       try {
         const detector = new LocalFacePerceptionService();
+        recordFrameDiagnostic({ phase: "model_initializing", lifecycle, detector: "face", role: "primary" });
         await detector.initialise();
+        recordFrameDiagnostic({ phase: "model_ready", lifecycle, detector: "face", role: "primary" });
         if (disposed) { detector.close(); return; }
         faceDetector.current = detector;
         setFaceCapability("Face monitoring: Recovering - awaiting a fresh primary camera frame");
-        const timer = window.setInterval(async () => {
+        const timer = window.setInterval(() => detectorQueue.enqueue("face:primary", async () => {
           if (disposed) return;
           try {
             const sampled = await frames.sample(ownedCameras.primary?.stream, primaryVideo.current, frame => {
@@ -356,8 +368,8 @@ function DemonstrationWorkspacePageContent() {
               setFaceCapability("Face monitoring: Active - Local MediaPipe detector");
               for (const signal of tracker.update(snapshot.faceCount, performance.now(), true)) void emitDraft(facePresenceEvidence(signal, snapshot));
             });
-            if (!sampled && !disposed) {
-              setFaceCapability("Face monitoring: Unavailable - no fresh primary camera frame");
+            if (sampled !== true && !disposed) {
+              setFaceCapability(sampled === false ? "Face monitoring: Unavailable - primary camera stream unavailable" : "Face monitoring: Waiting - no new primary camera frame yet");
               tracker.update(0, performance.now(), false);
             }
           } catch (reason) {
@@ -367,7 +379,7 @@ function DemonstrationWorkspacePageContent() {
             setFaceCapability(`Face monitoring: Degraded - Local MediaPipe detector unavailable (${message}). Other evidence sources remain active.`);
             if (objectGate.allow("face_detector_unavailable:primary", Date.now())) void emitDraft(faceDetectorUnavailableEvidence(message));
           }
-        }, FACE_SAMPLE_INTERVAL_MS);
+        }), FACE_SAMPLE_INTERVAL_MS);
         timers.push(timer);
       } catch (reason) {
         const message = reason instanceof Error ? reason.message : "model or WASM loading failed";
@@ -419,6 +431,8 @@ function DemonstrationWorkspacePageContent() {
     return () => {
       disposed = true;
       timers.forEach((timer) => window.clearInterval(timer));
+      detectorQueue.close();
+      recordFrameDiagnostic({ phase: "lifecycle_stop", lifecycle });
       frameSamplers.forEach(sampler => sampler.close());
       lossTimers.forEach(timer => window.clearTimeout(timer));
       document.removeEventListener("visibilitychange", visibility);
