@@ -50,17 +50,9 @@ The seeder creates users, a candidate, examination, and eligible assignment. The
 
 ## Docker Compose
 
-Compose intentionally requires secrets instead of embedding defaults:
+See [Docker deployment](docs/docker_deployment.md) for a fresh-clone setup, required secrets, build-time browser API URL, configurable loopback ports, isolated PostgreSQL storage, health checks and migration verification. Docker Desktop must be running with Linux containers and Compose v2.
 
-```powershell
-$env:SERPS_POSTGRES_PASSWORD = "your-local-database-password"
-$env:SERPS_DATABASE_URL = "postgresql+psycopg://serps:your-url-encoded-password@db:5432/serps_pop"
-$env:SERPS_JWT_SECRET = "your-random-secret-with-at-least-32-characters"
-docker compose config
-docker compose up -d --build
-```
-
-Docker Compose packages PostgreSQL 16, the FastAPI service, and the Next.js application. It is a configured deployment path, not evidence that the controlled prototype evaluation ran in containers. The recorded evaluation runtime uses native processes and SQLite; PostgreSQL/container behaviour requires separate deployment verification.
+The deployment path is separate from the native SQLite evaluation runtime. Container readiness does not establish detector or physical camera acceptance.
 
 ## Verification
 
@@ -72,7 +64,7 @@ npm.cmd run typecheck -w apps/web
 npm.cmd run test -w apps/web
 npm.cmd run lint -w apps/web
 npm.cmd run build -w apps/web
-docker compose config
+docker compose config --quiet
 ```
 
 See `docs/installation_guide.md`, `docs/user_manual.md`, `docs/demo_script.md`, and `docs/sprint3e_validation_report.md` for installation, operation, demonstration, and historical validation guidance. Current verification results should be taken from the applicable test run rather than inferred from the historical Sprint 3E report.
