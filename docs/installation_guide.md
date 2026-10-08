@@ -1,3 +1,5 @@
+> Fresh provisioning update: the shared demo-account seed workflow described historically below is retired. Use [the staff-only bootstrap runbook](cloud_staging.md); never set a demo candidate to enrolled or bypass identity controls. Existing research records are unchanged.
+
 # SERPS RC1 Installation Guide
 
 ## Supported demonstration topology
@@ -19,7 +21,7 @@ RC1 is designed for a controlled local demonstration with the Next.js web applic
 Set-Location C:\SERPS
 Copy-Item .env.example .env
 python -m pip install -e ".[dev]"
-npm.cmd install
+npx.cmd --yes --package=npm@11.21.0 npm ci
 ```
 
 Edit `.env` locally. Do not commit it. At minimum set:
@@ -41,11 +43,11 @@ Start PostgreSQL, then:
 python -m alembic heads
 python -m alembic upgrade head
 python -m alembic current
-$env:SERPS_DEMO_PASSWORD = "the-same-strong-demo-password"
-python scripts\dev\seed_demo_data.py
+ # Use the privately injected SERPS_BOOTSTRAP_* variables documented in cloud_staging.md.
+python scripts\deploy\bootstrap.py
 ```
 
-The current revision must match `python -m alembic heads` for the checked-out commit. The seed output should list four users and state that the candidate creates the session after consent and dual-camera readiness.
+The current revision must match `python -m alembic heads` for the checked-out commit. Bootstrap creates only the initial system administrator; candidates must register and enrol normally.
 
 ## Native development startup
 

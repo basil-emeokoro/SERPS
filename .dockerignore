@@ -19,6 +19,8 @@
 !scripts/
 !scripts/dev/
 !scripts/dev/seed_demo_data.py
+!scripts/deploy/
+!scripts/deploy/**
 !docker/
 !docker/*.Dockerfile
 **/.env*

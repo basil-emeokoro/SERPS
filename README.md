@@ -8,7 +8,7 @@ SERPS is not a complete assessment platform, production secure browser, or enter
 
 Candidate registration -> bounded prototype verification -> six-direction facial enrolment -> password authentication -> dynamic facial/liveness authentication -> immutable consent -> device readiness -> distinct primary and secondary cameras -> identity-gated demonstration workspace -> EvidenceEvents -> Contextual Intelligence Engine -> bounded agent recommendation -> institutional policy evaluation -> reviewer decision -> administrator oversight -> immutable audit and structured reports.
 
-Reviewer and administrator registrations enter a System Administrator approval queue. The four seeded defence identities are explicitly marked demonstration accounts and bypass registration and facial enrolment; normal candidate registrations do not bypass the lifecycle.
+Reviewer and administrator registrations enter a System Administrator approval queue. Fresh deployments provision only an audited initial system administrator; candidates must complete normal registration and facial enrolment. Historical demonstration identities in existing research databases are not changed by this deployment work.
 
 The backend remains authoritative for JWT authentication, RBAC, candidate ownership, institution isolation, registration status, identity readiness, governance records, and decisions. The browser performs bounded local EfficientDet-Lite0 person/mobile-phone inference, MediaPipe face-presence monitoring, and Web Audio RMS activity measurement. Raw camera and microphone media are not sent to reviewer or administrator portals or persisted by these monitors. Browser face and liveness results are bounded research-prototype attestations, not certified biometric or presentation-attack proof; recommendations remain advisory, final operational actions remain human-controlled, and SERPS does not autonomously terminate examinations.
 
@@ -26,11 +26,11 @@ The backend remains authoritative for JWT authentication, RBAC, candidate owners
 ```powershell
 Copy-Item .env.example .env
 python -m pip install -e ".[dev]"
-npm.cmd install
+npx.cmd --yes --package=npm@11.21.0 npm ci
 python -m alembic upgrade head
 ```
 
-Set a real local `SERPS_JWT_SECRET`, database credentials, and `SERPS_DEMO_PASSWORD` in `.env`; never commit that file.
+Set a real local `SERPS_JWT_SECRET`, database credentials in `.env`; never commit that file.
 
 Start the API and web application in separate terminals:
 
@@ -39,14 +39,7 @@ uvicorn apps.api.app.main:app --reload --port 8000
 npm.cmd run dev -w apps/web
 ```
 
-Seed a fresh demonstration database only after migrations:
-
-```powershell
-$env:SERPS_DEMO_PASSWORD = "your-strong-demo-only-password"
-python scripts\dev\seed_demo_data.py
-```
-
-The seeder creates users, a candidate, examination, and eligible assignment. The candidate creates the examination session only after consent and dual-camera readiness.
+For an empty, migrated database, follow the one-time staff-only [bootstrap and staging runbook](docs/cloud_staging.md). The old shared-demo seeder is retired; no candidate identity, enrolment or assignment gate is bypassed. Never bootstrap an existing research database.
 
 ## Docker Compose
 
@@ -72,3 +65,5 @@ See `docs/installation_guide.md`, `docs/user_manual.md`, `docs/demo_script.md`, 
 ## Dissertation boundary
 
 The implementation supports identity lifecycle, governance, explainability, dual-camera, reviewer, administrator, and reporting workflows at research-prototype scale. The facial representation is a derived 8-by-8 luminance descriptor and pose/liveness validation uses local MediaPipe landmarks plus bounded geometric movement proxies. Object-class person evidence does not establish that a detected representation is a physically present live person. SERPS is not production face recognition, certified liveness, presentation-attack resistance, penetration-tested infrastructure, or a production deployment. Hardware-backed browser evidence and production claims require separate validation.
+
+See the [Security and Cloud Deployment Readiness Report](docs/security_cloud_readiness.md) before any staging deployment. No public deployment is performed by CI.

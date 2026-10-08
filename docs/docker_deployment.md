@@ -67,7 +67,7 @@ Use `config --quiet`, not a full rendered configuration dump, to avoid printing 
 
 PostgreSQL becomes healthy before API startup. The API runs `alembic upgrade head` before Uvicorn and is checked at `/api/v1/health`; a migration failure prevents startup. The web service waits for API health and has its own HTTP health check. All three services must become healthy; the API must return `status: ok`, and the database revision must match the checked-out migration head. Verify the browser's network requests target the configured public API port (an API 401 without a login is an expected reachability response).
 
-The API image includes the optional demo seeder, but validation found that it currently fails on a fresh database: it creates a `demonstration_bypass` profile while assignment creation requires `enrolled`. Do not treat it as a working account-bootstrap command or weaken identity gates to make it pass. Correcting this application-level incompatibility is outside this Docker configuration change. Seeding is not required for health/migration validation. Run it only against a newly created disposable deployment with a separately supplied `SERPS_DEMO_PASSWORD`; never point it at an existing research/evaluation database. Accounts and sessions are not copied from the native runtime. No demo control policy is enabled by these commands.
+The historical demo-seeder incompatibility is corrected by retiring shared bypass accounts in favor of the audited, staff-only [bootstrap workflow](cloud_staging.md). The compatibility script delegates to bootstrap and refuses a nonempty database. Candidate enrolment and assignment gates remain unchanged. Seeding is not required for health/migration validation. Run it only against a newly created disposable deployment with privately injected `SERPS_BOOTSTRAP_*` variables; never point it at an existing research/evaluation database. Accounts and sessions are not copied from the native runtime. No demo control policy is enabled by these commands.
 
 ## Isolation and cleanup
 
@@ -85,7 +85,9 @@ This preserves its database volume. Add `--volumes` only if you deliberately wan
 
 Report actual results per run: commit, Docker versions, image IDs/tags, project/service names, published ports, container health, HTTP results, migration revision and cleanup state. If the Docker engine cannot start, classification is **A: Docker-configured only**, regardless of native tests. Image build success alone is **B**; successful isolated stack startup is **C**; a fresh remote clone reproducing the documented deployment supports **D**. Physical camera, background/minimise, identity and governance acceptance remain separate.
 
-## Recorded isolated validation (6 October 2026)
+## Historical isolated validation of baseline 9732228 (6 October 2026)
+
+The results below describe the earlier Docker-only phase. See [the security/cloud report](security_cloud_readiness.md) for the current dependency and bootstrap validation.
 
 Classification: **C ? Docker stack builds and runs successfully locally**. This is not an unrestricted production-readiness or physical acceptance claim. The application baseline was `d62da3d6380f2bb194f8e63b7c1a787d4a4f1bbf`, obtained from GitHub in an isolated checkout; only the deployment files in this change were added. Neither image relied on uncommitted native environment files. Successful images were not rebuilt merely to repeat validation. A fresh clone/replay of the final remote deployment commit was not performed, so classification D is not claimed.
 

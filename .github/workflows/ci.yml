@@ -1,27 +1,47 @@
-name: SERPS POP CI
-
+name: SERPS security and deployment checks
 on:
   push:
-    branches: [main]
+    branches: [main, codex/stabilize-mode-workflows-governance]
   pull_request:
-    branches: [main]
-
+  workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: '3.13'
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "npm"
-      - run: python -m pip install -e .[dev]
-      - run: python -m py_compile apps/api/app/main.py src/serps_pop/domain/evidence.py
+          node-version: '22'
+          cache: npm
+      - run: python -m pip install -e '.[dev]'
       - run: python -m pytest -q
-      - run: npm install
+        env:
+          SERPS_ENV: test
+          SERPS_DATABASE_URL: 'sqlite+pysqlite:///:memory:'
+          SERPS_JWT_SECRET: 'ephemeral-ci-test-only-not-a-deployment-secret'
+      - run: npm install --global npm@11.21.0 --no-audit --no-fund
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=moderate
+      - name: Record all tooling advisories (review documented exceptions)
+        run: npm audit --json > npm-audit.json
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit
+          path: npm-audit.json
       - run: npm run lint -w apps/web
       - run: npm run typecheck -w apps/web
       - run: npm run test -w apps/web
+      - run: npm run build -w apps/web -- --webpack
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://api.staging.example.invalid
+      - run: git diff --check
+      - name: Isolated Docker migration/bootstrap integration
+        run: python scripts/deploy/validate_docker.py
+# Deliberately no provider credentials, image publishing or cloud deployment job.
