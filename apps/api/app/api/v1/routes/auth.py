@@ -8,6 +8,7 @@ from serps_pop.identity.models import User, UserRole
 from serps_pop.identity.schemas import LoginRequest, LogoutRequest, MeResponse, RefreshRequest, TokenResponse
 from serps_pop.identity.services import (
     DomainConflict,
+    DomainNotFound,
     ROLE_CANDIDATE,
     authenticate_user,
     issue_tokens,

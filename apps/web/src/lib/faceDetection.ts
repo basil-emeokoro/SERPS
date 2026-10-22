@@ -48,17 +48,26 @@ export function deriveFaceGeometry(landmarks: NormalizedLandmark[]): Omit<LocalF
 export class LocalFacePerceptionService {
   private task: FaceLandmarkerInstance | null = null;
   private lastTimestamp = 0;
+  private closed = false;
+  private initialising: Promise<void> | null = null;
   modelLoadTime = 0;
 
-  async initialise(): Promise<void> {
+  initialise(): Promise<void> {
+    if (this.closed) return Promise.reject(new Error("Detector has been released."));
+    return this.initialising ??= this.load();
+  }
+
+  private async load(): Promise<void> {
     const started = performance.now();
     const { FaceLandmarker, FilesetResolver } = await import("@mediapipe/tasks-vision");
     const files = await FilesetResolver.forVisionTasks(FACE_WASM_PATH);
-    this.task = await FaceLandmarker.createFromOptions(files, {
+    const task = await FaceLandmarker.createFromOptions(files, {
       baseOptions: { modelAssetPath: FACE_MODEL_PATH, delegate: "CPU" }, runningMode: "VIDEO", numFaces: 2,
       minFaceDetectionConfidence: 0.55, minFacePresenceConfidence: 0.55, minTrackingConfidence: 0.55,
       outputFaceBlendshapes: false, outputFacialTransformationMatrixes: false,
     });
+    if (this.closed) { task.close(); return; }
+    this.task = task;
     this.modelLoadTime = performance.now() - started;
   }
 
@@ -75,7 +84,7 @@ export class LocalFacePerceptionService {
     return { detectorReady: true, faceCount, ...geometry, confidence: null, processingTime: performance.now() - started, faces };
   }
 
-  close(): void { this.task?.close(); this.task = null; }
+  close(): void { this.closed = true; this.task?.close(); this.task = null; }
 }
 
 // Compatibility alias for callers compiled against the pre-unification name.

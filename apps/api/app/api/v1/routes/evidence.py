@@ -3,8 +3,10 @@ from sqlalchemy.orm import Session
 
 from apps.api.app.api.deps.auth import CurrentUser, require_roles
 from apps.api.app.api.deps.database import get_db
+from serps_pop.evidence.models import EvidenceEventRecord
 from serps_pop.domain.evidence import EvidenceEvent, EvidenceEventCreate
 from serps_pop.evidence.services import (
+    delivery_event_id,
     EvidenceAccessDenied,
     EvidenceCandidateMismatch,
     EvidenceEventTypeDenied,
@@ -30,6 +32,8 @@ def create_evidence_event(
     db: Session = Depends(get_db),
 ) -> EvidenceEvent:
     try:
+        key = delivery_event_id(payload)
+        replay = bool(key and db.get(EvidenceEventRecord, key))
         event = persist_evidence_event(
             db,
             payload,
@@ -55,6 +59,8 @@ def create_evidence_event(
     except EvidenceEventTypeDenied as exc:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
+    if replay:
+        return event  # Authorization and payload identity were checked; no duplicate policy evaluation.
     if event.event_type in SUPPORTED_EVENT_TYPES:
         assessment = create_contextual_assessment(
             db,

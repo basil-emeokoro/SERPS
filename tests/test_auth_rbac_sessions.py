@@ -297,3 +297,10 @@ def test_course_cohort_preview_assignment_duplicates_and_institution_isolation(c
     assert repeated.json()["already_assigned_count"] == 1
     isolated = client.post("/api/v1/examinations/cohorts/preview", json=payload, headers=other_headers)
     assert isolated.status_code == 404
+
+
+def test_unknown_account_with_institution_is_rejected_not_server_error(client: TestClient, db_session: Session) -> None:
+    seed_users(db_session)
+    response = client.post("/api/v1/auth/login", json={"institution_code": "MIVA", "email": "missing@example.test", "password": "WrongPassword123!"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid email or password."

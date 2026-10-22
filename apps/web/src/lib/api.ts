@@ -15,7 +15,27 @@ export type CohortPreview = { examination_id: string; course_id: string; monitor
 
 export class ApiError extends Error { constructor(message: string, public readonly status: number) { super(message); } }
 export class SessionExpiredError extends ApiError {}
-export function getApiBaseUrl(): string { return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"; }
+export class NetworkError extends Error {}
+export class RequestCancelledError extends Error { readonly name = "AbortError"; }
+export function isRequestCancelled(error: unknown): boolean { return error instanceof Error && error.name === "AbortError"; }
+async function requestFetch(url: string, init: RequestInit): Promise<Response> {
+  if (init.signal?.aborted) throw new RequestCancelledError("Request cancelled.");
+  const controller = new AbortController();
+  let timedOut = false;
+  const cancel = () => controller.abort(new RequestCancelledError("Request cancelled."));
+  init.signal?.addEventListener("abort", cancel, { once: true });
+  const deadline = setTimeout(() => { timedOut = true; controller.abort(new Error("SERPS request timed out.")); }, 25000);
+  try { return await fetch(url, { ...init, signal: controller.signal }); }
+  catch (error) {
+    if (init.signal?.aborted || (!timedOut && isRequestCancelled(error))) throw new RequestCancelledError("Request cancelled.");
+    throw new NetworkError(timedOut ? "SERPS API request timed out. Your session has been retained." : "Unable to reach the configured SERPS API. Your session has been retained.");
+  } finally { clearTimeout(deadline); init.signal?.removeEventListener("abort", cancel); }
+}
+function clearSession(expectedToken: string) {
+  if (typeof window !== "undefined" && storedAccessToken() === expectedToken)
+    ["serps_access_token", "serps_refresh_token", "serps_current_user"].forEach(key => sessionStorage.removeItem(key));
+}
+export function getApiBaseUrl(): string { return (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000").trim().replace(/\/+$/, ""); }
 export function storedAccessToken(): string { return typeof window === "undefined" ? "" : sessionStorage.getItem("serps_access_token") ?? ""; }
 let refreshInFlight: Promise<string> | null = null;
 
@@ -24,14 +44,17 @@ async function refreshAccessToken(): Promise<string> {
   if (refreshInFlight) return refreshInFlight;
   const refreshToken = sessionStorage.getItem("serps_refresh_token");
   if (!refreshToken) throw new SessionExpiredError("Your session expired. Sign in again.", 401);
-  refreshInFlight = fetch(`${getApiBaseUrl()}/api/v1/auth/refresh`, {
+  refreshInFlight = requestFetch(`${getApiBaseUrl()}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh_token: refreshToken }),
     cache: "no-store",
   }).then(async (response) => {
-    if (!response.ok) throw new SessionExpiredError("Your session expired. Sign in again.", response.status);
+    if (response.status === 401 || response.status === 403) throw new SessionExpiredError("Your session expired. Sign in again.", response.status);
+    if (!response.ok) throw new ApiError("Session refresh is temporarily unavailable. Retry when connectivity recovers.", response.status);
     const tokens = await response.json() as TokenResponse;
+    if (sessionStorage.getItem("serps_refresh_token") !== refreshToken) throw new RequestCancelledError("Authentication changed while refreshing.");
+    if (!tokens.access_token || !tokens.refresh_token) throw new ApiError("Invalid session refresh response.", 502);
     sessionStorage.setItem("serps_access_token", tokens.access_token);
     sessionStorage.setItem("serps_refresh_token", tokens.refresh_token);
     return tokens.access_token;
@@ -49,13 +72,18 @@ function detailMessage(body: unknown, fallback: string): string {
 export async function apiRequest<T>(path: string, options: RequestInit & { token?: string; retry?: boolean } = {}): Promise<T> {
   const hasExplicitToken = Object.prototype.hasOwnProperty.call(options, "token");
   const { token = storedAccessToken(), retry = false, ...init } = options;
-  const execute = (requestToken = token) => fetch(`${getApiBaseUrl()}${path}`, { ...init, headers: { ...(init.body ? { "Content-Type": "application/json" } : {}), ...(requestToken ? { Authorization: `Bearer ${requestToken}` } : {}), ...(init.headers ?? {}) }, cache: "no-store" });
+  let lastRequestToken = token;
+  const execute = (requestToken = token) => { lastRequestToken = requestToken; return requestFetch(`${getApiBaseUrl()}${path}`, { ...init, headers: { ...(init.body ? { "Content-Type": "application/json" } : {}), ...(requestToken ? { Authorization: `Bearer ${requestToken}` } : {}), ...(init.headers ?? {}) }, cache: "no-store" }); };
   let response: Response;
-  try { response = await execute(); } catch (error) { if (!retry || (init.method && init.method !== "GET")) throw error; response = await execute(); }
+  try { response = await execute(); } catch (error) { if (!(error instanceof NetworkError) || !retry || (init.method && init.method !== "GET")) throw error; response = await execute(); }
   if (response.status === 401 && !hasExplicitToken) {
-    try { response = await execute(await refreshAccessToken()); }
+    try {
+      // A concurrent request may already have completed the shared rotation.
+      const current = storedAccessToken();
+      response = await execute(current && current !== token ? current : await refreshAccessToken());
+    }
     catch (error) {
-      if (typeof window !== "undefined") ["serps_access_token", "serps_refresh_token", "serps_current_user"].forEach((key) => sessionStorage.removeItem(key));
+      if (error instanceof SessionExpiredError) clearSession(token);
       throw error;
     }
   }
@@ -63,7 +91,7 @@ export async function apiRequest<T>(path: string, options: RequestInit & { token
     const body = await response.json().catch(() => null);
     const message = detailMessage(body, `SERPS request failed with ${response.status}.`);
     if (response.status === 401) {
-      if (typeof window !== "undefined") ["serps_access_token", "serps_refresh_token", "serps_current_user"].forEach((key) => sessionStorage.removeItem(key));
+      if (!hasExplicitToken) clearSession(lastRequestToken);
       throw new SessionExpiredError(message || "Your session expired. Sign in again.", response.status);
     }
     throw new ApiError(message, response.status);
@@ -100,7 +128,7 @@ export type CandidateProtection = { state: "NORMAL" | "PROTECTED"; reason_catego
 export function fetchCandidateProtection(sessionId: string, signal?: AbortSignal): Promise<CandidateProtection> { return apiRequest(`/api/v1/candidate/sessions/${sessionId}/protection`, { signal }); }
 export function updateDemoPhonePolicy(sessionId: string, armed: boolean): Promise<CandidateProtection> { return apiRequest(`/api/v1/candidate/sessions/${sessionId}/demo-phone-policy`, { method: "POST", body: JSON.stringify({ armed }) }); }
 export function completeCandidateSession(sessionId: string): Promise<unknown> { return apiRequest(`/api/v1/candidate/sessions/${sessionId}/complete`, { method: "POST" }); }
-export function submitEvidenceEvent(payload: { session_id: string; candidate_id: string; event_type: string; description: string; confidence?: number; camera_id?: "primary" | "secondary"; risk_weight?: number; metadata_json?: Record<string, unknown> }): Promise<unknown> { return apiRequest("/api/v1/evidence-events/", { method: "POST", body: JSON.stringify({ ...payload, source_module: "candidate_browser", risk_weight: payload.risk_weight ?? (payload.event_type === "camera_disconnected" ? 0.7 : 0.3), confidence: payload.confidence ?? 1.0 }) }); }
+export function submitEvidenceEvent(payload: { timestamp?: string; session_id: string; candidate_id: string; event_type: string; description: string; confidence?: number; camera_id?: "primary" | "secondary"; risk_weight?: number; metadata_json?: Record<string, unknown> }): Promise<unknown> { return apiRequest("/api/v1/evidence-events/", { method: "POST", body: JSON.stringify({ ...payload, source_module: "candidate_browser", risk_weight: payload.risk_weight ?? (payload.event_type === "camera_disconnected" ? 0.7 : 0.3), confidence: payload.confidence ?? 1.0 }) }); }
 export function fetchReviewerQueue(query = "", signal?: AbortSignal): Promise<ReviewerQueueItem[]> { return apiRequest(`/api/v1/reviewer/sessions${query ? `?${query}` : ""}`, { signal, retry: true }); }
 export function fetchReviewerSession(sessionId: string, role: "reviewer" | "admin" = "reviewer", signal?: AbortSignal): Promise<OperationalSessionDetail> { return apiRequest(`/api/v1/${role}/sessions/${sessionId}`, { signal, retry: true }); }
 export function submitReviewerDecision(sessionId: string, payload: Record<string, unknown>): Promise<unknown> { return apiRequest(`/api/v1/examination-sessions/${sessionId}/reviewer-decisions`, { method: "POST", body: JSON.stringify(payload) }); }

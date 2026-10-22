@@ -7,7 +7,7 @@ import { completeCandidateSession, fetchCandidateWorkspace, fetchCandidateProtec
 vi.mock("next/navigation", () => ({ useParams: () => ({ sessionId: "S" }) }));
 vi.mock("../components/PortalShell", () => ({ PortalShell: ({ children }: { children: React.ReactNode }) => <main>{children}</main> }));
 vi.mock("../components/FacialVerification", () => ({ default: () => <div>Identity check</div> }));
-vi.mock("./api", () => ({ completeCandidateSession: vi.fn(), fetchCandidateWorkspace: vi.fn(), fetchCandidateProtection: vi.fn(), submitEvidenceEvent: vi.fn(), updateDemoPhonePolicy: vi.fn() }));
+vi.mock("./api", async importOriginal => ({ ...await importOriginal<typeof import("./api")>(), completeCandidateSession: vi.fn(), fetchCandidateWorkspace: vi.fn(), fetchCandidateProtection: vi.fn(), submitEvidenceEvent: vi.fn(), updateDemoPhonePolicy: vi.fn() }));
 vi.mock("./reauthentication", () => ({ fetchReauthentication: vi.fn().mockResolvedValue({ required: false }), reauthenticationMessage: () => "" }));
 vi.mock("./objectDetection", () => ({ OBJECT_MODEL_NAME: "Test detector", OBJECT_MODEL_VERSION: "test", OBJECT_SAMPLE_INTERVAL_MS: 1500,
   LocalObjectDetector: class { async initialise() {} close() {} detect() { if (inferenceFails) throw new Error("Synthetic inference failure"); return { personCount: 1, mobilePhoneCount: 0, processingTime: 1, modelName: "test", modelVersion: "test", threshold: .55, detections: [{ detectedClass: "person", confidence: .9 }] }; } } }));

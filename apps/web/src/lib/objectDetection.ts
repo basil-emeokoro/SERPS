@@ -35,6 +35,8 @@ function configuredThreshold(): number {
 export class LocalObjectDetector {
   private task: ObjectDetectorInstance | null = null;
   private lastTimestamp = 0;
+  private closed = false;
+  private initialising: Promise<void> | null = null;
   readonly threshold: number;
   modelLoadTime = 0;
 
@@ -42,17 +44,24 @@ export class LocalObjectDetector {
     this.threshold = threshold;
   }
 
-  async initialise(): Promise<void> {
+  initialise(): Promise<void> {
+    if (this.closed) return Promise.reject(new Error("Detector has been released."));
+    return this.initialising ??= this.load();
+  }
+
+  private async load(): Promise<void> {
     const started = performance.now();
     const { FilesetResolver, ObjectDetector } = await import("@mediapipe/tasks-vision");
     const files = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
-    this.task = await ObjectDetector.createFromOptions(files, {
+    const task = await ObjectDetector.createFromOptions(files, {
       baseOptions: { modelAssetPath: OBJECT_MODEL_PATH, delegate: "CPU" },
       runningMode: "VIDEO",
       maxResults: 8,
       scoreThreshold: this.threshold,
       categoryAllowlist: ["person", "cell phone"],
     });
+    if (this.closed) { task.close(); return; }
+    this.task = task;
     this.modelLoadTime = performance.now() - started;
   }
 
@@ -89,6 +98,7 @@ export class LocalObjectDetector {
   }
 
   close(): void {
+    this.closed = true;
     this.task?.close();
     this.task = null;
   }

@@ -245,3 +245,32 @@ def test_repeated_retrieval_does_not_mutate_stored_events():
         assert first.json() == second.json()
         stored = db.execute(select(EvidenceEventRecord)).scalars().all()
         assert len(stored) == 1
+
+
+def test_delivery_replay_preserves_event_identity_without_repeating_governance():
+    with _db_session() as db:
+        _seed_session(db)
+        client = _client(db, _candidate_user())
+        payload = _event_payload()
+        payload["metadata_json"] = {"delivery_id": "6bb82bb5-70b1-4475-91b4-7bfb7b87d134", "delivery_sequence": 1}
+        first = client.post("/api/v1/evidence-events/", json=payload)
+        assert first.status_code == 201
+        counts = [len(db.scalars(select(model)).all()) for model in (EvidenceEventRecord, ContextualAssessment, AgentRecommendation, PolicyEvaluation)]
+        replay = client.post("/api/v1/evidence-events/", json=payload)
+        assert replay.status_code == 201
+        assert replay.json()["event_id"] == first.json()["event_id"]
+        assert counts == [len(db.scalars(select(model)).all()) for model in (EvidenceEventRecord, ContextualAssessment, AgentRecommendation, PolicyEvaluation)]
+        payload["description"] = "Changed payload must not replace the stored event"
+        assert client.post("/api/v1/evidence-events/", json=payload).status_code == 422
+        app.dependency_overrides[get_current_user] = lambda: _candidate_user(user_id="OTHER")
+        assert client.post("/api/v1/evidence-events/", json=payload).status_code == 403
+
+
+def test_invalid_delivery_identity_is_refused_without_writing_evidence():
+    with _db_session() as db:
+        _seed_session(db)
+        client = _client(db, _candidate_user())
+        payload = _event_payload()
+        payload["metadata_json"] = {"delivery_id": "invalid"}
+        assert client.post("/api/v1/evidence-events/", json=payload).status_code == 422
+        assert not db.scalars(select(EvidenceEventRecord)).all()

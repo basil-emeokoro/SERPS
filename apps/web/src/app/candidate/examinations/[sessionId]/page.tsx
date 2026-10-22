@@ -4,7 +4,8 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { ConfirmationDialog, ErrorState, LoadingState, StatusBadge } from "../../../../components/OperationalStates";
 import { PortalShell } from "../../../../components/PortalShell";
-import { completeCandidateSession, fetchCandidateProtection, fetchCandidateWorkspace, submitEvidenceEvent, updateDemoPhonePolicy } from "../../../../lib/api";
+import { completeCandidateSession, fetchCandidateProtection, fetchCandidateWorkspace, isRequestCancelled, updateDemoPhonePolicy } from "../../../../lib/api";
+import { evidenceOutbox, type DeliveryState } from "../../../../lib/evidenceDelivery";
 import { AUDIO_MONITOR_NAME, AUDIO_MONITOR_VERSION, AUDIO_SAMPLE_INTERVAL_MS, AudioActivityTracker, LocalAudioMonitor } from "../../../../lib/audioMonitoring";
 import type { CandidateWorkspace } from "../../../../lib/contracts";
 import { audioEvidence, detectorUnavailableEvidence, DuplicateEventGate, faceDetectorUnavailableEvidence, facePresenceEvidence, objectEvidence, objectRolesForMode, type CameraRole, type EvidenceDraft } from "../../../../lib/multimodalEvents";
@@ -34,6 +35,7 @@ function DemonstrationWorkspacePageContent() {
   const [workspace, setWorkspace] = useState<CandidateWorkspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [delivery, setDelivery] = useState<DeliveryState>({ pending: 0, failure: "", durable: true });
   const [status, setStatus] = useState("Preparing monitored demonstration...");
   const [elapsed, setElapsed] = useState("00:00:00");
   const [question, setQuestion] = useState(0);
@@ -103,7 +105,7 @@ function DemonstrationWorkspacePageContent() {
     metadata: Record<string, unknown> = {},
   ) => {
     if (!workspace) return;
-    await submitEvidenceEvent({
+    evidenceOutbox(workspace.candidate.candidate_id, workspace.session.session_id).enqueue({
       session_id: workspace.session.session_id,
       candidate_id: workspace.candidate.candidate_id,
       event_type: eventType,
@@ -115,6 +117,18 @@ function DemonstrationWorkspacePageContent() {
     });
   }, [workspace]);
 
+  useEffect(() => {
+    if (!workspace) return;
+    const queue = evidenceOutbox(workspace.candidate.candidate_id, workspace.session.session_id);
+    const unsubscribe = queue.subscribe(setDelivery);
+    queue.resume();
+    const warn = (event: BeforeUnloadEvent) => {
+      if (queue.snapshot().pending || queue.snapshot().failure) { event.preventDefault(); event.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => { unsubscribe(); queue.pause(); window.removeEventListener("beforeunload", warn); };
+  }, [workspace]);
+
   const emitDraft = useCallback(async (draft: EvidenceDraft) => {
     await emit(draft.eventType, draft.description, draft.cameraId, draft.confidence, draft.riskWeight, draft.metadata);
   }, [emit]);
@@ -123,6 +137,7 @@ function DemonstrationWorkspacePageContent() {
     const controller = new AbortController();
     fetchCandidateWorkspace(sessionId, controller.signal)
       .then((result) => {
+        if (controller.signal.aborted) return;
         setWorkspace(result);
         if (result.session.status === "completed") {
           setFinished(true);
@@ -132,8 +147,8 @@ function DemonstrationWorkspacePageContent() {
           setStatus("Demonstration workspace active. This is not a secure browser or complete CBT platform.");
         }
       })
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Workspace could not load."))
-      .finally(() => setLoading(false));
+      .catch((reason) => { if (!controller.signal.aborted && !isRequestCancelled(reason)) setError(reason instanceof Error ? reason.message : "Workspace could not load."); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [sessionId]);
 
@@ -437,7 +452,7 @@ function DemonstrationWorkspacePageContent() {
       lossTimers.forEach(timer => window.clearTimeout(timer));
       document.removeEventListener("visibilitychange", visibility);
       navigator.mediaDevices?.removeEventListener("devicechange", deviceChange);
-      void stopMedia();
+      void stopMedia().catch(reason => recordFrameDiagnostic({ phase: "cleanup_error", error: String(reason) }));
     };
   }, [workspace, finished, emit, emitDraft, stopMedia]);
 
@@ -461,7 +476,10 @@ function DemonstrationWorkspacePageContent() {
   useEffect(() => {
     if (!workspace || finished) return;
     let disposed = false;
+    let checking = false;
     const checkServer = async () => {
+      if (checking || disposed) return;
+      checking = true;
       try {
         const policy = await fetchCandidateProtection(workspace.session.session_id);
         if (disposed) return;
@@ -501,7 +519,7 @@ function DemonstrationWorkspacePageContent() {
             last_successful_acknowledgement: lastServerAckAt.current ? new Date(lastServerAckAt.current).toISOString() : null,
           });
         }
-      }
+      } finally { checking = false; }
     };
     void checkServer();
     const interval = window.setInterval(() => void checkServer(), 10000);
@@ -511,6 +529,13 @@ function DemonstrationWorkspacePageContent() {
   async function finish() {
     setFinishOpen(false);
     try {
+      if (workspace) {
+        const queue = evidenceOutbox(workspace.candidate.candidate_id, workspace.session.session_id);
+        await queue.flush();
+        if (queue.snapshot().pending || queue.snapshot().failure) {
+          setStatus("Completion blocked: unresolved evidence delivery. Restore delivery before finishing."); return;
+        }
+      }
       await completeCandidateSession(sessionId);
       await stopMedia();
       setFinished(true);
@@ -554,6 +579,7 @@ function DemonstrationWorkspacePageContent() {
     <p className="mode-disclosure"><strong>Proctoring mode:</strong> {modeDescription[workspace.session.deployment_mode]}</p>
     {demoControlsEnabled && protection.mode !== "PROTECTED" && <aside className="demo-policy-control" role="note"><div><strong>Prototype demonstration configuration</strong><p>Phone evidence remains logged. Policy protection is applied only when this demo control is armed and at least two phone-positive EvidenceEvents occur in the bounded contextual window.</p></div><button type="button" onClick={() => void configureDemoPhonePolicy(!demoPhonePolicyArmed)}>{demoPhonePolicyArmed ? "Disable phone-protection demonstration" : "Enable phone-protection demonstration"}</button></aside>}
     {identityRequirement?.required && <aside className="identity-prompt" role="alert"><div><strong>Identity assurance required by institutional policy</strong><p>{reauthenticationMessage(identityRequirement)}</p></div>{identityRequirement.state !== "manual_review" && <button className="primary-action" onClick={() => setIdentityCheckOpen(true)}>Verify identity</button>}</aside>}
+    {(delivery.pending > 0 || delivery.failure) && <aside role="alert"><strong>Evidence delivery: {delivery.pending} pending</strong><p>{delivery.failure || "Awaiting server acknowledgement; events remain queued in order."}</p><p>{delivery.durable ? "Pending metadata is retained in this browser tab's session storage." : "Keep this tab open: persistent storage is unavailable."}</p><button onClick={() => workspace && evidenceOutbox(workspace.candidate.candidate_id, workspace.session.session_id).retry()}>Retry retained evidence</button></aside>}
     {identityCheckOpen && <FacialVerification examination={{ sessionId, primaryStream: () => streamByRole.current.primary ?? null, onReturn: () => { setIdentityCheckOpen(false); void refreshIdentityRequirement().catch(() => undefined); } }} /> }
     {requiredMonitoringUnavailable && <aside className="inline-warning" role="alert"><strong>{demoPhonePolicyArmed ? "Assessment interaction paused:" : "Monitoring readiness notice:"}</strong> required monitoring is unavailable. Restore the indicated camera, microphone or face-monitoring component to continue. {demoPhonePolicyArmed ? "The session remains active for human-governed review." : "Operational events are recorded for institutional policy evaluation and human review."}</aside>}
 

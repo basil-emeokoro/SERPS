@@ -95,9 +95,13 @@ export default function FacialVerification({ examination }: { examination?: Exam
       await detector.initialise();
       if (runGeneration !== runGenerationRef.current) { detector.close(); return; }
       setStatus("Camera and detector ready. Hold one quality-valid forward-facing observation.");
+      let observing = false;
       loopRef.current = window.setInterval(() => {
+        if (observing || runGeneration !== runGenerationRef.current) return;
         if (!videoRef.current || !canvasRef.current || videoRef.current.readyState < 2 || !detectorRef.current) return;
+        observing = true;
         void observeFace(videoRef.current, canvasRef.current, detectorRef.current).then((value) => {
+          if (runGeneration !== runGenerationRef.current) return;
           setObservation(value);
           const valid = poseIsValid("forward", value);
           if (!valid) {
@@ -107,7 +111,7 @@ export default function FacialVerification({ examination }: { examination?: Exam
           }
           if (stableSinceRef.current == null) stableSinceRef.current = performance.now();
           setStableMs(performance.now() - stableSinceRef.current);
-        }).catch((error) => setStatus(error instanceof Error ? error.message : "Face analysis failed."));
+        }).catch((error) => { if (runGeneration === runGenerationRef.current) setStatus(error instanceof Error ? error.message : "Face analysis failed."); }).finally(() => { observing = false; });
       }, 220);
       timeoutRef.current = window.setTimeout(() => {
         releaseResources();
@@ -122,11 +126,12 @@ export default function FacialVerification({ examination }: { examination?: Exam
       setCameraActive(false);
       setStatus(error instanceof Error ? error.message : "Camera or detector initialisation failed.");
     } finally {
-      setBusy(false);
+      if (runGeneration === runGenerationRef.current) setBusy(false);
     }
   }, [releaseResources]);
 
   useEffect(() => {
+    let disposed = false;
     const initialise = window.setTimeout(() => {
       if (!examinationRef.current && !sessionStorage.getItem("serps_face_challenge")) {
         setStatus("The facial-authentication challenge is missing or expired. Return to sign-in.");
@@ -134,6 +139,7 @@ export default function FacialVerification({ examination }: { examination?: Exam
         setStatus("Local WebAssembly face detection is unavailable in this browser.");
       } else {
         void navigator.mediaDevices.enumerateDevices().then((devices) => {
+          if (disposed) return;
           const videoDevices = devices.filter((device) => device.kind === "videoinput");
           setCameras(videoDevices);
           const activeDeviceId = examinationRef.current?.primaryStream()?.getVideoTracks()[0]?.getSettings().deviceId;
@@ -147,10 +153,10 @@ export default function FacialVerification({ examination }: { examination?: Exam
           } else {
             setStatus("The saved candidate-facing camera is unavailable. Select and confirm the primary camera.");
           }
-        }).catch((error) => setStatus(error instanceof Error ? error.message : "Camera discovery failed."));
+        }).catch((error) => { if (!disposed) setStatus(error instanceof Error ? error.message : "Camera discovery failed."); });
       }
     }, 0);
-    return () => { window.clearTimeout(initialise); releaseResources(); };
+    return () => { disposed = true; window.clearTimeout(initialise); releaseResources(); };
   }, [releaseResources, startCamera]);
 
   async function verify(face: FaceObservation) {
