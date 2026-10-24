@@ -3,7 +3,7 @@
 **Governance-aware, multimodal examination integrity research prototype**  
 *Research Prototype v1.0 — Release Candidate (RC1)*
 
-[![GitHub Actions](https://github.com/basil-emeokoro/SERPS/actions/workflows/verify.yml/badge.svg)](https://github.com/basil-emeokoro/SERPS/actions)
+[![CI: view workflows](https://img.shields.io/badge/CI-view%20workflows-2563eb)](https://github.com/basil-emeokoro/SERPS/actions)
 [![Status: Research Prototype](https://img.shields.io/badge/status-research%20prototype-334155)](docs/native_runtime_integration.md)
 [![Validation: 265 tests](https://img.shields.io/badge/validated%20locally-265%20tests-0f766e)](docs/native_runtime_integration.md)
 [![Deployment: Restricted staging pending](https://img.shields.io/badge/deployment-restricted%20staging%20pending-c2410c)](docs/runtime_deployment_alternatives.md)
@@ -21,6 +21,8 @@
 | [Run locally](#local-development) | Native and clean-install guidance |
 | [Deployment readiness](#deployment-readiness) | Railway, Render and PostgreSQL preparation, without a live public deployment |
 | [Project documentation](#documentation) | Installation, demonstrations, runtime recovery and governance evidence |
+| [Architecture reference](docs/architecture_overview.md) | Monitoring, evidence, governance and mode boundaries |
+| [Screenshot gallery plan](docs/portfolio_gallery.md) | Public-safe capture and redaction checklist |
 
 ## System workflow
 
@@ -98,6 +100,8 @@ The stock demo seeder has a documented provisioning incompatibility; **do not by
 
 ## Documentation
 
+- [Architecture overview](docs/architecture_overview.md)
+- [Public-safe portfolio gallery checklist](docs/portfolio_gallery.md)
 - [Native runtime recovery, acceptance and rollback](docs/native_runtime_integration.md)
 - [Restricted deployment alternatives](docs/runtime_deployment_alternatives.md)
 - [Docker deployment](docs/docker_deployment.md)
