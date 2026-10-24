@@ -11,7 +11,8 @@ function validEntry(value: unknown): value is Entry {
     && !!payload.metadata_json && typeof payload.metadata_json === "object"
     && typeof (payload.metadata_json as Record<string, unknown>).delivery_id === "string";
 }
-export type DeliveryState = { pending: number; failure: string; durable: boolean };
+export type DeliveryState = { pending: number; failure: string; durable: boolean; requiresInvestigation: boolean };
+const CORRUPT_QUEUE_MESSAGE = "Saved evidence queue could not be read. It has not been overwritten; delivery requires investigation.";
 /** One ordered outbox per candidate/session in this tab. Raw media is never added. */
 export class EvidenceOutbox {
   private entries: Entry[] = [];
@@ -31,9 +32,9 @@ export class EvidenceOutbox {
         if (!data || !Array.isArray(data.entries) || !data.entries.every(validEntry) || !Number.isSafeInteger(data.sequence)) throw new Error();
         this.entries = data.entries; this.sequence = data.sequence;
       }
-    } catch { this.corrupt = true; this.durable = false; this.failure = "Saved evidence queue could not be read. It has not been overwritten; delivery requires investigation."; }
+    } catch { this.corrupt = true; this.durable = false; this.failure = CORRUPT_QUEUE_MESSAGE; }
   }
-  snapshot(): DeliveryState { return { pending: this.entries.length, failure: this.failure, durable: this.durable }; }
+  snapshot(): DeliveryState { return { pending: this.entries.length, failure: this.corrupt ? CORRUPT_QUEUE_MESSAGE : this.failure, durable: this.durable, requiresInvestigation: this.corrupt }; }
   subscribe(listener: (state: DeliveryState) => void) {
     this.listeners.add(listener); listener(this.snapshot());
     return () => { this.listeners.delete(listener); };
@@ -53,6 +54,7 @@ export class EvidenceOutbox {
   pause() { this.paused = true; clearTimeout(this.timer); this.timer = undefined; }
   resume() { this.paused = false; void this.flush(); }
   retry() {
+    if (this.corrupt) { this.publish(); return; }
     clearTimeout(this.timer); this.timer = undefined;
     for (const entry of this.entries) entry.attempts = 0;
     this.failure = ""; this.persist(); this.resume();

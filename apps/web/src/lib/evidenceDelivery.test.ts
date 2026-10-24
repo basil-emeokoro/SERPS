@@ -38,3 +38,13 @@ it.each(["corrupt", JSON.stringify({ sequence: 1, entries: [null] })])("preserve
   queue.enqueue(payload); await queue.flush();
   expect(setItem).not.toHaveBeenCalled(); expect(queue.snapshot().failure).toContain("not been overwritten");
 });
+
+it("cannot clear a corrupt-queue barrier by retrying before any new event arrives", async () => {
+  const store = storage(); store.setItem("key", "unreadable retained evidence");
+  const send = vi.fn(); const queue = new EvidenceOutbox("key", store, send);
+  queue.retry(); await queue.flush();
+  expect(queue.snapshot().failure).toContain("not been overwritten");
+  expect(queue.snapshot().durable).toBe(false);
+  expect(store.getItem("key")).toBe("unreadable retained evidence");
+  expect(send).not.toHaveBeenCalled();
+});

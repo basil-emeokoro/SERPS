@@ -3,16 +3,14 @@ from sqlalchemy.orm import Session
 
 from apps.api.app.api.deps.auth import CurrentUser, require_roles
 from apps.api.app.api.deps.database import get_db
-from serps_pop.evidence.models import EvidenceEventRecord
 from serps_pop.domain.evidence import EvidenceEvent, EvidenceEventCreate
 from serps_pop.evidence.services import (
-    delivery_event_id,
     EvidenceAccessDenied,
     EvidenceCandidateMismatch,
     EvidenceEventTypeDenied,
     EvidenceSessionNotFound,
     EvidenceSessionNotActive,
-    create_evidence_event as persist_evidence_event,
+    create_evidence_event_with_status as persist_evidence_event,
 )
 from serps_pop.governance.engine import SUPPORTED_EVENT_TYPES
 from serps_pop.governance.services import (
@@ -32,9 +30,7 @@ def create_evidence_event(
     db: Session = Depends(get_db),
 ) -> EvidenceEvent:
     try:
-        key = delivery_event_id(payload)
-        replay = bool(key and db.get(EvidenceEventRecord, key))
-        event = persist_evidence_event(
+        event, created = persist_evidence_event(
             db,
             payload,
             actor_institution_id=current_user.institution_id,
@@ -59,29 +55,34 @@ def create_evidence_event(
     except EvidenceEventTypeDenied as exc:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
-    if replay:
-        return event  # Authorization and payload identity were checked; no duplicate policy evaluation.
-    if event.event_type in SUPPORTED_EVENT_TYPES:
-        assessment = create_contextual_assessment(
-            db,
-            session_id=event.session_id,
-            actor_user_id=current_user.user_id,
-            actor_institution_id=current_user.institution_id,
-            actor_roles=current_user.roles,
-        )
-        recommendation = create_agent_recommendation(
-            db,
-            assessment_id=assessment.assessment_id,
-            actor_user_id=current_user.user_id,
-            actor_institution_id=current_user.institution_id,
-            actor_roles=current_user.roles,
-        )
-        create_policy_evaluation(
-            db,
-            recommendation_id=recommendation.recommendation_id,
-            actor_user_id=current_user.user_id,
-            actor_institution_id=current_user.institution_id,
-            actor_roles=current_user.roles,
-        )
-    db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    try:
+        if created and event.event_type in SUPPORTED_EVENT_TYPES:
+            assessment = create_contextual_assessment(
+                db,
+                session_id=event.session_id,
+                actor_user_id=current_user.user_id,
+                actor_institution_id=current_user.institution_id,
+                actor_roles=current_user.roles,
+            )
+            recommendation = create_agent_recommendation(
+                db,
+                assessment_id=assessment.assessment_id,
+                actor_user_id=current_user.user_id,
+                actor_institution_id=current_user.institution_id,
+                actor_roles=current_user.roles,
+            )
+            create_policy_evaluation(
+                db,
+                recommendation_id=recommendation.recommendation_id,
+                actor_user_id=current_user.user_id,
+                actor_institution_id=current_user.institution_id,
+                actor_roles=current_user.roles,
+            )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return event
