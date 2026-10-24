@@ -23,6 +23,10 @@ The backend remains authoritative for JWT authentication, RBAC, candidate owners
 
 ## Local setup
 
+For the preserved native API on port 8765 and frontend on port 3100, see [Native recovery and acceptance](docs/native_runtime_integration.md). Do not replace existing environment files or seed existing databases with the fresh-install commands below. Recovery retains ordered evidence identities and distinguishes transport interruption from authentication expiry. It does not provide indefinite offline retention or resolve the completion-in-flight race.
+
+[Restricted deployment alternatives](docs/runtime_deployment_alternatives.md) documents cloud preparation only; no public deployment or unrelated Phase 4 integration is included.
+
 ```powershell
 Copy-Item .env.example .env
 python -m pip install -e ".[dev]"

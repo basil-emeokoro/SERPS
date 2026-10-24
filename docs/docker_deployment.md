@@ -1,5 +1,7 @@
 # Docker deployment and isolated validation
 
+For the runtime-recovery branch, also read [Restricted deployment alternatives](runtime_deployment_alternatives.md) and [Native recovery acceptance](native_runtime_integration.md). The historical Docker results below are not a fresh validation of this recovery patch. Existing Compose behavior is unchanged.
+
 This path is separate from the native SERPS evaluation runtime. Do not use its database, environment files, sessions, detector trials or evidence. Container startup is not physical camera/detector acceptance.
 
 ## Prerequisites and fresh clone
