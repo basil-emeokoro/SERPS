@@ -11,6 +11,7 @@ AdvisoryAction = Literal[
     "NOTIFY_REVIEWER",
     "REQUEST_CANDIDATE_ACKNOWLEDGEMENT",
     "ESCALATE_INCIDENT",
+    "PROTECT_AND_PAUSE",
 ]
 ReviewerDecisionValue = Literal[
     "CONTINUE",
@@ -173,6 +174,7 @@ class OperationalSessionDetail(BaseModel):
     session: dict[str, Any]
     candidate: dict[str, Any]
     identity_assurance: dict[str, Any]
+    identity_reauthentication: dict[str, Any] = Field(default_factory=dict)
     institution: dict[str, Any]
     examination: dict[str, Any]
     primary_camera: OperationalCameraStatus
@@ -182,6 +184,8 @@ class OperationalSessionDetail(BaseModel):
     latest_policy_evaluation: dict[str, Any] | None
     reviewer_decisions: list[dict[str, Any]]
     timeline: list[TimelineEntry]
+    timeline_total_entries: int
+    timeline_truncated: bool
     reports: list[dict[str, Any]]
 
 

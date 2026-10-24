@@ -103,6 +103,7 @@ def test_complete_operational_workflow(e2e_client: TestClient, e2e_db: Session) 
         title="SERPS RC1 Demonstration",
         status="published",
         duration_minutes=30,
+        monitoring_mode="B",
     )
     e2e_db.add(examination)
     e2e_db.flush()
@@ -146,7 +147,7 @@ def test_complete_operational_workflow(e2e_client: TestClient, e2e_db: Session) 
         selection = e2e_client.post(
             "/api/v1/candidate/cameras",
             headers=candidate_headers,
-            json={"camera_role": role, "device_id": device, "label": f"{role.title()} Camera", "camera_count": 2},
+                json={"camera_role": role, "device_id": device, "label": f"{role.title()} Camera", "camera_count": 2, "metadata": {"preview_live_confirmed": True}},
         )
         assert selection.status_code == 201, selection.text
         permission = e2e_client.post(
@@ -161,7 +162,7 @@ def test_complete_operational_workflow(e2e_client: TestClient, e2e_db: Session) 
     started = e2e_client.post(
         f"/api/v1/candidate/examinations/{examination.examination_id}/start",
         headers=candidate_headers,
-        json={"deployment_mode": "A"},
+        json={"deployment_mode": "B"},
     )
     assert started.status_code == 201, started.text
     session_id = started.json()["session_id"]

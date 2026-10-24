@@ -30,3 +30,34 @@ Diagram Sketches.docx
 Diagram Sketches.pdf
 *.tsbuildinfo
 *.egg-info/
+.aider*
+
+# Local dissertation, research, and evaluation evidence (never source-controlled)
+/Capstone Report/
+/SERPS Dissertation Evidence/
+/Complete Assessment Platform.txt
+/_edgeqa*/
+*.docx
+*.pdf
+*.xlsx
+*.xls
+*.csv
+*.tsv
+
+# Local databases and browser/test artefacts
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+playwright/.cache/
+test-results/
+blob-report/
+screenshots/
+
+# Raw or participant-related evaluation material
+raw_event_exports/
+raw_evidence/
+evaluation_evidence/
+participant_images/
+participant-media/

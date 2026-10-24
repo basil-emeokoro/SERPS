@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { CameraPanel, ErrorState, FeatureCapability, LoadingState, MetricCards, ReadinessSummary, RiskIndicator } from "./OperationalStates";
 import { RoleNavigation } from "./RoleNavigation";
-import { formatElapsed, validateCameraPair, validateReviewerDecision } from "../lib/operational";
+import { formatElapsed, reviewerDetailPresentation, validateCameraPair, validateReviewerDecision } from "../lib/operational";
 
 describe("operational portal components", () => {
   it("renders loading and API failure states accessibly", () => {
@@ -40,4 +40,11 @@ describe("operational interaction rules", () => {
   it("requires distinct primary and secondary cameras", () => expect(validateCameraPair("camera-1", "camera-1")).toContain("different physical devices"));
   it("requires reviewer rationale", () => expect(validateReviewerDecision("CONTINUE", "   ")).toContain("rationale"));
   it("keeps the demonstration timer stable from persisted start time", () => expect(formatElapsed("2026-07-20T10:00:00Z", Date.parse("2026-07-20T11:02:03Z"))).toBe("01:02:03"));
+  it("treats a timezone-naive persisted timestamp as UTC", () => expect(formatElapsed("2026-07-20T10:00:00", Date.parse("2026-07-20T11:02:03Z"))).toBe("01:02:03"));
+  it("preserves rendered reviewer detail during polling and refresh failures", () => {
+    expect(reviewerDetailPresentation(true, true, "")).toBe("content");
+    expect(reviewerDetailPresentation(true, false, "Refresh failed")).toBe("content");
+    expect(reviewerDetailPresentation(false, true, "")).toBe("loading");
+    expect(reviewerDetailPresentation(false, false, "Initial request failed")).toBe("error");
+  });
 });

@@ -4,14 +4,63 @@ export type ApiHealth = { status: string; service: string; version: string };
 export type LoginPayload = { email: string; password: string; institution_code?: string };
 export type TokenResponse = { authentication_stage: "complete"; access_token: string; refresh_token: string; token_type: "bearer"; expires_in: number };
 export type FacialStageResponse = { authentication_stage: "facial_required"; challenge_id: string; challenge_token: string; required_actions: string[]; expires_at: string };
-export type LoginResponse = TokenResponse | FacialStageResponse;
+export type EnrollmentStageResponse = { authentication_stage: "enrollment_required"; challenge_id: string; challenge_token: string; required_actions: string[]; expires_at: string; capture_restart_required: true };
+export type LoginResponse = TokenResponse | FacialStageResponse | EnrollmentStageResponse;
 export type AssignedExamination = { assignment_id: string; assignment_status: string; examination_id: string; exam_code: string; title: string; status: string; starts_at: string | null; ends_at: string | null; duration_minutes: number; monitoring_mode: string };
-export type CandidateDashboard = { candidate: { candidate_id: string; full_name: string; email: string; status: string }; assigned_examinations: AssignedExamination[]; consent: { accepted: boolean; consent_version: string } | null; device_check: { passed: boolean; browser_name: string } | null; primary_camera_selection: { camera_selection_id: string; label: string | null; camera_count: number } | null; primary_camera_permission: { granted: boolean; status: string } | null; secondary_camera_selection: { camera_selection_id: string; label: string | null; camera_count: number } | null; secondary_camera_permission: { granted: boolean; status: string } | null; active_session: { session_id: string; examination_id: string; status: string } | null; readiness: Record<string, boolean> };
+export type CandidateDashboard = { candidate: { candidate_id: string; full_name: string; email: string; status: string }; assigned_examinations: AssignedExamination[]; consent: { accepted: boolean; consent_version: string } | null; device_check: { passed: boolean; browser_name: string } | null; primary_camera_selection: { camera_selection_id: string; label: string | null; camera_count: number } | null; primary_camera_permission: { granted: boolean; status: string } | null; secondary_camera_selection: { camera_selection_id: string; label: string | null; camera_count: number } | null; secondary_camera_permission: { granted: boolean; status: string } | null; active_session: { session_id: string; examination_id: string; status: string } | null; readiness: Record<string, boolean>; readiness_by_mode: Record<"A" | "B" | "C", Record<string, boolean>> };
+export type AdministrativeCandidate = { candidate_id: string; institution_id: string; full_name: string; email: string; status: string; candidate_identifier: string };
+export type AdministrativeExamination = { examination_id: string; institution_id: string; exam_code: string; title: string; status: string; duration_minutes: number; monitoring_mode: "A" | "B" | "C"; is_active: boolean };
+export type AdministrativeCourse = { course_id: string; institution_id: string; course_code: string; title: string; is_active: boolean };
+export type CohortPreview = { examination_id: string; course_id: string; monitoring_mode: "A" | "B" | "C"; candidates: { candidate_id: string; full_name: string; email: string; outcome: "eligible" | "already_assigned" | "ineligible"; reason: string | null }[]; eligible_count: number; already_assigned_count: number; ineligible_count: number; created_count: number };
 
 export class ApiError extends Error { constructor(message: string, public readonly status: number) { super(message); } }
 export class SessionExpiredError extends ApiError {}
-export function getApiBaseUrl(): string { return process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"; }
+export class NetworkError extends Error {}
+export class RequestCancelledError extends Error { readonly name = "AbortError"; }
+export function isRequestCancelled(error: unknown): boolean { return error instanceof Error && error.name === "AbortError"; }
+async function requestFetch(url: string, init: RequestInit): Promise<Response> {
+  if (init.signal?.aborted) throw new RequestCancelledError("Request cancelled.");
+  const controller = new AbortController();
+  let timedOut = false;
+  const cancel = () => controller.abort(new RequestCancelledError("Request cancelled."));
+  init.signal?.addEventListener("abort", cancel, { once: true });
+  const deadline = setTimeout(() => { timedOut = true; controller.abort(new Error("SERPS request timed out.")); }, 25000);
+  try { return await fetch(url, { ...init, signal: controller.signal }); }
+  catch (error) {
+    if (init.signal?.aborted || (!timedOut && isRequestCancelled(error))) throw new RequestCancelledError("Request cancelled.");
+    throw new NetworkError(timedOut ? "SERPS API request timed out. Your session has been retained." : "Unable to reach the configured SERPS API. Your session has been retained.");
+  } finally { clearTimeout(deadline); init.signal?.removeEventListener("abort", cancel); }
+}
+function clearSession(expectedToken: string) {
+  if (typeof window !== "undefined" && storedAccessToken() === expectedToken)
+    ["serps_access_token", "serps_refresh_token", "serps_current_user"].forEach(key => sessionStorage.removeItem(key));
+}
+export function getApiBaseUrl(): string { return (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000").trim().replace(/\/+$/, ""); }
 export function storedAccessToken(): string { return typeof window === "undefined" ? "" : sessionStorage.getItem("serps_access_token") ?? ""; }
+let refreshInFlight: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  if (typeof window === "undefined") throw new SessionExpiredError("Your session expired. Sign in again.", 401);
+  if (refreshInFlight) return refreshInFlight;
+  const refreshToken = sessionStorage.getItem("serps_refresh_token");
+  if (!refreshToken) throw new SessionExpiredError("Your session expired. Sign in again.", 401);
+  refreshInFlight = requestFetch(`${getApiBaseUrl()}/api/v1/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+    cache: "no-store",
+  }).then(async (response) => {
+    if (response.status === 401 || response.status === 403) throw new SessionExpiredError("Your session expired. Sign in again.", response.status);
+    if (!response.ok) throw new ApiError("Session refresh is temporarily unavailable. Retry when connectivity recovers.", response.status);
+    const tokens = await response.json() as TokenResponse;
+    if (sessionStorage.getItem("serps_refresh_token") !== refreshToken) throw new RequestCancelledError("Authentication changed while refreshing.");
+    if (!tokens.access_token || !tokens.refresh_token) throw new ApiError("Invalid session refresh response.", 502);
+    sessionStorage.setItem("serps_access_token", tokens.access_token);
+    sessionStorage.setItem("serps_refresh_token", tokens.refresh_token);
+    return tokens.access_token;
+  }).finally(() => { refreshInFlight = null; });
+  return refreshInFlight;
+}
 function detailMessage(body: unknown, fallback: string): string {
   if (typeof body === "object" && body !== null && "detail" in body) {
     const detail = (body as { detail: unknown }).detail;
@@ -21,15 +70,28 @@ function detailMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 export async function apiRequest<T>(path: string, options: RequestInit & { token?: string; retry?: boolean } = {}): Promise<T> {
+  const hasExplicitToken = Object.prototype.hasOwnProperty.call(options, "token");
   const { token = storedAccessToken(), retry = false, ...init } = options;
-  const execute = () => fetch(`${getApiBaseUrl()}${path}`, { ...init, headers: { ...(init.body ? { "Content-Type": "application/json" } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.headers ?? {}) }, cache: "no-store" });
+  let lastRequestToken = token;
+  const execute = (requestToken = token) => { lastRequestToken = requestToken; return requestFetch(`${getApiBaseUrl()}${path}`, { ...init, headers: { ...(init.body ? { "Content-Type": "application/json" } : {}), ...(requestToken ? { Authorization: `Bearer ${requestToken}` } : {}), ...(init.headers ?? {}) }, cache: "no-store" }); };
   let response: Response;
-  try { response = await execute(); } catch (error) { if (!retry || (init.method && init.method !== "GET")) throw error; response = await execute(); }
+  try { response = await execute(); } catch (error) { if (!(error instanceof NetworkError) || !retry || (init.method && init.method !== "GET")) throw error; response = await execute(); }
+  if (response.status === 401 && !hasExplicitToken) {
+    try {
+      // A concurrent request may already have completed the shared rotation.
+      const current = storedAccessToken();
+      response = await execute(current && current !== token ? current : await refreshAccessToken());
+    }
+    catch (error) {
+      if (error instanceof SessionExpiredError) clearSession(token);
+      throw error;
+    }
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const message = detailMessage(body, `SERPS request failed with ${response.status}.`);
     if (response.status === 401) {
-      if (typeof window !== "undefined") ["serps_access_token", "serps_refresh_token", "serps_current_user"].forEach((key) => sessionStorage.removeItem(key));
+      if (!hasExplicitToken) clearSession(lastRequestToken);
       throw new SessionExpiredError(message || "Your session expired. Sign in again.", response.status);
     }
     throw new ApiError(message, response.status);
@@ -39,16 +101,21 @@ export async function apiRequest<T>(path: string, options: RequestInit & { token
 }
 export function fetchApiHealth(): Promise<ApiHealth> { return apiRequest("/api/v1/health", { retry: true }); }
 export function login(payload: LoginPayload): Promise<LoginResponse> { return apiRequest("/api/v1/auth/login", { method: "POST", token: "", body: JSON.stringify(payload) }); }
-export function fetchCurrentUser(accessToken: string, signal?: AbortSignal): Promise<MeResponse> { return apiRequest("/api/v1/auth/me", { token: accessToken, signal }); }
+export function fetchCurrentUser(accessToken?: string, signal?: AbortSignal): Promise<MeResponse> {
+  return accessToken
+    ? apiRequest("/api/v1/auth/me", { token: accessToken, signal })
+    : apiRequest("/api/v1/auth/me", { signal });
+}
 export function registerCandidate(payload: Record<string, string>): Promise<Record<string, string>> { return apiRequest("/api/v1/candidate/register", { method: "POST", token: "", body: JSON.stringify(payload) }); }
 export function registerIdentity(payload: Record<string, unknown>): Promise<RegistrationRequest> { return apiRequest("/api/v1/identity-assurance/registrations", { method: "POST", token: "", body: JSON.stringify(payload) }); }
 export function fetchRegistrationInstitutions(signal?: AbortSignal): Promise<InstitutionRegistration[]> { return apiRequest("/api/v1/identity-assurance/institutions", { token: "", signal, retry: true }); }
 export function submitEnrollment(payload: { enrollment_token: string; captures: FaceCapture[]; liveness_actions: LivenessAction[]; retry_count: number }): Promise<Record<string, unknown>> { return apiRequest("/api/v1/identity-assurance/enrollments", { method: "POST", token: "", body: JSON.stringify(payload) }); }
-export function submitFacialAuthentication(payload: { challenge_token: string; descriptor: number[]; one_face: boolean; lighting_score: number; distance_score: number; liveness_actions: LivenessAction[]; retry_count: number }): Promise<Record<string, unknown>> { return apiRequest("/api/v1/identity-assurance/facial-authentication", { method: "POST", token: "", body: JSON.stringify(payload) }); }
+export function resumeEnrollment(payload: { institution_code?: string; email: string; password: string }): Promise<{ challenge_token: string; required_actions: string[] }> { return apiRequest("/api/v1/identity-assurance/enrollments/resume", { method: "POST", token: "", body: JSON.stringify(payload) }); }
+export function submitFacialAuthentication(payload: { challenge_token: string; descriptor: number[]; one_face: boolean; lighting_score: number; distance_score: number; retry_count: number }): Promise<Record<string, unknown>> { return apiRequest("/api/v1/identity-assurance/facial-authentication", { method: "POST", token: "", body: JSON.stringify(payload) }); }
 export function fetchRegistrations(signal?: AbortSignal): Promise<RegistrationRequest[]> { return apiRequest("/api/v1/identity-assurance/registrations", { signal, retry: true }); }
 export function decideRegistration(registrationId: string, decision: "approve" | "reject", rationale: string): Promise<RegistrationRequest> { return apiRequest(`/api/v1/identity-assurance/registrations/${registrationId}/decision`, { method: "POST", body: JSON.stringify({ decision, rationale }) }); }
 export function beginPeriodicVerification(): Promise<{ challenge_token: string; required_actions: string[] }> { return apiRequest("/api/v1/identity-assurance/periodic/challenge", { method: "POST" }); }
-export function submitPeriodicVerification(payload: { challenge_token: string; descriptor: number[]; one_face: boolean; lighting_score: number; distance_score: number; liveness_actions: LivenessAction[]; retry_count: number }): Promise<Record<string, unknown>> { return apiRequest("/api/v1/identity-assurance/periodic/verify", { method: "POST", body: JSON.stringify(payload) }); }
+export function submitPeriodicVerification(payload: { challenge_token: string; descriptor: number[]; one_face: boolean; lighting_score: number; distance_score: number; retry_count: number }): Promise<Record<string, unknown>> { return apiRequest("/api/v1/identity-assurance/periodic/verify", { method: "POST", body: JSON.stringify(payload) }); }
 export function fetchIdentityStatus(): Promise<{ biometric_required: boolean; demo_bypass: boolean; enrolment_status: string; authentication_result: string; identity_confidence: number | null; liveness_result: string; last_verified_at: string | null }> { return apiRequest("/api/v1/identity-assurance/status", { retry: true }); }
 export function fetchCandidateDashboard(signal?: AbortSignal): Promise<CandidateDashboard> { return apiRequest("/api/v1/candidate/dashboard", { signal, retry: true }); }
 export function acceptCandidateConsent(): Promise<unknown> { return apiRequest("/api/v1/candidate/consents", { method: "POST", body: JSON.stringify({ consent_version: "CONSENT-1.0", monitoring_consent: true, privacy_notice_accepted: true, institutional_policy_accepted: true }) }); }
@@ -57,8 +124,11 @@ export function submitCameraSelection(payload: Record<string, unknown>): Promise
 export function submitCameraPermission(cameraRole: "primary" | "secondary", status: string): Promise<unknown> { return apiRequest("/api/v1/candidate/camera-permissions", { method: "POST", body: JSON.stringify({ camera_role: cameraRole, status, user_agent: navigator.userAgent }) }); }
 export function startCandidateSession(examinationId: string, deploymentMode: "A" | "B" | "C" = "B"): Promise<{ session_id: string; candidate_id: string }> { return apiRequest(`/api/v1/candidate/examinations/${examinationId}/start`, { method: "POST", body: JSON.stringify({ deployment_mode: deploymentMode }) }); }
 export function fetchCandidateWorkspace(sessionId: string, signal?: AbortSignal): Promise<CandidateWorkspace> { return apiRequest(`/api/v1/candidate/sessions/${sessionId}`, { signal, retry: true }); }
+export type CandidateProtection = { state: "NORMAL" | "PROTECTED"; reason_category: string | null; policy_action: string | null; requires_reviewer: boolean; misconduct_determination: boolean; evaluated_at: string | null; demo_controls_enabled: boolean; demo_phone_policy_armed: boolean };
+export function fetchCandidateProtection(sessionId: string, signal?: AbortSignal): Promise<CandidateProtection> { return apiRequest(`/api/v1/candidate/sessions/${sessionId}/protection`, { signal }); }
+export function updateDemoPhonePolicy(sessionId: string, armed: boolean): Promise<CandidateProtection> { return apiRequest(`/api/v1/candidate/sessions/${sessionId}/demo-phone-policy`, { method: "POST", body: JSON.stringify({ armed }) }); }
 export function completeCandidateSession(sessionId: string): Promise<unknown> { return apiRequest(`/api/v1/candidate/sessions/${sessionId}/complete`, { method: "POST" }); }
-export function submitEvidenceEvent(payload: { session_id: string; candidate_id: string; event_type: string; description: string; confidence?: number; camera_id?: "primary" | "secondary"; risk_weight?: number; metadata_json?: Record<string, unknown> }): Promise<unknown> { return apiRequest("/api/v1/evidence-events/", { method: "POST", body: JSON.stringify({ ...payload, source_module: "candidate_browser", risk_weight: payload.risk_weight ?? (payload.event_type === "camera_disconnected" ? 0.7 : 0.3), confidence: payload.confidence ?? 1.0 }) }); }
+export function submitEvidenceEvent(payload: { timestamp?: string; session_id: string; candidate_id: string; event_type: string; description: string; confidence?: number; camera_id?: "primary" | "secondary"; risk_weight?: number; metadata_json?: Record<string, unknown> }): Promise<unknown> { return apiRequest("/api/v1/evidence-events/", { method: "POST", body: JSON.stringify({ ...payload, source_module: "candidate_browser", risk_weight: payload.risk_weight ?? (payload.event_type === "camera_disconnected" ? 0.7 : 0.3), confidence: payload.confidence ?? 1.0 }) }); }
 export function fetchReviewerQueue(query = "", signal?: AbortSignal): Promise<ReviewerQueueItem[]> { return apiRequest(`/api/v1/reviewer/sessions${query ? `?${query}` : ""}`, { signal, retry: true }); }
 export function fetchReviewerSession(sessionId: string, role: "reviewer" | "admin" = "reviewer", signal?: AbortSignal): Promise<OperationalSessionDetail> { return apiRequest(`/api/v1/${role}/sessions/${sessionId}`, { signal, retry: true }); }
 export function submitReviewerDecision(sessionId: string, payload: Record<string, unknown>): Promise<unknown> { return apiRequest(`/api/v1/examination-sessions/${sessionId}/reviewer-decisions`, { method: "POST", body: JSON.stringify(payload) }); }
@@ -66,4 +136,13 @@ export function generateSessionReport(sessionId: string): Promise<Record<string,
 export function fetchGovernanceTimeline(sessionId: string, signal?: AbortSignal): Promise<Record<string, unknown>[]> { return apiRequest(`/api/v1/examination-sessions/${sessionId}/governance-timeline`, { signal, retry: true }); }
 export function fetchSessionReport(sessionId: string, reportId: string, signal?: AbortSignal): Promise<Record<string, unknown>> { return apiRequest(`/api/v1/examination-sessions/${sessionId}/reports/${reportId}`, { signal, retry: true }); }
 export function fetchAdminMetrics(signal?: AbortSignal): Promise<AdministratorMetrics> { return apiRequest("/api/v1/admin/metrics", { signal, retry: true }); }
+export function fetchAdministrativeCandidates(signal?: AbortSignal): Promise<AdministrativeCandidate[]> { return apiRequest("/api/v1/candidates/?status=active", { signal, retry: true }); }
+export function fetchAdministrativeExaminations(signal?: AbortSignal): Promise<AdministrativeExamination[]> { return apiRequest("/api/v1/examinations/", { signal, retry: true }); }
+export function createAdministrativeExamination(payload: { exam_code: string; title: string; duration_minutes: number; status: "draft" | "published" | "active" | "inactive"; monitoring_mode: "A" | "B" | "C"; is_active: boolean; policy_profile: string }): Promise<AdministrativeExamination> { return apiRequest("/api/v1/examinations/", { method: "POST", body: JSON.stringify(payload) }); }
+export function assignCandidateToExamination(candidateId: string, examinationId: string): Promise<{ assignment_id: string; status: string }> { return apiRequest("/api/v1/examinations/assignments", { method: "POST", body: JSON.stringify({ candidate_id: candidateId, examination_id: examinationId }) }); }
+export function fetchAdministrativeCourses(signal?: AbortSignal): Promise<AdministrativeCourse[]> { return apiRequest("/api/v1/examinations/courses", { signal, retry: true }); }
+export function createAdministrativeCourse(payload: { course_code: string; title: string; is_active: boolean }): Promise<AdministrativeCourse> { return apiRequest("/api/v1/examinations/courses", { method: "POST", body: JSON.stringify(payload) }); }
+export function registerCandidateForCourse(courseId: string, candidateId: string): Promise<unknown> { return apiRequest("/api/v1/examinations/course-registrations", { method: "POST", body: JSON.stringify({ course_id: courseId, candidate_id: candidateId }) }); }
+export function previewCourseCohort(courseId: string, examinationId: string): Promise<CohortPreview> { return apiRequest("/api/v1/examinations/cohorts/preview", { method: "POST", body: JSON.stringify({ course_id: courseId, examination_id: examinationId }) }); }
+export function assignCourseCohort(courseId: string, examinationId: string): Promise<CohortPreview> { return apiRequest("/api/v1/examinations/cohorts/assign", { method: "POST", body: JSON.stringify({ course_id: courseId, examination_id: examinationId }) }); }
 export function fetchAdminPolicy(signal?: AbortSignal): Promise<InstitutionalPolicy | null> { return apiRequest("/api/v1/admin/policy", { signal, retry: true }); }

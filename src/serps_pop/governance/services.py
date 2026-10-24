@@ -5,12 +5,13 @@ import json
 from datetime import datetime
 from typing import Any, Iterable
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.orm import Session
 
 from serps_pop.evidence.repository import EvidenceEventRepository
 from serps_pop.evidence.models import EvidenceEventRecord
 from serps_pop.governance.engine import DEFAULT_WINDOW_SECONDS, RISK_LEVEL_ORDER, assess_events
+from serps_pop.governance.demo_policy import phone_protection_armed_at
 from serps_pop.governance.models import (
     AgentRecommendation,
     ContextualAssessment,
@@ -124,6 +125,8 @@ def create_contextual_assessment(
     examination_session = _authorised_session(db, session_id, actor_institution_id, actor_roles)
     events = EvidenceEventRepository(db).list_by_session(session_id)
     result = assess_events(events, window_seconds)
+    from serps_pop.governance.camera_monitoring import camera_condition
+    camera_context = camera_condition(events, examination_session.deployment_mode)
     previous_id = db.scalar(
         select(ContextualAssessment.assessment_id)
         .where(ContextualAssessment.session_id == session_id)
@@ -143,7 +146,7 @@ def create_contextual_assessment(
         evidence_window_end=result.evidence_window_end,
         evidence_event_ids=result.evidence_event_ids,
         rule_version=result.rule_version,
-        metadata_json=result.metadata,
+        metadata_json={**result.metadata, "required_camera_condition": camera_context},
     )
     db.add(assessment)
     db.flush()
@@ -277,20 +280,61 @@ def create_policy_evaluation(
     policy = get_or_create_default_policy(db, recommendation.institution_id, actor_user_id)
     level_rank = RISK_LEVEL_ORDER[assessment.risk_level]
     notification_rank = RISK_LEVEL_ORDER[policy.reviewer_notification_threshold]
-    reauth_rank = RISK_LEVEL_ORDER[policy.reauthentication_threshold]
     approved_action = recommendation.recommended_action
     if assessment.risk_level == "High":
         approved_action = policy.high_risk_action
     elif assessment.risk_level == "Critical":
         approved_action = policy.critical_risk_action
+    armed_at = phone_protection_armed_at(assessment.session_id)
+    phone_protection_enabled = armed_at is not None
+    phone_count = 0
+    if armed_at is not None:
+        window_start = assessment.evidence_window_start
+        if window_start.tzinfo is None:
+            window_start = window_start.replace(tzinfo=armed_at.tzinfo)
+        window_end = assessment.evidence_window_end
+        if window_end.tzinfo is None:
+            window_end = window_end.replace(tzinfo=armed_at.tzinfo)
+        effective_start = max(window_start, armed_at)
+        phone_count = len(db.scalars(select(EvidenceEventRecord).where(
+            EvidenceEventRecord.session_id == assessment.session_id,
+            EvidenceEventRecord.event_type == "mobile_phone_detected",
+            EvidenceEventRecord.timestamp >= effective_start,
+            EvidenceEventRecord.timestamp <= window_end,
+        )).all())
+    if phone_protection_enabled and phone_count >= 2 and assessment.risk_level in {"High", "Critical"}:
+        approved_action = "PROTECT_AND_PAUSE"
     requires_reviewer = recommendation.requires_reviewer or level_rank >= notification_rank
+    from serps_pop.governance.camera_monitoring import camera_loss_action
+    camera_context = assessment.metadata_json.get("required_camera_condition", {})
+    camera_action = camera_loss_action(policy.metadata_json, camera_context)
+    # Explicit operational policy is independent of phone-demo arming and identity checks.
+    # Preserve a concurrently required phone protective pause.
+    other_context = any(count for name, count in assessment.metadata_json.get("event_counts", {}).items()
+                        if name != "camera_disconnected")
+    if camera_action and approved_action != "PROTECT_AND_PAUSE":
+        if not other_context or camera_action == "PROTECT_AND_PAUSE":
+            approved_action = camera_action
+        elif camera_action == "NOTIFY_REVIEWER" and approved_action in {"CONTINUE_MONITORING", "REQUEST_CANDIDATE_ACKNOWLEDGEMENT"}:
+            approved_action = camera_action
+    if camera_action in {"NOTIFY_REVIEWER", "PROTECT_AND_PAUSE"}:
+        requires_reviewer = True
     requires_ack = policy.candidate_acknowledgement_required and level_rank >= RISK_LEVEL_ORDER["Moderate"]
-    reauthentication_expected = level_rank >= reauth_rank
+    from serps_pop.identity_assurance.reauthentication import identity_conditions, require_from_evaluation
+    reauth_conditions = identity_conditions(assessment, policy)
+    reauthentication_expected = bool(reauth_conditions)
+    if reauthentication_expected:
+        requires_reviewer = True
+        if approved_action in {"CONTINUE_MONITORING", "REQUEST_CANDIDATE_ACKNOWLEDGEMENT"}:
+            approved_action = "REQUEST_REAUTHENTICATION"
     explanation = (
         f"Policy {policy.policy_version} evaluated {recommendation.recommended_action} at "
         f"{assessment.risk_level} risk and approved {approved_action}. "
         f"Reviewer required: {str(requires_reviewer).lower()}; candidate acknowledgement required: "
-        f"{str(requires_ack).lower()}; the examination continues. Automatic termination is prohibited."
+        f"{str(requires_ack).lower()}; the session is not terminated. A policy-controlled protective pause may apply. "
+        "Automatic termination and misconduct determination are prohibited. "
+        f"Required camera operational response: {camera_action or 'not configured'}; no misconduct determination. "
+        f"Identity re-authentication conditions: {', '.join(reauth_conditions) or 'none'}."
     )
     evaluation = PolicyEvaluation(
         institution_id=recommendation.institution_id,
@@ -304,7 +348,20 @@ def create_policy_evaluation(
         continue_examination=True,
         explanation=explanation,
         policy_version=policy.policy_version,
-        metadata_json={"reauthentication_expected": reauthentication_expected},
+        metadata_json={
+            "reauthentication_expected": reauthentication_expected,
+            "identity_conditions": reauth_conditions,
+            "identity_reauthentication_policy": policy.metadata_json.get("identity_reauthentication", {}),
+            "protection_required": approved_action == "PROTECT_AND_PAUSE",
+            "protection_trigger": ("required_camera_unavailable" if camera_action == "PROTECT_AND_PAUSE" else
+                                   "persistent_mobile_phone_evidence" if approved_action == "PROTECT_AND_PAUSE" else None),
+            "required_camera_condition": camera_context,
+            "required_camera_loss_action": camera_action,
+            "phone_protection_required": phone_protection_enabled and phone_count >= 2 and assessment.risk_level in {"High", "Critical"},
+            "misconduct_determination": False,
+            "prototype_demo_phone_policy_armed": phone_protection_enabled,
+            "phone_persistence_rule": "at_least_2_mobile_phone_detected_events_in_contextual_window" if phone_protection_enabled else None,
+        },
     )
     db.add(evaluation)
     db.flush()
@@ -324,6 +381,7 @@ def create_policy_evaluation(
             "policy_version": policy.policy_version,
         },
     )
+    require_from_evaluation(db, evaluation, assessment, policy)
     db.flush()
     return evaluation
 
@@ -379,6 +437,8 @@ def record_reviewer_decision(
         previous_entity_id=previous_id or evaluation.evaluation_id,
         details={"decision": decision.decision, "rationale": decision.rationale},
     )
+    from serps_pop.identity_assurance.reauthentication import apply_reviewer_decision
+    apply_reviewer_decision(db, decision)
     db.flush()
     return decision
 
@@ -388,14 +448,14 @@ def _queue_camera_status(db: Session, session_id: str, role: str) -> str:
         select(EvidenceEventRecord)
         .where(
             EvidenceEventRecord.session_id == session_id,
-            EvidenceEventRecord.event_type.in_(("camera_connected", "camera_disconnected")),
+            EvidenceEventRecord.event_type.in_(("camera_connected", "camera_disconnected", "camera_reconnected")),
         )
         .order_by(EvidenceEventRecord.timestamp.desc(), EvidenceEventRecord.event_id.desc())
     ).all()
     for event in events:
         event_role = event.camera_id or "primary"
         if event_role == role:
-            return "connected" if event.event_type == "camera_connected" else "disconnected"
+            return "connected" if event.event_type in {"camera_connected", "camera_reconnected"} else "disconnected"
     return "not_seen"
 
 
@@ -525,13 +585,16 @@ AUDIT_FIELDS = (
 
 
 def governance_timeline(
-    db: Session, *, session_id: str, actor_institution_id: str, actor_roles: Iterable[str]
+    db: Session, *, session_id: str, actor_institution_id: str, actor_roles: Iterable[str], limit: int | None = None
 ) -> list[dict[str, Any]]:
     _authorised_session(db, session_id, actor_institution_id, actor_roles)
     entries: list[dict[str, Any]] = []
-    evidence = db.scalars(
-        select(EvidenceEventRecord).where(EvidenceEventRecord.session_id == session_id)
-    ).all()
+    evidence_stmt = select(EvidenceEventRecord).where(EvidenceEventRecord.session_id == session_id)
+    if limit is not None:
+        evidence_stmt = evidence_stmt.order_by(
+            EvidenceEventRecord.timestamp.desc(), EvidenceEventRecord.event_id.desc()
+        ).limit(limit)
+    evidence = db.scalars(evidence_stmt).all()
     for item in evidence:
         entries.append({
             "entry_type": "EvidenceEvent",
@@ -547,7 +610,10 @@ def governance_timeline(
         (GovernanceAuditRecord, "GovernanceAuditRecord", "audit_id", "timestamp", AUDIT_FIELDS),
     )
     for model, entry_type, id_field, time_field, fields in collections:
-        for item in db.scalars(select(model).where(model.session_id == session_id)).all():
+        statement = select(model).where(model.session_id == session_id)
+        if limit is not None:
+            statement = statement.order_by(getattr(model, time_field).desc(), getattr(model, id_field).desc()).limit(limit)
+        for item in db.scalars(statement).all():
             entries.append({
                 "entry_type": entry_type,
                 "entity_id": getattr(item, id_field),
@@ -555,7 +621,22 @@ def governance_timeline(
                 "payload": _model_payload(item, fields),
             })
     entries.sort(key=lambda item: (item["timestamp"], item["entry_type"], item["entity_id"]))
-    return entries
+    return entries[-limit:] if limit is not None else entries
+
+
+def governance_timeline_count(db: Session, *, session_id: str) -> int:
+    models = (
+        EvidenceEventRecord,
+        ContextualAssessment,
+        AgentRecommendation,
+        PolicyEvaluation,
+        ReviewerDecision,
+        GovernanceAuditRecord,
+    )
+    return sum(
+        db.scalar(select(func.count()).select_from(model).where(model.session_id == session_id)) or 0
+        for model in models
+    )
 
 
 def _report_payload(db: Session, examination_session: ExaminationSession) -> dict[str, Any]:
@@ -664,3 +745,23 @@ def get_report(
     if report is None or report.session_id != session_id:
         raise GovernanceNotFound("Session report not found.")
     return _authorised_entity(report, actor_institution_id, actor_roles)
+
+
+def configure_camera_policy(db: Session, institution_id: str, actor_user_id: str, action: str | None) -> InstitutionalPolicy:
+    from serps_pop.governance.camera_monitoring import CameraMonitoringPolicy
+    CameraMonitoringPolicy(required_camera_loss_action=action)
+    old = get_or_create_default_policy(db, institution_id, actor_user_id)
+    policy = InstitutionalPolicy(institution_id=institution_id, created_by=actor_user_id,
+        policy_version="IPIME-CAMERA-1.0", high_risk_action=old.high_risk_action,
+        critical_risk_action=old.critical_risk_action, reviewer_notification_threshold=old.reviewer_notification_threshold,
+        candidate_acknowledgement_required=old.candidate_acknowledgement_required,
+        reauthentication_threshold=old.reauthentication_threshold, automatic_exam_termination_allowed=False,
+        metadata_json={**old.metadata_json, "required_camera_loss_action": action, "previous_policy_id": old.policy_id})
+    db.add(policy)
+    db.flush()
+    from serps_pop.identity.services import audit
+    audit(db, institution_id=institution_id, actor_user_id=actor_user_id,
+          action="camera_monitoring_policy.configure", result="success", target_type="InstitutionalPolicy",
+          target_id=policy.policy_id, metadata={"previous_policy_id": old.policy_id,
+          "required_camera_loss_action": action, "misconduct_determination": False})
+    return policy

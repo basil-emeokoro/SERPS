@@ -25,14 +25,14 @@ from serps_pop.identity.services import (
     user_roles,
     validate_email,
 )
-from serps_pop.security.passwords import hash_password
+from serps_pop.security.passwords import hash_password, verify_password
 
 from .models import BiometricEnrollment, IdentityAssuranceProfile, IdentityChallenge, RegistrationRequest, utc_now
 from .schemas import EnrollmentSubmit, FaceAuthenticationSubmit, RegistrationCreate, RegistrationDecision
 
 POSE_SEQUENCE = ["forward", "left", "right", "up", "down", "centre_confirmation"]
 LIVENESS_ACTIONS = ["turn_left", "turn_right", "look_up", "look_down", "return_to_centre"]
-CHALLENGE_MINUTES = 10
+CHALLENGE_MINUTES = 30
 
 
 def _validated_configured_fields(institution: Institution, payload: RegistrationCreate) -> tuple[dict, str | None]:
@@ -229,6 +229,41 @@ def register_account(db: Session, payload: RegistrationCreate) -> tuple[Registra
     return registration, enrollment_token, required_actions
 
 
+def resume_candidate_enrollment(db: Session, institution_code: str | None, email: str, password: str) -> tuple[IdentityChallenge, str]:
+    normalised_email = validate_email(email)
+    query = select(User, Institution).join(Institution, Institution.institution_id == User.institution_id).where(
+        User.email == normalised_email,
+        Institution.is_active.is_(True),
+    )
+    if institution_code:
+        query = query.where(Institution.code == institution_code.strip().upper())
+    matches = db.execute(query).all()
+    valid_matches = [
+        (user, institution)
+        for user, institution in matches
+        if user.status == "pending_facial_enrolment" and verify_password(password, user.password_hash)
+    ]
+    if len(valid_matches) != 1:
+        raise DomainNotFound("Pending candidate enrolment not found or credentials are invalid.")
+    user, institution = valid_matches[0]
+    profile = db.scalar(select(IdentityAssuranceProfile).where(IdentityAssuranceProfile.user_id == user.user_id))
+    if profile is None or profile.enrolment_status != "pending":
+        raise DomainConflict("Candidate facial enrolment is not resumable.")
+    pending = db.scalars(select(IdentityChallenge).where(
+        IdentityChallenge.user_id == user.user_id,
+        IdentityChallenge.purpose == "enrollment",
+        IdentityChallenge.status == "pending",
+    )).all()
+    for item in pending:
+        item.status = "superseded"
+    actions = random.sample(LIVENESS_ACTIONS[:-1], 2) + ["return_to_centre"]
+    challenge, token = _new_challenge(db, user.user_id, "enrollment", actions)
+    audit(db, action="identity.enrollment.resume", result="success", institution_id=institution.institution_id,
+          actor_user_id=user.user_id, target_type="identity_challenge", target_id=challenge.challenge_id,
+          metadata={"prior_pending_challenges_superseded": len(pending)})
+    return challenge, token
+
+
 def decide_registration(
     db: Session,
     registration_id: str,
@@ -379,8 +414,7 @@ def begin_facial_authentication(db: Session, user: User) -> tuple[IdentityChalle
     )
     if enrollment is None:
         raise DomainConflict("Facial enrolment is required before this account can sign in.")
-    actions = random.sample(LIVENESS_ACTIONS[:-1], 2) + ["return_to_centre"]
-    challenge, token = _new_challenge(db, user.user_id, "authentication", actions)
+    challenge, token = _new_challenge(db, user.user_id, "authentication", [])
     audit(
         db,
         action="identity.password_stage",
@@ -422,7 +456,6 @@ def verify_facial_authentication(
         profile.authentication_result = "retry_required"
         profile.liveness_result = "retry_required"
         return user, 0.0, "Retry Required"
-    liveness_confidence = _validate_actions(challenge.required_actions, payload.liveness_actions)
     confidence = _similarity(enrollment.representation_json, payload.descriptor)
     if confidence >= 0.72:
         outcome = "Verified"
@@ -443,7 +476,7 @@ def verify_facial_authentication(
         profile.authentication_result = "failed"
         profile.liveness_result = "passed"
     challenge.confidence = confidence
-    challenge.metadata_json = {"liveness_confidence": liveness_confidence, "raw_media_stored": False}
+    challenge.metadata_json = {**challenge.metadata_json, "observation_count": 1, "quality_validated": True, "raw_media_stored": False}
     audit(
         db,
         action="identity.facial_authentication",
@@ -452,14 +485,13 @@ def verify_facial_authentication(
         actor_user_id=user.user_id,
         target_type="identity_challenge",
         target_id=challenge.challenge_id,
-        metadata={"outcome": outcome, "confidence": confidence, "liveness_confidence": liveness_confidence},
+        metadata={"outcome": outcome, "confidence": confidence, "observation_count": 1, "raw_media_stored": False},
     )
     return user, confidence, outcome
 
 
 def begin_periodic_verification(db: Session, user: User) -> tuple[IdentityChallenge, str]:
-    actions = random.sample(LIVENESS_ACTIONS[:-1], 2) + ["return_to_centre"]
-    challenge, token = _new_challenge(db, user.user_id, "periodic", actions)
+    challenge, token = _new_challenge(db, user.user_id, "periodic", [])
     audit(
         db,
         action="identity.periodic_challenge",

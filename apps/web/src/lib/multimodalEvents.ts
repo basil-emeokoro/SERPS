@@ -1,5 +1,6 @@
 import { AUDIO_MONITOR_NAME, AUDIO_MONITOR_VERSION, type AudioActivitySignal } from "./audioMonitoring";
 import { OBJECT_MODEL_NAME, OBJECT_MODEL_VERSION, type ObjectDetectionSnapshot } from "./objectDetection";
+import { FACE_PERCEPTION_NAME, FACE_PERCEPTION_VERSION, type FacePresenceSignal, type LocalFaceResult } from "./faceDetection";
 
 export type CameraRole = "primary" | "secondary";
 export type ProctoringMode = "A" | "B" | "C";
@@ -84,6 +85,58 @@ export function audioEvidence(signal: AudioActivitySignal): EvidenceDraft {
       detector_version: AUDIO_MONITOR_VERSION,
       correlation_window_seconds: 60,
       raw_audio_stored: false,
+    },
+  };
+}
+
+export function facePresenceEvidence(signal: FacePresenceSignal, snapshot: LocalFaceResult): EvidenceDraft {
+  const primaryFace = snapshot.faces[0] ?? null;
+  const descriptions: Record<FacePresenceSignal["kind"], string> = {
+    face_detected: `${snapshot.faceCount} face${snapshot.faceCount === 1 ? "" : "s"} detected in the primary candidate-facing view.`,
+    face_not_detected: "No face was detected in the connected primary candidate-facing view.",
+    sustained_face_absence: `No face was detected continuously for ${Math.round(signal.absenceDurationMs)} ms in the connected primary view.`,
+  };
+  return {
+    eventType: signal.kind,
+    description: descriptions[signal.kind],
+    cameraId: "primary",
+    // MediaPipe Tasks does not expose a calibrated per-face confidence here.
+    // Keep the field truthful instead of inventing a score.
+    confidence: snapshot.confidence ?? 0,
+    riskWeight: signal.kind === "face_detected" ? 0 : signal.kind === "sustained_face_absence" ? 0.5 : 0.15,
+    metadata: {
+      source: "local_mediapipe_face_perception",
+      detector_name: FACE_PERCEPTION_NAME,
+      detector_version: FACE_PERCEPTION_VERSION,
+      purpose: "face_presence_monitoring",
+      identity_matching_performed: false,
+      face_count: snapshot.faceCount,
+      bounding_box: primaryFace?.boundingBox ?? null,
+      face_centre: primaryFace?.faceCentre ?? null,
+      face_size: primaryFace?.faceSize ?? null,
+      processing_time_ms: Number(snapshot.processingTime.toFixed(2)),
+      detector_confidence_available: snapshot.confidence != null,
+      absence_duration_ms: Math.round(signal.absenceDurationMs),
+      raw_video_stored: false,
+    },
+  };
+}
+
+export function faceDetectorUnavailableEvidence(reason: string): EvidenceDraft {
+  return {
+    eventType: "face_detector_unavailable",
+    description: `Local MediaPipe face monitoring is unavailable; other configured evidence sources remain active. Reason: ${reason}`,
+    cameraId: "primary",
+    confidence: 1,
+    riskWeight: 0,
+    metadata: {
+      source: "local_mediapipe_face_perception",
+      detector_name: FACE_PERCEPTION_NAME,
+      detector_version: FACE_PERCEPTION_VERSION,
+      purpose: "face_presence_monitoring",
+      identity_matching_performed: false,
+      unavailable_reason: reason,
+      raw_video_stored: false,
     },
   };
 }

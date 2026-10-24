@@ -19,8 +19,17 @@ export function validateReviewerDecision(decision: string, rationale: string): s
   if (!rationale.trim()) return "Reviewer rationale is required.";
   return null;
 }
-export function formatElapsed(startedAt: string, nowMs: number): string {
-  const seconds = Math.max(0, Math.floor((nowMs - new Date(startedAt).getTime()) / 1000));
+export function reviewerDetailPresentation(hasDetail: boolean, loading: boolean, error: string): "loading" | "error" | "content" {
+  if (hasDetail) return "content";
+  if (loading) return "loading";
+  return error ? "error" : "error";
+}
+export function formatElapsed(startedAt: string, now: number | string): string {
+  const timestamp = /(?:Z|[+-]\d{2}:\d{2})$/i.test(startedAt) ? startedAt : `${startedAt}Z`;
+  const endingTimestamp = typeof now === "number"
+    ? now
+    : new Date(/(?:Z|[+-]\d{2}:\d{2})$/i.test(now) ? now : `${now}Z`).getTime();
+  const seconds = Math.max(0, Math.floor((endingTimestamp - new Date(timestamp).getTime()) / 1000));
   return `${Math.floor(seconds / 3600).toString().padStart(2, "0")}:${Math.floor((seconds % 3600) / 60).toString().padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
 export function cameraStatusText(camera: CameraStatus): string {

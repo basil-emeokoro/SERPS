@@ -24,6 +24,7 @@ export function PortalShell({ allowedRoles, title, badge, summary, children }: P
     const controller = new AbortController();
     async function initialise() {
       await Promise.resolve();
+      if (controller.signal.aborted) return;
       const stored = sessionStorage.getItem("serps_current_user");
       const token = sessionStorage.getItem("serps_access_token");
       if (stored) {
@@ -32,12 +33,13 @@ export function PortalShell({ allowedRoles, title, badge, summary, children }: P
       }
       if (!token) { setLoaded(true); return; }
       try {
-        const current = await fetchCurrentUser(token, controller.signal);
+        const current = await fetchCurrentUser(undefined, controller.signal);
+        if (controller.signal.aborted) return;
         setUser(current);
         sessionStorage.setItem("serps_current_user", JSON.stringify(current));
       } catch (error) {
-        if (error instanceof SessionExpiredError) setExpired(true);
-      } finally { setLoaded(true); }
+        if (!controller.signal.aborted && error instanceof SessionExpiredError) setExpired(true);
+      } finally { if (!controller.signal.aborted) setLoaded(true); }
     }
     void initialise();
     return () => controller.abort();

@@ -47,6 +47,12 @@ class RegistrationRead(BaseModel):
     verification_status: str = "pending_verification"
 
 
+class EnrollmentResumeCreate(BaseModel):
+    institution_code: str | None = Field(default=None, min_length=2, max_length=32)
+    email: str
+    password: str = Field(min_length=12, max_length=128)
+
+
 class RegistrationFieldRead(BaseModel):
     name: str
     label: str
@@ -113,7 +119,6 @@ class FaceAuthenticationSubmit(BaseModel):
     one_face: bool
     lighting_score: float = Field(ge=0, le=1)
     distance_score: float = Field(ge=0, le=1)
-    liveness_actions: list[LivenessAction] = Field(min_length=3, max_length=8)
     retry_count: int = Field(default=0, ge=0, le=20)
 
 

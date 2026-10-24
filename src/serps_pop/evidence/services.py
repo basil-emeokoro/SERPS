@@ -1,8 +1,14 @@
 ﻿from __future__ import annotations
 
 from collections.abc import Iterable
+from hashlib import sha256
+import json
+from uuid import UUID
+from serps_pop.evidence.models import EvidenceEventRecord
 
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
 from serps_pop.domain.evidence import EvidenceEvent, EvidenceEventCreate
 from serps_pop.evidence.repository import EvidenceEventRepository
@@ -16,6 +22,8 @@ CANDIDATE_EVENT_TYPES = {
     "camera_reconnected",
     "face_detected",
     "face_not_detected",
+    "sustained_face_absence",
+    "face_detector_unavailable",
     "tab_focus_lost",
     "person_detected",
     "multiple_persons_detected",
@@ -26,6 +34,11 @@ CANDIDATE_EVENT_TYPES = {
     "audio_activity_detected",
     "sustained_audio_activity",
     "audio_monitor_unavailable",
+    "protection_entered",
+    "protection_cleared",
+    "connectivity_interrupted",
+    "connectivity_restored",
+    "demo_protection_recovered",
 }
 CANDIDATE_SOURCE_MODULES = {"candidate_browser"}
 
@@ -76,6 +89,24 @@ def get_session_for_evidence(
     return examination_session
 
 
+def delivery_event_id(payload: EvidenceEventCreate) -> str | None:
+    value = payload.metadata_json.get("delivery_id")
+    if value is None:
+        return None
+    try:
+        key = str(UUID(str(value)))
+    except ValueError as exc:
+        raise EvidenceEventTypeDenied("Invalid evidence delivery identity.") from exc
+    scope = f"{payload.session_id}:{payload.candidate_id}:{key}"
+    return "EVT-" + sha256(scope.encode()).hexdigest()[:28]
+
+
+def delivery_fingerprint(payload: EvidenceEventCreate) -> str:
+    data = payload.model_dump(mode="json")
+    data["metadata_json"] = {k: v for k, v in data["metadata_json"].items() if k != "delivery_payload_hash"}
+    return sha256(json.dumps(data, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
 def create_evidence_event(
     db: Session,
     payload: EvidenceEventCreate,
@@ -83,6 +114,22 @@ def create_evidence_event(
     actor_roles: Iterable[str],
     actor_user_id: str | None = None,
 ) -> EvidenceEvent:
+    event, _ = create_evidence_event_with_status(db, payload, actor_institution_id, actor_roles, actor_user_id)
+    return event
+
+
+def create_evidence_event_with_status(
+    db: Session,
+    payload: EvidenceEventCreate,
+    actor_institution_id: str,
+    actor_roles: Iterable[str],
+    actor_user_id: str | None = None,
+) -> tuple[EvidenceEvent, bool]:
+    """Return the event and whether this transaction owns its new delivery claim.
+
+    The caller must commit the claim and governance together, or roll both back.
+    The existing evidence primary key arbitrates competing requests in the DB.
+    """
     roles = _role_set(actor_roles)
     if ROLE_CANDIDATE not in roles or roles.intersection({ROLE_ADMIN, ROLE_REVIEWER, ROLE_SYSADMIN}):
         raise EvidenceAccessDenied(payload.session_id)
@@ -99,8 +146,28 @@ def create_evidence_event(
     )
     if examination_session.candidate_id != payload.candidate_id:
         raise EvidenceCandidateMismatch(payload.candidate_id)
+    event_id = delivery_event_id(payload)
+    if event_id:
+        fingerprint = delivery_fingerprint(payload)
+        payload = payload.model_copy(update={"metadata_json": {**payload.metadata_json, "delivery_payload_hash": fingerprint}})
     event = EvidenceEvent.from_create(payload)
-    return EvidenceEventRepository(db).add(event)
+    if event_id:
+        event.event_id = event_id
+        dialect = db.get_bind().dialect.name
+        insert = {"sqlite": sqlite_insert, "postgresql": postgres_insert}.get(dialect)
+        if insert is None:
+            raise RuntimeError("Atomic evidence delivery requires SQLite or PostgreSQL.")
+        statement = insert(EvidenceEventRecord).values(**event.model_dump()).on_conflict_do_nothing(
+            index_elements=[EvidenceEventRecord.event_id]
+        ).returning(EvidenceEventRecord.event_id)
+        created = db.execute(statement).scalar_one_or_none() is not None
+        record = db.get(EvidenceEventRecord, event_id, populate_existing=True)
+        if record is None:
+            raise RuntimeError("Evidence delivery claim was not visible; retry the transaction.")
+        if record.metadata_json.get("delivery_payload_hash") != fingerprint:
+            raise EvidenceEventTypeDenied("Evidence delivery identity was reused for a different event.")
+        return EvidenceEventRepository._to_domain(record), created
+    return EvidenceEventRepository(db).add(event), True
 
 
 def list_session_evidence_events(

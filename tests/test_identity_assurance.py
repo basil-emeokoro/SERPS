@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -14,7 +14,8 @@ from apps.api.app.api.deps.database import get_db
 from apps.api.app.main import app
 from serps_pop.identity.schemas import InstitutionCreate, UserCreate
 from serps_pop.identity.services import ROLE_CANDIDATE, ROLE_SYSADMIN, create_institution, create_user
-from serps_pop.identity_assurance.services import _validate_actions, create_demo_profile
+from serps_pop.identity_assurance.models import IdentityChallenge
+from serps_pop.identity_assurance.services import _token_hash, _validate_actions, create_demo_profile
 from serps_pop.identity.services import DomainConflict
 from serps_pop.infrastructure.database import Base
 
@@ -148,7 +149,36 @@ def test_candidate_registration_enrollment_password_face_and_periodic_flow(clien
         "/api/v1/auth/login",
         json={"institution_code": "MIVA", "email": "biometric@example.test", "password": "Password123!"},
     )
-    assert missing_enrolment.status_code == 401
+    assert missing_enrolment.status_code == 200
+    assert missing_enrolment.json()["authentication_stage"] == "enrollment_required"
+    assert missing_enrolment.json()["capture_restart_required"] is True
+    assert len(missing_enrolment.json()["required_actions"]) == 3
+
+    resumed = client.post(
+        "/api/v1/identity-assurance/enrollments/resume",
+        json={"institution_code": "miva", "email": "biometric@example.test", "password": "Password123!"},
+    )
+    assert resumed.status_code == 200, resumed.text
+    assert resumed.json()["purpose"] == "enrollment"
+    assert len(resumed.json()["required_actions"]) == 3
+    resumed_without_institution = client.post(
+        "/api/v1/identity-assurance/enrollments/resume",
+        json={"email": "biometric@example.test", "password": "Password123!"},
+    )
+    assert resumed_without_institution.status_code == 200, resumed_without_institution.text
+    assert resumed_without_institution.json()["purpose"] == "enrollment"
+    resumed_expiry = datetime.fromisoformat(resumed_without_institution.json()["expires_at"])
+    if resumed_expiry.tzinfo is None:
+        resumed_expiry = resumed_expiry.replace(tzinfo=timezone.utc)
+    assert resumed_expiry > datetime.now(timezone.utc) + timedelta(minutes=29)
+    registered["enrollment_token"] = resumed_without_institution.json()["challenge_token"]
+    registered["required_actions"] = resumed_without_institution.json()["required_actions"]
+
+    invalid_resume = client.post(
+        "/api/v1/identity-assurance/enrollments/resume",
+        json={"institution_code": "MIVA", "email": "biometric@example.test", "password": "WrongPassword!"},
+    )
+    assert invalid_resume.status_code == 404
 
     enrolled = client.post(
         "/api/v1/identity-assurance/enrollments",
@@ -181,6 +211,7 @@ def test_candidate_registration_enrollment_password_face_and_periodic_flow(clien
     assert password_stage.status_code == 200, password_stage.text
     challenge = password_stage.json()
     assert challenge["authentication_stage"] == "facial_required"
+    assert challenge["required_actions"] == []
 
     retry_required = client.post(
         "/api/v1/identity-assurance/facial-authentication",
@@ -213,23 +244,48 @@ def test_candidate_registration_enrollment_password_face_and_periodic_flow(clien
     assert verified.json()["outcome"] == "Verified"
     access_token = verified.json()["access_token"]
 
-    periodic = client.post("/api/v1/identity-assurance/periodic/challenge", headers=auth(access_token))
-    assert periodic.status_code == 200, periodic.text
-    periodic_result = client.post(
-        "/api/v1/identity-assurance/periodic/verify",
-        headers=auth(access_token),
+    mismatch_challenge = client.post(
+        "/api/v1/auth/login",
+        json={"institution_code": "MIVA", "email": "biometric@example.test", "password": "Password123!"},
+    ).json()
+    mismatch = client.post(
+        "/api/v1/identity-assurance/facial-authentication",
         json={
-            "challenge_token": periodic.json()["challenge_token"],
-            "descriptor": [0.5] * 64,
+            "challenge_token": mismatch_challenge["challenge_token"],
+            "descriptor": [0.0] * 64,
             "one_face": True,
             "lighting_score": 0.9,
             "distance_score": 0.9,
-            "liveness_actions": liveness(periodic.json()["required_actions"]),
             "retry_count": 0,
         },
     )
-    assert periodic_result.status_code == 200, periodic_result.text
-    assert periodic_result.json()["outcome"] == "Verified"
+    assert mismatch.status_code == 200
+    assert mismatch.json()["outcome"] == "Authentication Failed"
+
+    expired_challenge = client.post(
+        "/api/v1/auth/login",
+        json={"institution_code": "MIVA", "email": "biometric@example.test", "password": "Password123!"},
+    ).json()
+    expired_record = db.scalar(select(IdentityChallenge).where(IdentityChallenge.token_hash == _token_hash(expired_challenge["challenge_token"])))
+    expired_record.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+    db.commit()
+    expired = client.post(
+        "/api/v1/identity-assurance/facial-authentication",
+        json={"challenge_token": expired_challenge["challenge_token"], "descriptor": [0.5] * 64, "one_face": True, "lighting_score": 0.9, "distance_score": 0.9, "retry_count": 0},
+    )
+    assert expired.status_code == 409
+
+    # The retired unbound endpoints must never bypass institutional context.
+    count_before = len(db.scalars(select(IdentityChallenge)).all())
+    periodic = client.post("/api/v1/identity-assurance/periodic/challenge", headers=auth(access_token))
+    assert periodic.status_code == 410, periodic.text
+    periodic_result = client.post(
+        "/api/v1/identity-assurance/periodic/verify", headers=auth(access_token),
+        json={"challenge_token": expired_challenge["challenge_token"], "descriptor": [0.5] * 64,
+              "one_face": True, "lighting_score": 0.9, "distance_score": 0.9, "retry_count": 0},
+    )
+    assert periodic_result.status_code == 410, periodic_result.text
+    assert len(db.scalars(select(IdentityChallenge)).all()) == count_before
 
 
 def test_registration_approval_and_demo_bypass(client: TestClient, db: Session):

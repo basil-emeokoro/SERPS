@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from apps.api.app.api.deps.auth import CurrentUser, get_current_user, require_roles
 from apps.api.app.api.deps.database import get_db
-from serps_pop.identity.models import User, UserRole
 from serps_pop.identity.services import DomainConflict, DomainNotFound, ROLE_ADMIN, ROLE_CANDIDATE, ROLE_SYSADMIN, issue_tokens
 from serps_pop.identity_assurance.schemas import (
     ChallengeRead,
+    EnrollmentResumeCreate,
     EnrollmentSubmit,
     FaceAuthenticationSubmit,
     IdentityStatusRead,
@@ -19,12 +19,12 @@ from serps_pop.identity_assurance.schemas import (
     RegistrationRead,
 )
 from serps_pop.identity_assurance.services import (
-    begin_periodic_verification,
     complete_enrollment,
     decide_registration,
     list_registrations,
     profile_for_user,
     register_account,
+    resume_candidate_enrollment,
     verify_facial_authentication,
 )
 
@@ -138,6 +138,18 @@ def enroll(payload: EnrollmentSubmit, db: Session = Depends(get_db)) -> dict:
         _error(exc)
 
 
+@router.post("/enrollments/resume", response_model=ChallengeRead)
+def resume_enrollment(payload: EnrollmentResumeCreate, db: Session = Depends(get_db)) -> ChallengeRead:
+    try:
+        challenge, token = resume_candidate_enrollment(db, payload.institution_code, payload.email, payload.password)
+        db.commit()
+        return ChallengeRead(challenge_id=challenge.challenge_id, challenge_token=token, purpose=challenge.purpose,
+                             required_actions=challenge.required_actions, expires_at=challenge.expires_at)
+    except (DomainConflict, DomainNotFound, ValueError) as exc:
+        db.rollback()
+        _error(exc)
+
+
 @router.post("/facial-authentication")
 def facial_authentication(payload: FaceAuthenticationSubmit, db: Session = Depends(get_db)) -> dict:
     try:
@@ -158,42 +170,15 @@ def facial_authentication(payload: FaceAuthenticationSubmit, db: Session = Depen
         _error(exc)
 
 
-@router.post("/periodic/challenge", response_model=ChallengeRead)
-def periodic_challenge(
-    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE)),
-    db: Session = Depends(get_db),
-) -> ChallengeRead:
-    user = db.scalar(
-        select(User).options(selectinload(User.roles).selectinload(UserRole.role)).where(User.user_id == current_user.user_id)
-    )
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate account not found.")
-    challenge, token = begin_periodic_verification(db, user)
-    db.commit()
-    return ChallengeRead(
-        challenge_id=challenge.challenge_id,
-        challenge_token=token,
-        purpose=challenge.purpose,
-        required_actions=challenge.required_actions,
-        expires_at=challenge.expires_at,
-    )
+@router.post("/periodic/challenge")
+def periodic_challenge(current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE))) -> dict:
+    raise HTTPException(status_code=410, detail="Periodic identity challenges are retired. Return to the originating examination for its institutionally governed identity requirement.")
 
 
 @router.post("/periodic/verify")
-def periodic_verify(
-    payload: FaceAuthenticationSubmit,
-    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE)),
-    db: Session = Depends(get_db),
-) -> dict:
-    try:
-        user, confidence, outcome = verify_facial_authentication(db, payload, purpose="periodic")
-        if user.user_id != current_user.user_id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Identity challenge ownership mismatch.")
-        db.commit()
-        return {"outcome": outcome, "identity_confidence": confidence, "prototype": True}
-    except (DomainConflict, DomainNotFound) as exc:
-        db.rollback()
-        _error(exc)
+def periodic_verify(payload: FaceAuthenticationSubmit,
+                    current_user: CurrentUser = Depends(require_roles(ROLE_CANDIDATE))) -> dict:
+    raise HTTPException(status_code=410, detail="Unbound periodic challenges cannot verify an examination. Return to the originating session; existing challenge records are preserved for review.")
 
 
 @router.get("/status", response_model=IdentityStatusRead)

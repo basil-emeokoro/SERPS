@@ -5,8 +5,6 @@ services:
       POSTGRES_USER: serps
       POSTGRES_PASSWORD: ${SERPS_POSTGRES_PASSWORD:?Set SERPS_POSTGRES_PASSWORD}
       POSTGRES_DB: serps_pop
-    ports:
-      - "5432:5432"
     volumes:
       - serps_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -16,6 +14,7 @@ services:
       retries: 5
 
   api:
+    image: serps-api:${SERPS_IMAGE_TAG:-local}
     build:
       context: .
       dockerfile: docker/api.Dockerfile
@@ -29,21 +28,35 @@ services:
       SERPS_REFRESH_TOKEN_DAYS: ${SERPS_REFRESH_TOKEN_DAYS:-7}
       SERPS_CORS_ORIGINS: ${SERPS_CORS_ORIGINS:-http://localhost:3000}
     ports:
-      - "8000:8000"
+      - "${SERPS_BIND_ADDRESS:-127.0.0.1}:${SERPS_API_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 6
+      start_period: 30s
 
   web:
+    image: serps-web:${SERPS_IMAGE_TAG:-local}
     build:
       context: .
       dockerfile: docker/web.Dockerfile
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     ports:
-      - "3000:3000"
+      - "${SERPS_BIND_ADDRESS:-127.0.0.1}:${SERPS_WEB_PORT:-3000}:3000"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000', {signal: AbortSignal.timeout(5000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 6s
+      retries: 6
+      start_period: 20s
 
 volumes:
   serps_postgres_data:

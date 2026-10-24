@@ -1,6 +1,6 @@
 # SERPS Research Prototype
 
-SERPS is an explainable multi-modal identity-assurance, monitoring, and governance layer for integration with external assessment systems. This repository contains the Production-Oriented Prototype and is classified as **Research Prototype Version 1.0 Release Candidate (RC1)** after Sprint 3E validation.
+SERPS is an explainable multi-modal identity-assurance, monitoring, and governance layer for integration with external assessment systems. This repository contains the Production-Oriented Prototype and is classified as **Research Prototype Version 1.0 Release Candidate (RC1)**.
 
 SERPS is not a complete assessment platform, production secure browser, or enterprise video-streaming service. Its bounded demonstration examination workspace generates realistic monitored interactions for research evaluation.
 
@@ -10,18 +10,22 @@ Candidate registration -> bounded prototype verification -> six-direction facial
 
 Reviewer and administrator registrations enter a System Administrator approval queue. The four seeded defence identities are explicitly marked demonstration accounts and bypass registration and facial enrolment; normal candidate registrations do not bypass the lifecycle.
 
-The backend remains authoritative for JWT authentication, RBAC, candidate ownership, institution isolation, registration status, identity readiness, governance records, and decisions. Browser face and liveness results are bounded research-prototype attestations, not certified biometric proof; final operational actions remain human-controlled.
+The backend remains authoritative for JWT authentication, RBAC, candidate ownership, institution isolation, registration status, identity readiness, governance records, and decisions. The browser performs bounded local EfficientDet-Lite0 person/mobile-phone inference, MediaPipe face-presence monitoring, and Web Audio RMS activity measurement. Raw camera and microphone media are not sent to reviewer or administrator portals or persisted by these monitors. Browser face and liveness results are bounded research-prototype attestations, not certified biometric or presentation-attack proof; recommendations remain advisory, final operational actions remain human-controlled, and SERPS does not autonomously terminate examinations.
 
 ## Stack
 
-- Next.js, React, TypeScript, and locally bundled MediaPipe Tasks Vision web application
+- Next.js, React, TypeScript, locally bundled MediaPipe Tasks Vision, EfficientDet-Lite0, and Web Audio RMS monitoring
 - FastAPI and Pydantic API
 - SQLAlchemy and Alembic persistence
-- PostgreSQL deployment target
+- SQLite for the evaluated native prototype runtime; PostgreSQL is the configured deployment target
 - Pytest, Vitest, TypeScript, and ESLint validation
 - Docker Compose packaging
 
 ## Local setup
+
+For the preserved native API on port 8765 and frontend on port 3100, see [Native recovery and acceptance](docs/native_runtime_integration.md). Do not replace existing environment files or seed existing databases with the fresh-install commands below. Recovery retains ordered evidence identities and distinguishes transport interruption from authentication expiry. It does not provide indefinite offline retention or resolve the completion-in-flight race.
+
+[Restricted deployment alternatives](docs/runtime_deployment_alternatives.md) documents cloud preparation only; no public deployment or unrelated Phase 4 integration is included.
 
 ```powershell
 Copy-Item .env.example .env
@@ -50,15 +54,9 @@ The seeder creates users, a candidate, examination, and eligible assignment. The
 
 ## Docker Compose
 
-Compose intentionally requires secrets instead of embedding defaults:
+See [Docker deployment](docs/docker_deployment.md) for a fresh-clone setup, required secrets, build-time browser API URL, configurable loopback ports, isolated PostgreSQL storage, health checks and migration verification. Docker Desktop must be running with Linux containers and Compose v2.
 
-```powershell
-$env:SERPS_POSTGRES_PASSWORD = "your-local-database-password"
-$env:SERPS_DATABASE_URL = "postgresql+psycopg://serps:your-url-encoded-password@db:5432/serps_pop"
-$env:SERPS_JWT_SECRET = "your-random-secret-with-at-least-32-characters"
-docker compose config
-docker compose up -d --build
-```
+The deployment path is separate from the native SQLite evaluation runtime. Container readiness does not establish detector or physical camera acceptance.
 
 ## Verification
 
@@ -70,11 +68,11 @@ npm.cmd run typecheck -w apps/web
 npm.cmd run test -w apps/web
 npm.cmd run lint -w apps/web
 npm.cmd run build -w apps/web
-docker compose config
+docker compose config --quiet
 ```
 
-See `docs/installation_guide.md`, `docs/user_manual.md`, `docs/demo_script.md`, and `docs/sprint3e_validation_report.md` for examiner-facing guidance and exact validation status.
+See `docs/installation_guide.md`, `docs/user_manual.md`, `docs/demo_script.md`, and `docs/sprint3e_validation_report.md` for installation, operation, demonstration, and historical validation guidance. Current verification results should be taken from the applicable test run rather than inferred from the historical Sprint 3E report.
 
 ## Dissertation boundary
 
-The implementation supports the dissertation identity-lifecycle, governance, explainability, dual-camera, reviewer, administrator, and reporting claims at research-prototype scale. The facial representation is a derived 8-by-8 luminance descriptor and pose/liveness validation uses local MediaPipe landmarks plus bounded geometric movement proxies. It is not production face recognition, certified liveness, or presentation-attack resistance. Hardware-backed browser evidence and production deployment claims must follow the limitations documents.
+The implementation supports identity lifecycle, governance, explainability, dual-camera, reviewer, administrator, and reporting workflows at research-prototype scale. The facial representation is a derived 8-by-8 luminance descriptor and pose/liveness validation uses local MediaPipe landmarks plus bounded geometric movement proxies. Object-class person evidence does not establish that a detected representation is a physically present live person. SERPS is not production face recognition, certified liveness, presentation-attack resistance, penetration-tested infrastructure, or a production deployment. Hardware-backed browser evidence and production claims require separate validation.

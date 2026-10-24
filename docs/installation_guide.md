@@ -45,7 +45,7 @@ $env:SERPS_DEMO_PASSWORD = "the-same-strong-demo-password"
 python scripts\dev\seed_demo_data.py
 ```
 
-Expected head: `0005_sprint3d_dual_camera`. The seed output should list four users and state that the candidate creates the session after consent and dual-camera readiness.
+The current revision must match `python -m alembic heads` for the checked-out commit. The seed output should list four users and state that the candidate creates the session after consent and dual-camera readiness.
 
 ## Native development startup
 
@@ -67,19 +67,7 @@ Open `http://localhost:3000`. API health is `http://localhost:8000/api/v1/health
 
 ## Docker Compose startup
 
-Compose does not contain default secrets. Set all required values in the launching shell:
-
-```powershell
-$env:SERPS_POSTGRES_PASSWORD = "strong-local-database-password"
-$env:SERPS_DATABASE_URL = "postgresql+psycopg://serps:URL_ENCODED_PASSWORD@db:5432/serps_pop"
-$env:SERPS_JWT_SECRET = "random-secret-of-at-least-32-characters"
-$env:SERPS_CORS_ORIGINS = "http://localhost:3000"
-docker compose config
-docker compose up -d --build
-docker compose ps
-```
-
-The API container runs `alembic upgrade head` before Uvicorn. Seed through the API container only after it is healthy and with `SERPS_DEMO_PASSWORD` explicitly provided.
+Follow [Docker deployment](docker_deployment.md). It supplies fresh-clone commands and avoids relying on a native runtime `.env` or web `.env.local`. Never point container validation at the active evaluation database or reuse its storage.
 
 ## Installation verification
 

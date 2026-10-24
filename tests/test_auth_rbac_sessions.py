@@ -12,9 +12,10 @@ from apps.api.app.api.deps.database import get_db
 from apps.api.app.main import app
 from serps_pop.evidence import models as evidence_models  # noqa: F401
 from serps_pop.identity import models as identity_models  # noqa: F401
-from serps_pop.identity.models import AuditLog, Institution, User
+from serps_pop.identity.models import AuditLog, Candidate, Examination, Institution, User
 from serps_pop.identity.services import ROLE_ADMIN, ROLE_CANDIDATE, ROLE_REVIEWER, ROLE_SYSADMIN, create_institution, create_user
 from serps_pop.identity.schemas import InstitutionCreate, UserCreate
+from serps_pop.identity_assurance.models import IdentityAssuranceProfile
 from serps_pop.infrastructure.database import Base
 from serps_pop.security.tokens import create_access_token
 
@@ -219,6 +220,15 @@ def test_examination_assignment_session_and_invalid_transition(client: TestClien
         json={"candidate_id": candidate["candidate_id"], "examination_id": exam["examination_id"]},
         headers=headers,
     )
+    assert assignment.status_code == 409
+    candidate_record = db_session.get(Candidate, candidate["candidate_id"])
+    candidate_user = create_user(db_session, UserCreate(institution_id=users["institution_id"], email="session-user@miva.edu.ng", full_name="Session Candidate", password="Password123!", roles=[ROLE_CANDIDATE]))
+    candidate_record.user_id = candidate_user.user_id
+    candidate_record.status = "active"
+    db_session.add(IdentityAssuranceProfile(user_id=candidate_user.user_id, enrolment_status="enrolled"))
+    db_session.get(Examination, exam["examination_id"]).status = "published"
+    db_session.commit()
+    assignment = client.post("/api/v1/examinations/assignments", json={"candidate_id": candidate["candidate_id"], "examination_id": exam["examination_id"]}, headers=headers)
     assert assignment.status_code == 201
     session = client.post(
         "/api/v1/examination-sessions/",
@@ -241,3 +251,56 @@ def test_examination_assignment_session_and_invalid_transition(client: TestClien
     )
     assert valid.status_code == 200
     assert valid.json()["status"] == "device_check_pending"
+
+
+def test_administrator_examination_creation_modes_and_candidate_rejection(client: TestClient, db_session: Session) -> None:
+    users = seed_users(db_session)
+    admin_headers = {"Authorization": f"Bearer {login(client, users['admin'])}"}
+    candidate_headers = {"Authorization": f"Bearer {login(client, users['candidate_user'])}"}
+    for mode in ("A", "B", "C"):
+        response = client.post("/api/v1/examinations/", json={"exam_code": f"MODE-{mode}", "title": f"Mode {mode} examination", "duration_minutes": 90, "status": "published", "monitoring_mode": mode, "is_active": True, "policy_profile": "generic"}, headers=admin_headers)
+        assert response.status_code == 201, response.text
+        assert response.json()["monitoring_mode"] == mode
+        assert response.json()["is_active"] is True
+    invalid = client.post("/api/v1/examinations/", json={"exam_code": "BAD", "title": "Bad mode", "monitoring_mode": "D"}, headers=admin_headers)
+    assert invalid.status_code == 422
+    forbidden = client.post("/api/v1/examinations/", json={"exam_code": "NOPE", "title": "Forbidden", "monitoring_mode": "A"}, headers=candidate_headers)
+    assert forbidden.status_code == 403
+
+
+def test_course_cohort_preview_assignment_duplicates_and_institution_isolation(client: TestClient, db_session: Session) -> None:
+    users = seed_users(db_session)
+    admin_headers = {"Authorization": f"Bearer {login(client, users['admin'])}"}
+    other_headers = {"Authorization": f"Bearer {login(client, users['other_admin'])}"}
+    candidate = client.post("/api/v1/candidates/", json={"candidate_identifier": "COHORT-1", "full_name": "Cohort Candidate", "email": "cohort@miva.edu.ng"}, headers=admin_headers).json()
+    record = db_session.get(Candidate, candidate["candidate_id"])
+    user = create_user(db_session, UserCreate(institution_id=users["institution_id"], email="cohort-user@miva.edu.ng", full_name="Cohort Candidate", password="Password123!", roles=[ROLE_CANDIDATE]))
+    record.user_id = user.user_id; record.status = "active"
+    db_session.add(IdentityAssuranceProfile(user_id=user.user_id, enrolment_status="enrolled")); db_session.commit()
+    exam = client.post("/api/v1/examinations/", json={"exam_code": "COHORT-EXAM", "title": "Cohort Exam", "status": "published", "monitoring_mode": "C"}, headers=admin_headers).json()
+    course = client.post("/api/v1/examinations/courses", json={"course_code": "CSC900", "title": "Research Methods"}, headers=admin_headers)
+    assert course.status_code == 201, course.text
+    course_id = course.json()["course_id"]
+    assert client.get("/api/v1/examinations/courses", headers=other_headers).json() == []
+    registered = client.post("/api/v1/examinations/course-registrations", json={"course_id": course_id, "candidate_id": candidate["candidate_id"]}, headers=admin_headers)
+    assert registered.status_code == 201, registered.text
+    duplicate_registration = client.post("/api/v1/examinations/course-registrations", json={"course_id": course_id, "candidate_id": candidate["candidate_id"]}, headers=admin_headers)
+    assert duplicate_registration.status_code == 409
+    payload = {"course_id": course_id, "examination_id": exam["examination_id"]}
+    preview = client.post("/api/v1/examinations/cohorts/preview", json=payload, headers=admin_headers)
+    assert preview.status_code == 200 and preview.json()["eligible_count"] == 1
+    assert preview.json()["monitoring_mode"] == "C"
+    assigned = client.post("/api/v1/examinations/cohorts/assign", json=payload, headers=admin_headers)
+    assert assigned.status_code == 201 and assigned.json()["created_count"] == 1
+    repeated = client.post("/api/v1/examinations/cohorts/assign", json=payload, headers=admin_headers)
+    assert repeated.status_code == 201 and repeated.json()["created_count"] == 0
+    assert repeated.json()["already_assigned_count"] == 1
+    isolated = client.post("/api/v1/examinations/cohorts/preview", json=payload, headers=other_headers)
+    assert isolated.status_code == 404
+
+
+def test_unknown_account_with_institution_is_rejected_not_server_error(client: TestClient, db_session: Session) -> None:
+    seed_users(db_session)
+    response = client.post("/api/v1/auth/login", json={"institution_code": "MIVA", "email": "missing@example.test", "password": "WrongPassword123!"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid email or password."

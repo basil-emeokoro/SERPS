@@ -245,3 +245,97 @@ def test_repeated_retrieval_does_not_mutate_stored_events():
         assert first.json() == second.json()
         stored = db.execute(select(EvidenceEventRecord)).scalars().all()
         assert len(stored) == 1
+
+
+def test_delivery_replay_preserves_event_identity_without_repeating_governance():
+    with _db_session() as db:
+        _seed_session(db)
+        client = _client(db, _candidate_user())
+        payload = _event_payload()
+        payload["metadata_json"] = {"delivery_id": "6bb82bb5-70b1-4475-91b4-7bfb7b87d134", "delivery_sequence": 1}
+        first = client.post("/api/v1/evidence-events/", json=payload)
+        assert first.status_code == 201
+        counts = [len(db.scalars(select(model)).all()) for model in (EvidenceEventRecord, ContextualAssessment, AgentRecommendation, PolicyEvaluation)]
+        replay = client.post("/api/v1/evidence-events/", json=payload)
+        assert replay.status_code == 201
+        assert replay.json()["event_id"] == first.json()["event_id"]
+        assert counts == [len(db.scalars(select(model)).all()) for model in (EvidenceEventRecord, ContextualAssessment, AgentRecommendation, PolicyEvaluation)]
+        payload["description"] = "Changed payload must not replace the stored event"
+        assert client.post("/api/v1/evidence-events/", json=payload).status_code == 422
+        app.dependency_overrides[get_current_user] = lambda: _candidate_user(user_id="OTHER")
+        assert client.post("/api/v1/evidence-events/", json=payload).status_code == 403
+
+
+def test_invalid_delivery_identity_is_refused_without_writing_evidence():
+    with _db_session() as db:
+        _seed_session(db)
+        client = _client(db, _candidate_user())
+        payload = _event_payload()
+        payload["metadata_json"] = {"delivery_id": "invalid"}
+        assert client.post("/api/v1/evidence-events/", json=payload).status_code == 422
+        assert not db.scalars(select(EvidenceEventRecord)).all()
+
+
+@pytest.mark.parametrize("interleaved", [True, False])
+def test_concurrent_delivery_has_one_governance_chain(tmp_path, monkeypatch, interleaved):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier, Event
+    from apps.api.app.api.v1.routes import evidence as route
+    from serps_pop.domain.evidence import EvidenceEventCreate
+
+    engine = create_engine(f"sqlite:///{tmp_path / 'concurrent.db'}", connect_args={"check_same_thread": False, "timeout": 15})
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        _seed_session(db)
+    payload = _event_payload()
+    payload["metadata_json"] = {"delivery_id": "6bb82bb5-70b1-4475-91b4-7bfb7b87d134"}
+    payload = EvidenceEventCreate(**payload)
+    barrier, winner_done = Barrier(2), Event()
+    original = route.persist_evidence_event
+    from threading import local
+    worker_state = local()
+    def synchronised(*args, **kwargs):
+        barrier.wait(timeout=15)
+        if interleaved and worker_state.index == 1:
+            assert winner_done.wait(timeout=15)
+        return original(*args, **kwargs)
+    monkeypatch.setattr(route, "persist_evidence_event", synchronised)
+    def worker(index):
+        worker_state.index = index
+        try:
+            with Session(engine) as db:
+                return route.create_evidence_event(payload, _candidate_user(), db).event_id
+        finally:
+            if index == 0: winner_done.set()
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(worker, index) for index in range(2)]
+            results = [future.result(timeout=40) for future in futures]
+        assert results[0] == results[1]
+        with Session(engine) as db:
+            assert [len(db.scalars(select(model)).all()) for model in (EvidenceEventRecord, ContextualAssessment, AgentRecommendation, PolicyEvaluation)] == [1, 1, 1, 1]
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("stage", ["create_contextual_assessment", "create_agent_recommendation", "create_policy_evaluation"])
+def test_failed_governance_rolls_back_delivery_claim_and_retry_succeeds(monkeypatch, stage):
+    from apps.api.app.api.v1.routes import evidence as route
+    from serps_pop.domain.evidence import EvidenceEventCreate
+    with _db_session() as db:
+        _seed_session(db)
+        payload = _event_payload()
+        payload["metadata_json"] = {"delivery_id": "6bb82bb5-70b1-4475-91b4-7bfb7b87d134"}
+        payload = EvidenceEventCreate(**payload)
+        original = getattr(route, stage)
+        def fail_after_write(*args, **kwargs):
+            original(*args, **kwargs)
+            raise RuntimeError("Injected governance failure")
+        monkeypatch.setattr(route, stage, fail_after_write)
+        with pytest.raises(RuntimeError, match="Injected governance failure"):
+            route.create_evidence_event(payload, _candidate_user(), db)
+        db.commit()  # A caught failure must not leave a partial claim that can be committed.
+        assert [len(db.scalars(select(model)).all()) for model in (EvidenceEventRecord, ContextualAssessment, AgentRecommendation, PolicyEvaluation)] == [0, 0, 0, 0]
+        monkeypatch.setattr(route, stage, original)
+        route.create_evidence_event(payload, _candidate_user(), db)
+        assert [len(db.scalars(select(model)).all()) for model in (EvidenceEventRecord, ContextualAssessment, AgentRecommendation, PolicyEvaluation)] == [1, 1, 1, 1]

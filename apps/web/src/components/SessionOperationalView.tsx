@@ -5,7 +5,7 @@ function text(value: unknown): string { return value == null ? "Unavailable" : S
 
 const timelineLabels: Record<string, string> = {
   camera_connected: "camera connected", camera_disconnected: "camera disconnected", camera_reconnected: "camera reconnected",
-  camera_heartbeat: "camera heartbeat received", face_not_detected: "face not detected", face_detected: "face detected",
+  camera_heartbeat: "camera heartbeat received", face_not_detected: "face not detected", face_detected: "face detected", sustained_face_absence: "sustained face absence", face_detector_unavailable: "face detector unavailable",
   person_detected: "person detected", multiple_persons_detected: "multiple persons detected",
   mobile_phone_detected: "mobile phone detected", object_detector_unavailable: "object detector unavailable",
   microphone_connected: "microphone connected", microphone_disconnected: "microphone disconnected",
@@ -59,6 +59,7 @@ export function SessionOperationalView({ detail }: { detail: OperationalSessionD
     <section className="card timeline-card">
       <div className="section-heading"><div><span className="badge">Metadata only</span><h2>Evidence and governance timeline</h2></div></div>
       <p>Reviewer evidence contains structured detector metadata and explainable governance output. SERPS does not provide a remote live-media feed.</p>
+      {detail.timeline_truncated ? <p className="form-note">Showing the most recent {detail.timeline.length.toLocaleString()} of {detail.timeline_total_entries.toLocaleString()} persisted entries.</p> : null}
       {detail.timeline.length ? <ol className="timeline">{detail.timeline.map((entry) => <li key={`${entry.entry_type}-${entry.entity_id}`}>
         <time>{new Date(entry.timestamp).toLocaleString()}</time><strong>{timelineText(entry)}</strong>
         <details><summary title="Show technical event details">Technical details</summary><dl>

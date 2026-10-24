@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from apps.api.app.api.deps.auth import CurrentUser, require_roles
 from apps.api.app.api.deps.database import get_db
+from serps_pop.governance.camera_monitoring import CameraMonitoringPolicy
 from serps_pop.governance.schemas import (
     AdministratorMetricsRead,
     AgentRecommendationRead,
@@ -324,3 +325,21 @@ def retrieve_report(
         )
     except (GovernanceNotFound, GovernanceAccessDenied) as exc:
         _raise_http(exc)
+
+
+@router.get("/admin/policy/camera-monitoring")
+def read_camera_monitoring_policy(current_user: CurrentUser = Depends(require_roles(ROLE_ADMIN, ROLE_SYSADMIN)),
+                                  db: Session = Depends(get_db)):
+    from serps_pop.governance.camera_monitoring import CameraMonitoringPolicy
+    policy = current_policy(db, current_user.institution_id)
+    return CameraMonitoringPolicy(required_camera_loss_action=policy.metadata_json.get("required_camera_loss_action") if policy else None)
+
+
+@router.put("/admin/policy/camera-monitoring")
+def configure_camera_monitoring_policy(payload: CameraMonitoringPolicy,
+                                       current_user: CurrentUser = Depends(require_roles(ROLE_ADMIN, ROLE_SYSADMIN)),
+                                       db: Session = Depends(get_db)):
+    from serps_pop.governance.services import configure_camera_policy
+    policy = configure_camera_policy(db, current_user.institution_id, current_user.user_id, payload.required_camera_loss_action)
+    db.commit()
+    return {"policy_id": policy.policy_id, "required_camera_loss_action": payload.required_camera_loss_action}
