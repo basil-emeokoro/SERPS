@@ -7,11 +7,22 @@
 **Revision boundary:** The recovery capability descriptions document historical revision [`0cc0126`](https://github.com/basil-emeokoro/SERPS/blob/0cc012697fdf19311b549e5ceae17571fd53f744/README.md), with validation reported 24 October 2026. They do not establish identical functionality or acceptance on current `main`. In particular, the ordered outbox, atomic delivery and authentication recovery belong to that recovery revision; this documentation update does not add them to main.
 
 
-An explainable identity-assurance, monitoring and governance layer for assessment workflows. SERPS connects local observations to structured evidence, contextual reasoning and institutional policy, with human oversight.
+SERPS is a research-oriented, production-oriented prototype investigating trustworthy multimodal AI for educational assessment. It connects local computer-vision observations to explainable evidence, institutional policy and accountable human review. The engineering work asks how to preserve evidence and authority boundaries; the research agenda asks whether those mechanisms support valid, fair and privacy-conscious assessment.
 
 **Scope:** a Production-Oriented Prototype with a bounded demonstration examination workspace. It is not a complete CBT platform, secure browser, certified biometric system or autonomous misconduct adjudicator.
 
 [Evidence matrix](docs/portfolio/evidence-matrix.md) - [Evidence boundaries](#evidence-and-acceptance) - [Architecture](#architecture-and-operating-modes) - [Run locally](#deployment-and-verification) - [Limitations](#acceptance-boundaries)
+
+## Research and engineering portfolio
+
+| Read for | Start here | What it establishes |
+| --- | --- | --- |
+| Research motivation and psychometrics | [Research statement](docs/portfolio/research-statement.md) | Questions and hypotheses, not validated fairness or score validity |
+| Architecture and engineering decisions | [Engineering case study](docs/portfolio/engineering-case-study.md) | Source-linked boundaries, trade-offs and failure modes |
+| Evidence and reproducibility | [Evaluation ledger](docs/portfolio/evaluation-and-reproducibility.md) | Revision-specific software results; no invented model benchmarks |
+| Doctoral research potential | [Two research directions](docs/portfolio/phd-research-directions.md) | Trustworthy multimodal AI and handwriting-centered human-AI assessment proposals |
+
+The practical motivation is to make monitoring evidence inspectable without equating a detected object or unavailable camera with misconduct. Implemented bounded reasoning and human-review records provide an engineering foundation. Their effects on reviewer decisions, assessment validity, fairness and learning remain research questions.
 
 ## Capabilities and revision boundaries
 
