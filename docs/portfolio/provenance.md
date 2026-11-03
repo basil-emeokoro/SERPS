@@ -6,4 +6,4 @@ The SVG font stack names Segoe UI, Arial and sans-serif; the viewer supplies ava
 
 **Interface screenshot gallery withheld pending provenance review; no candidate/camera/governance acceptance is implied.** Uncertainty about historical UI provenance is not a finding of infringement. No historical PNG, screenshot manifest, private report, capture log, credentials, research data, academic report or slide deck is included in this change.
 
-Historical recovery claims and dated test results are pinned to `0cc012697fdf19311b549e5ceae17571fd53f744`; they do not establish feature parity or acceptance for current main. Issue #2 remains unresolved. Source implementation, controlled tests and independent physical acceptance are different evidence classes.
+Historical recovery claims and dated test results are pinned to `0cc012697fdf19311b549e5ceae17571fd53f744`; they do not establish feature parity or acceptance for current main. Operational protection acceptance remains incomplete. Source implementation, controlled tests and independent physical acceptance are different evidence classes.

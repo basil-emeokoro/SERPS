@@ -24,16 +24,16 @@ Supported observations become structured EvidenceEvents. The CIE evaluates bound
 
 A separate [24 October recovery report](https://github.com/basil-emeokoro/SERPS/blob/0cc012697fdf19311b549e5ceae17571fd53f744/docs/native_runtime_integration.md) describes an ordered tab-scoped outbox, stable delivery identities, atomic evidence/governance handling and authentication interruption recovery. Those features belong to recovery revision `0cc0126`, not the main-based publication code. Do not copy their tests/results into a claim that main includes them.
 
-Trade-offs remain: tab closure can lose pending metadata; a completion request can race with a new event; synchronous governance couples ingestion latency to downstream work; PostgreSQL replay concurrency remains unverified. The design must report unresolved delivery rather than silently erase it. No repair is made in this documentation phase.
+Evidence retention, completion consistency and cross-database behavior require further validation. Recovery is bounded rather than an indefinite offline guarantee. No repair or new acceptance claim is made in this documentation phase.
 
 ## Quality assurance and security
 
 The [workflow test](../../tests/test_sprint3e_e2e.py) exercises API contracts with synthetic inputs; it cannot validate actual cameras or human liveness. [Token tests](../../tests/test_token_security.py) and negative role/ownership tests cover selected security boundaries. Historical build, lint and type checks establish a revision-specific engineering result, not production readiness. See the [evaluation ledger](evaluation-and-reproducibility.md).
 
-The documented identity descriptor is a bounded experimental representation, not certified biometric recognition. Session-storage tokens, access-token revocation timing, secret management, TLS, retention controls and independent security review require explicit deployment treatment. Historical dependency audits are time-bound; no current zero-vulnerability claim is made. [Prototype limitations](../prototype_limitations.md) contains historical statements that must be interpreted in their original context, not as live operational status.
+The documented identity descriptor is a bounded experimental representation, not certified biometric recognition. Authentication lifecycle, data protection and independent security review require explicit deployment validation. Historical dependency audits are time-bound; no current zero-vulnerability claim is made. [Prototype limitations](../prototype_limitations.md) contains historical statements that must be interpreted in their original context, not as live operational status.
 
 ## Open engineering work
 
-Issue #2 remains unresolved: phone-policy controls and independent integrity protection must not be conflated. Recovery must not allow unauthorized continuation. Physical foreground/background, interruption and sleep/resume checks remain necessary. Scale testing needs a defined workload, service-level targets, database isolation and failure scenarios. A future fix must preserve governance authority and candidate evidence, not merely hide monitoring errors.
+Operational protection semantics and independent integrity controls require further validation. Recovery must not allow unauthorized continuation. Physical foreground/background, interruption and sleep/resume checks remain necessary. Scale testing needs a defined workload, service-level targets, database isolation and failure scenarios. A future fix must preserve governance authority and candidate evidence, not merely hide monitoring errors.
 
 [Research statement](research-statement.md) · [Evaluation](evaluation-and-reproducibility.md) · [README](../../README.md)

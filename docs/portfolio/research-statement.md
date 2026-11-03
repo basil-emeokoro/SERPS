@@ -35,7 +35,7 @@ Future work should separate detector error, reviewer error and assessment-score 
 
 Local inference and metadata-only reviewer views limit raw-media transfer but do not make the system anonymous or risk-free. Derived identity representations remain sensitive. An institutional study needs a justified purpose, proportionate collection, retention/deletion controls, withdrawal procedures where applicable, and independent ethics review. Security controls and consent screens do not substitute for those approvals.
 
-Current evidence is engineering evidence: source, controlled fixtures and dated regression reports. See [evaluation and reproducibility](evaluation-and-reproducibility.md). No participant dataset or model-performance benchmark is supplied by this portfolio. Candidate identity and physical-camera acceptance are incomplete; Issue #2 remains unresolved. The prototype is not a full CBT platform, secure browser, certified biometric system or autonomous adjudicator.
+Current evidence is engineering evidence: source, controlled fixtures and dated regression reports. See [evaluation and reproducibility](evaluation-and-reproducibility.md). No participant dataset or model-performance benchmark is supplied by this portfolio. Candidate identity and physical-camera acceptance are incomplete; Operational protection acceptance remains incomplete. The prototype is not a full CBT platform, secure browser, certified biometric system or autonomous adjudicator.
 
 ## Validation path
 

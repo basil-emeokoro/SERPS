@@ -16,7 +16,7 @@ Two connected proposals, not completed findings, funded projects or established 
 
 **Ethics and challenges.** Consent under institutional power imbalance, accommodations, sensitive identity representations, spurious correlations, adversarial behavior and automation bias need explicit treatment. Proposed data minimization is not a differential-privacy guarantee. Avoid operational sanctions during exploratory experiments.
 
-**Connection to SERPS.** Source implements local observations, bounded CIE/ADS/IPIME stages and reviewer records. Learning-based fusion, calibrated uncertainty, privacy guarantees and independent human-subject validation are proposed work. Issue #2 and operational integrity must be resolved before any pilot that relies on protection behavior.
+**Connection to SERPS.** Source implements local observations, bounded CIE/ADS/IPIME stages and reviewer records. Learning-based fusion, calibrated uncertainty, privacy guarantees and independent human-subject validation are proposed work. Operational integrity must be validated before any pilot that relies on protection behavior.
 
 ## Direction 2: Handwriting-centered human-AI assessment
 
