@@ -1,80 +1,103 @@
-# SERPS Research Prototype
+<p align="center"><img src="docs/portfolio/assets/serps-header.svg" alt="SERPS: Evidence with context. Decisions with oversight. Research prototype; physical acceptance pending." width="100%"></p>
 
-SERPS is an explainable multi-modal identity-assurance, monitoring, and governance layer for integration with external assessment systems. This repository contains the Production-Oriented Prototype and is classified as **Research Prototype Version 1.0 Release Candidate (RC1)** after Sprint 3E validation.
+<p align="center"><strong>Research prototype RC1</strong> - <strong>Source-linked engineering evidence</strong> - <strong>No public deployment</strong></p>
 
-SERPS is not a complete assessment platform, production secure browser, or enterprise video-streaming service. Its bounded demonstration examination workspace generates realistic monitored interactions for research evaluation.
+# SERPS POP
 
-## Implemented workflow
+**Revision boundary:** The recovery capability descriptions document historical revision [`0cc0126`](https://github.com/basil-emeokoro/SERPS/blob/0cc012697fdf19311b549e5ceae17571fd53f744/README.md), with validation reported 24 October 2026. They do not establish identical functionality or acceptance on current `main`. In particular, the ordered outbox, atomic delivery and authentication recovery belong to that recovery revision; this documentation update does not add them to main.
 
-Candidate registration -> bounded prototype verification -> six-direction facial enrolment -> password authentication -> dynamic facial/liveness authentication -> immutable consent -> device readiness -> distinct primary and secondary cameras -> identity-gated demonstration workspace -> EvidenceEvents -> Contextual Intelligence Engine -> bounded agent recommendation -> institutional policy evaluation -> reviewer decision -> administrator oversight -> immutable audit and structured reports.
 
-Reviewer and administrator registrations enter a System Administrator approval queue. The four seeded defence identities are explicitly marked demonstration accounts and bypass registration and facial enrolment; normal candidate registrations do not bypass the lifecycle.
+An explainable identity-assurance, monitoring and governance layer for assessment workflows. SERPS connects local observations to structured evidence, contextual reasoning and institutional policy, with human oversight.
 
-The backend remains authoritative for JWT authentication, RBAC, candidate ownership, institution isolation, registration status, identity readiness, governance records, and decisions. Browser face and liveness results are bounded research-prototype attestations, not certified biometric proof; final operational actions remain human-controlled.
+**Scope:** a Production-Oriented Prototype with a bounded demonstration examination workspace. It is not a complete CBT platform, secure browser, certified biometric system or autonomous misconduct adjudicator.
 
-## Stack
+[Evidence matrix](docs/portfolio/evidence-matrix.md) - [Evidence boundaries](#evidence-and-acceptance) - [Architecture](#architecture-and-operating-modes) - [Run locally](#deployment-and-verification) - [Limitations](#acceptance-boundaries)
 
-- Next.js, React, TypeScript, and locally bundled MediaPipe Tasks Vision web application
-- FastAPI and Pydantic API
-- SQLAlchemy and Alembic persistence
-- PostgreSQL deployment target
-- Pytest, Vitest, TypeScript, and ESLint validation
-- Docker Compose packaging
+## Capabilities and revision boundaries
 
-## Local setup
+| Capability | Implementation boundary | Portfolio evidence |
+| --- | --- | --- |
+| Identity and access | Registration, enrolment, authentication, roles and institution isolation | Source implementation; no candidate biometric acceptance claim |
+| Local monitoring | MediaPipe face geometry, EfficientDet-Lite0 person/phone classes, Web Audio activity | Source and historical tests; no new physical-camera acceptance evidence |
+| Recovery-revision evidence delivery | Ordered metadata, stable delivery IDs, bounded retries and visible unresolved failures | Historical recovery report only; absent from this main baseline; not indefinite offline storage |
+| Explainable governance | Evidence - CIE - ADS advisory recommendation - IPIME - human review/audit | Implemented code; populated governance views not captured |
+| Operational protection | Independent policy, identity, connectivity and monitoring concerns | Exam Protect anomaly remains unresolved; no acceptance claim |
+
+## Architecture and operating modes
+
+The architecture below describes the historical recovery revision. It is not a deployment or feature-parity statement for main.
+
+![SERPS architecture: local observations, authenticated evidence API, contextual assessment, institutional policy, human review and audit](docs/portfolio/assets/architecture.svg)
+
+The Next.js browser performs bounded local inference. FastAPI enforces authentication, ownership and institutional access; SQLAlchemy persists structured records. SQLite supports the native prototype; PostgreSQL is the configured deployment target. Reviewer interfaces receive metadata and explanations, not live camera or microphone feeds.
+
+| Mode | Intended arrangement | Interpretation |
+| --- | --- | --- |
+| A | Candidate-facing primary camera | Primary inference; no independent environmental corroboration |
+| B | Candidate-facing primary + distinct environment camera | Independent configured roles can contribute contextual corroboration |
+| C | Primary camera + physical mirror | Same image source; a mirror is not an independent digital camera |
+
+Readiness currently retains distinct-device prerequisites even for A/C. Historical routing tests do not establish current physical acceptance of all modes. See [mode implementation status](docs/proctoring_modes_implementation_status.md).
+
+**C1 - candidate:** primary-camera observations. **C2 - environment:** secondary observations in Mode B, or a mirror view within the primary image in Mode C. **C3 - response capture:** a conceptual integration boundary; the bounded question UI must not be presented as a validated general response-capture or external CBT integration. No explicit C3 implementation was located in this audit.
+
+### IPIME, identity and privacy
+
+IPIME evaluates institutional policy against contextual assessments and bounded recommendations. It is policy-as-code within a research prototype, not a certification or an autonomous disciplinary engine. Operational protection and a human misconduct decision are distinct. An absent phone does not establish that all independent protections should be inactive.
+
+Normal candidate workflows retain consent, enrolment, identity and readiness gates. Browser face/liveness outputs are bounded attestations; the documented luminance descriptor and geometric proxies are not certified recognition or presentation-attack resistance. Local monitoring does not upload raw audiovisual streams to staff portals. This does not mean identity data is non-sensitive: protect biometric representations, account data and institutional records separately.
+
+## Evidence and acceptance
+
+**Interface screenshot gallery withheld pending provenance review; no candidate/camera/governance acceptance is implied.**
+
+This portfolio publishes explanatory diagrams and source-linked engineering documentation, not application screenshots. See the [evidence matrix](docs/portfolio/evidence-matrix.md) and [publication scope](docs/portfolio/provenance.md). Missing candidate identity, camera readiness, active examination and populated governance captures are not evidence of successful acceptance. Issue #2 remains unresolved.
+
+## Deployment and verification
+
+For the historical recovery installation only, consult [native runtime integration](https://github.com/basil-emeokoro/SERPS/blob/0cc012697fdf19311b549e5ceae17571fd53f744/docs/native_runtime_integration.md). Preserve its environment and database; do not run a fresh-install seeder against existing data. Native reference ports are frontend 3100 and API 8765. `NEXT_PUBLIC_API_BASE_URL` is compiled at frontend build time.
+
+Historical deployment references (not validated installation instructions for main): review [Docker deployment](https://github.com/basil-emeokoro/SERPS/blob/0cc012697fdf19311b549e5ceae17571fd53f744/docs/docker_deployment.md) and [restricted deployment alternatives](https://github.com/basil-emeokoro/SERPS/blob/0cc012697fdf19311b549e5ceae17571fd53f744/docs/runtime_deployment_alternatives.md). The stock demo seeder's bypass-profile/enrolled-only assignment incompatibility is recorded as a provisioning blocker for the recovery baseline. No cloud activation is represented here.
+
+Run validation only in a configured disposable development/test environment:
 
 ```powershell
-Copy-Item .env.example .env
-python -m pip install -e ".[dev]"
-npm.cmd install
-python -m alembic upgrade head
-```
-
-Set a real local `SERPS_JWT_SECRET`, database credentials, and `SERPS_DEMO_PASSWORD` in `.env`; never commit that file.
-
-Start the API and web application in separate terminals:
-
-```powershell
-uvicorn apps.api.app.main:app --reload --port 8000
-npm.cmd run dev -w apps/web
-```
-
-Seed a fresh demonstration database only after migrations:
-
-```powershell
-$env:SERPS_DEMO_PASSWORD = "your-strong-demo-only-password"
-python scripts\dev\seed_demo_data.py
-```
-
-The seeder creates users, a candidate, examination, and eligible assignment. The candidate creates the examination session only after consent and dual-camera readiness.
-
-## Docker Compose
-
-Compose intentionally requires secrets instead of embedding defaults:
-
-```powershell
-$env:SERPS_POSTGRES_PASSWORD = "your-local-database-password"
-$env:SERPS_DATABASE_URL = "postgresql+psycopg://serps:your-url-encoded-password@db:5432/serps_pop"
-$env:SERPS_JWT_SECRET = "your-random-secret-with-at-least-32-characters"
-docker compose config
-docker compose up -d --build
-```
-
-## Verification
-
-```powershell
-python -m py_compile apps\api\app\main.py
-python -m pytest -q
-python -m alembic heads
-npm.cmd run typecheck -w apps/web
+npm.cmd ci
 npm.cmd run test -w apps/web
+npm.cmd run typecheck -w apps/web
 npm.cmd run lint -w apps/web
 npm.cmd run build -w apps/web
-docker compose config
+python -m pytest -q
 ```
 
-See `docs/installation_guide.md`, `docs/user_manual.md`, `docs/demo_script.md`, and `docs/sprint3e_validation_report.md` for examiner-facing guidance and exact validation status.
+The [24 October 2026 recovery-revision report](https://github.com/basil-emeokoro/SERPS/blob/0cc012697fdf19311b549e5ceae17571fd53f744/docs/native_runtime_integration.md) records 149 frontend tests, 116 backend tests, successful TypeScript/lint/build and isolated staff browser recovery checks. These are historical engineering results, not fresh runs, independent certification, detector accuracy metrics or physical acceptance.
 
-## Dissertation boundary
+## Acceptance boundaries
 
-The implementation supports the dissertation identity-lifecycle, governance, explainability, dual-camera, reviewer, administrator, and reporting claims at research-prototype scale. The facial representation is a derived 8-by-8 luminance descriptor and pose/liveness validation uses local MediaPipe landmarks plus bounded geometric movement proxies. It is not production face recognition, certified liveness, or presentation-attack resistance. Hardware-backed browser evidence and production deployment claims must follow the limitations documents.
+- Issue #2: Exam Protect can reflect monitoring integrity independently of phone-positive evidence; investigation is unfinished.
+- Current real-camera, candidate biometric, background/minimisation and sleep/resume acceptance remains separate.
+- In the recovery revision, the evidence outbox is tab-scoped. Corrupt storage blocks delivery visibly; tab closure can lose retained metadata.
+- An event generated while completion is already in flight can remain unresolved after session closure.
+- Live PostgreSQL concurrency for the runtime recovery and response-body timeout handling remain unverified.
+- Historical dependency-security findings were not remediated or re-audited by this runtime work. No production-security approval is implied.
+- Interface captures are withheld. Never publish private fixtures, credentials, tokens, biometric records or Trial 17 evidence.
+
+## Research and innovation
+
+The proposed research contribution under study is the integration of local multimodal observations, contextual explanations, institutional policy and accountable human review. This is a design proposition, not a claim of novelty, superior accuracy or peer-reviewed validation.
+
+Trace the implementation through [governance services](src/serps_pop/governance/services.py), [contextual engine](src/serps_pop/governance/engine.py), [historical recovery evidence services](https://github.com/basil-emeokoro/SERPS/blob/0cc012697fdf19311b549e5ceae17571fd53f744/src/serps_pop/evidence/services.py), [prototype limitations](docs/prototype_limitations.md) and the [dissertation alignment matrix](docs/dissertation_alignment_matrix.md). Historical reports must be read with their dates and validation scopes.
+
+## Roadmap
+
+1. Resolve and independently test Issue #2 without weakening independent protections.
+2. Complete consenting-volunteer identity/camera acceptance and genuine governance-view capture.
+3. Close dependency-security and synthetic provisioning blockers.
+4. Validate PostgreSQL concurrency and completion/evidence integrity boundaries.
+5. Evaluate restricted staging only after separate authorization; external assessment integration remains bounded/planned work.
+
+## Contribute and contact
+
+Use [SERPS issues](https://github.com/basil-emeokoro/SERPS/issues) for reproducible, non-sensitive reports. Describe expected behaviour, actual behaviour and synthetic reproduction steps. Never attach credentials, tokens, biometric imagery or confidential examination records. Propose a private disclosure channel with the maintainer before sharing sensitive security details.
+
+Maintainer: [Basil Emeokoro](https://github.com/basil-emeokoro). Changes to identity, evidence integrity or policy need focused regression evidence and human review. No production readiness, legal compliance or institutional endorsement is claimed.
